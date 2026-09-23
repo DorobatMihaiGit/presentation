@@ -157,7 +157,7 @@ Baked lightmaps + AO (Cycles CPU bake, one-off), Poly Haven studio HDRI in both 
 6. `check-budgets.ts` fails CI on breach.
 
 ### Performance budgets (CI-enforced)
-LCP ≤ 2.0 s desktop / ≤ 2.5 s mobile, CLS < 0.05, INP < 200 ms · public JS before 3D ≤ 120 KB gz, lazy 3D chunk ≤ 350 KB gz (after LCP, `requestIdleCallback`) · initial transfer ≤ 1.5 MB · per shot ≤ 9 MB desktop / ≤ 5 MB mobile; **total `public/seq` + `public/3d` ≤ 80 MB** (Vercel deploy size) · glb ≤ 1.5 MB, ≤ 100 draw calls, ≥ 55 fps on Iris Xe 1080p · fonts: 2 variable woff2, latin + latin-ext (Romanian ș ț ă â î).
+LCP ≤ 2.0 s desktop / ≤ 2.5 s mobile, CLS < 0.05, INP < 200 ms · public JS before 3D ≤ 160 KB gz (revised 2026-09-23: Next 16 + React 19 + next-intl baseline measured 143 KB gz at M0), lazy 3D chunk ≤ 350 KB gz (after LCP, `requestIdleCallback`) · initial transfer ≤ 1.5 MB · per shot ≤ 9 MB desktop / ≤ 5 MB mobile; **total `public/seq` + `public/3d` ≤ 80 MB** (Vercel deploy size) · glb ≤ 1.5 MB, ≤ 100 draw calls, ≥ 55 fps on Iris Xe 1080p · fonts: 2 variable woff2, latin + latin-ext (Romanian ș ț ă â î).
 
 ### Accessibility
 SSR DOM in logical order, canvases `aria-hidden`, skip link, `lang` per locale, contrast ≥ 4.5:1 (scrim over plates), SplitText `aria:'auto'`, reduced-motion → T0, no autoplay audio.
