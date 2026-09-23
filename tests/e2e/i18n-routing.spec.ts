@@ -13,7 +13,7 @@ test.describe("locale routing", () => {
     expect(response?.status()).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Fullstack Developer" }),
+      page.getByRole("heading", { level: 1, name: "Alex Marin" }),
     ).toBeVisible();
     await expect(page).toHaveTitle("Fullstack Developer — CV");
   });
@@ -26,9 +26,10 @@ test.describe("locale routing", () => {
     expect(response?.status()).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("lang", "ro");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Dezvoltator Fullstack" }),
+      page.getByText(
+        "Dezvoltator fullstack care construiește produse web rapide și accesibile, de la baza de date la pixel.",
+      ),
     ).toBeVisible();
-    await expect(page.getByText("Portofoliu în construcție.")).toBeVisible();
   });
 
   test("returns 404 for an unsupported locale", async ({ page }) => {

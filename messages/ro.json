@@ -3,10 +3,6 @@
     "title": "Dezvoltator Fullstack — CV",
     "description": "Portofoliul și CV-ul unui dezvoltator fullstack."
   },
-  "HomePage": {
-    "title": "Dezvoltator Fullstack",
-    "subtitle": "Portofoliu în construcție."
-  },
   "Layout": {
     "skipToContent": "Sari la conținut"
   },
@@ -42,6 +38,34 @@
       "part_time": "Normă parțială",
       "contract": "Contract",
       "freelance": "Freelance"
+    }
+  },
+  "Hero": {
+    "primaryCta": "Contact",
+    "secondaryCta": "Proiecte"
+  },
+  "Projects": {
+    "title": "Proiecte alese",
+    "role": "Rol",
+    "outcome": "Rezultat",
+    "live": "Site live",
+    "source": "Cod sursă",
+    "liveLabel": "Site live: {title}",
+    "sourceLabel": "Cod sursă: {title}"
+  },
+  "Contact": {
+    "title": "Hai să construim",
+    "intro": "Spune-mi despre produsul la care lucrezi. Răspund în două zile lucrătoare.",
+    "email": "Email",
+    "profiles": "Profiluri",
+    "form": {
+      "title": "Trimite un mesaj",
+      "name": "Nume",
+      "email": "Email",
+      "company": "Companie (opțional)",
+      "message": "Mesaj",
+      "submit": "Trimite mesajul",
+      "pending": "Formularul se deschide în curând. Până atunci, scrie-mi direct pe email."
     }
   },
   "NotFound": {

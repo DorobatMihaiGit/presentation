@@ -3,10 +3,6 @@
     "title": "Fullstack Developer — CV",
     "description": "Portfolio and CV of a fullstack developer."
   },
-  "HomePage": {
-    "title": "Fullstack Developer",
-    "subtitle": "Portfolio under construction."
-  },
   "Layout": {
     "skipToContent": "Skip to content"
   },
@@ -42,6 +38,34 @@
       "part_time": "Part-time",
       "contract": "Contract",
       "freelance": "Freelance"
+    }
+  },
+  "Hero": {
+    "primaryCta": "Contact",
+    "secondaryCta": "Work"
+  },
+  "Projects": {
+    "title": "Selected work",
+    "role": "Role",
+    "outcome": "Outcome",
+    "live": "Live site",
+    "source": "Source code",
+    "liveLabel": "Live site: {title}",
+    "sourceLabel": "Source code: {title}"
+  },
+  "Contact": {
+    "title": "Let's build",
+    "intro": "Tell me about the product you are building. I reply within two working days.",
+    "email": "Email",
+    "profiles": "Profiles",
+    "form": {
+      "title": "Send a message",
+      "name": "Name",
+      "email": "Email",
+      "company": "Company (optional)",
+      "message": "Message",
+      "submit": "Send message",
+      "pending": "The form opens soon. Until then, email me directly."
     }
   },
   "NotFound": {
