@@ -1,8 +1,4 @@
 {
-  "Metadata": {
-    "title": "Fullstack Developer — CV",
-    "description": "Portfolio and CV of a fullstack developer."
-  },
   "Layout": {
     "skipToContent": "Skip to content",
     "backToTop": "Back to top"
@@ -23,6 +19,10 @@
   "Availability": {
     "open": "Open to new projects",
     "closed": "Not taking new projects"
+  },
+  "Hero": {
+    "primaryCta": "Contact",
+    "secondaryCta": "Work"
   },
   "About": {
     "title": "About",
@@ -53,10 +53,6 @@
       "contract": "Contract",
       "freelance": "Freelance"
     }
-  },
-  "Hero": {
-    "primaryCta": "Contact",
-    "secondaryCta": "Work"
   },
   "Projects": {
     "title": "Selected work",

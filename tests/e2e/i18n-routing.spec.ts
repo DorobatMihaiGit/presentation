@@ -15,7 +15,7 @@ test.describe("locale routing", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "Alex Marin" }),
     ).toBeVisible();
-    await expect(page).toHaveTitle("Fullstack Developer — CV");
+    await expect(page).toHaveTitle("Alex Marin · Fullstack Developer");
   });
 
   test("serves /ro with lang=ro and Romanian diacritics intact", async ({
@@ -25,6 +25,7 @@ test.describe("locale routing", () => {
 
     expect(response?.status()).toBe(200);
     await expect(page.locator("html")).toHaveAttribute("lang", "ro");
+    await expect(page).toHaveTitle("Alex Marin · Dezvoltator Fullstack");
     await expect(
       page.getByText(
         "Dezvoltator fullstack care construiește produse web rapide și accesibile, de la baza de date la pixel.",

@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { getCv } from "@/content/get-cv";
 import { routing } from "@/i18n/routing";
+import { siteUrl } from "@/site";
 import { mono, sans } from "../fonts";
 import "../globals.css";
 
@@ -13,11 +14,12 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("Metadata");
+  const cv = await getCv(await getLocale());
 
   return {
-    title: t("title"),
-    description: t("description"),
+    metadataBase: new URL(siteUrl),
+    title: cv.profile.seoTitle.value,
+    description: cv.profile.seoDescription.value,
   };
 }
 

@@ -1,8 +1,4 @@
 {
-  "Metadata": {
-    "title": "Dezvoltator Fullstack — CV",
-    "description": "Portofoliul și CV-ul unui dezvoltator fullstack."
-  },
   "Layout": {
     "skipToContent": "Sari la conținut",
     "backToTop": "Înapoi sus"
@@ -23,6 +19,10 @@
   "Availability": {
     "open": "Disponibil pentru proiecte noi",
     "closed": "Nu preiau proiecte noi"
+  },
+  "Hero": {
+    "primaryCta": "Contact",
+    "secondaryCta": "Proiecte"
   },
   "About": {
     "title": "Despre",
@@ -53,10 +53,6 @@
       "contract": "Contract",
       "freelance": "Freelance"
     }
-  },
-  "Hero": {
-    "primaryCta": "Contact",
-    "secondaryCta": "Proiecte"
   },
   "Projects": {
     "title": "Proiecte alese",
