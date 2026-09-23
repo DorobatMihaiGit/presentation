@@ -19,5 +19,7 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: false,
     timeout: 180_000,
+    // Canonical URLs, hreflang, sitemap and JSON-LD are baked at build time.
+    env: { SITE_URL: baseURL },
   },
 });

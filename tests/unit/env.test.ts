@@ -63,6 +63,27 @@ describe("createAppEnv", () => {
     ).toThrow("Invalid environment variables");
   });
 
+  it("accepts an https SITE_URL", () => {
+    const env = createAppEnv({
+      DATABASE_URL: LOCAL_DB,
+      SITE_URL: "https://cv.example.dev",
+    });
+
+    expect(env.SITE_URL).toBe("https://cv.example.dev");
+  });
+
+  it("treats an empty SITE_URL as unset", () => {
+    const env = createAppEnv({ DATABASE_URL: LOCAL_DB, SITE_URL: "" });
+
+    expect(env.SITE_URL).toBeUndefined();
+  });
+
+  it("rejects a SITE_URL without an http(s) scheme", () => {
+    expect(() =>
+      createAppEnv({ DATABASE_URL: LOCAL_DB, SITE_URL: "cv.example.dev" }),
+    ).toThrow("Invalid environment variables");
+  });
+
   it("refuses to expose DATABASE_URL to client code", () => {
     const env = createAppEnv({ DATABASE_URL: LOCAL_DB }, { isServer: false });
 

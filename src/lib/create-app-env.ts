@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export type RuntimeEnv = {
   DATABASE_URL?: string;
+  SITE_URL?: string;
   NEXT_PUBLIC_ASSET_BASE?: string;
 };
 
@@ -13,12 +14,14 @@ export function createAppEnv(
   return createEnv({
     server: {
       DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+      SITE_URL: z.url({ protocol: /^https?$/ }).optional(),
     },
     client: {
       NEXT_PUBLIC_ASSET_BASE: z.url().optional(),
     },
     runtimeEnv: {
       DATABASE_URL: runtimeEnv.DATABASE_URL,
+      SITE_URL: runtimeEnv.SITE_URL,
       NEXT_PUBLIC_ASSET_BASE: runtimeEnv.NEXT_PUBLIC_ASSET_BASE,
     },
     emptyStringAsUndefined: true,
