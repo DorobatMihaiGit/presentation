@@ -34,3 +34,6 @@ blender/renders/
 *.pem
 npm-debug.log*
 .pnpm-debug.log*
+
+# lighthouse ci
+.lighthouseci/
