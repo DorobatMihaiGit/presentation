@@ -1,0 +1,14 @@
+{
+  "Metadata": {
+    "title": "Fullstack Developer — CV",
+    "description": "Portfolio and CV of a fullstack developer."
+  },
+  "HomePage": {
+    "title": "Fullstack Developer",
+    "subtitle": "Portfolio under construction."
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist."
+  }
+}
