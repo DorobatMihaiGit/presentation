@@ -10,6 +10,40 @@
   "Layout": {
     "skipToContent": "Sari la conținut"
   },
+  "Availability": {
+    "open": "Disponibil pentru proiecte noi",
+    "closed": "Nu preiau proiecte noi"
+  },
+  "About": {
+    "title": "Despre",
+    "location": "Locație",
+    "experience": "Experiență",
+    "years": "{count, plural, one {# an} few {# ani} other {# de ani}}",
+    "projects": "Proiecte livrate",
+    "availability": "Disponibilitate"
+  },
+  "Skills": {
+    "title": "Stiva",
+    "intro": "Cinci straturi, de la interfața pe care o atinge omul până la meșteșugul care le ține laolaltă.",
+    "layer": "Stratul {index}",
+    "materials": {
+      "interface": "Sticlă",
+      "api": "Titan",
+      "data": "Ceramică",
+      "infra": "Placă de circuit",
+      "craft": "Placă de bază"
+    }
+  },
+  "Experience": {
+    "title": "Experiență",
+    "present": "Prezent",
+    "employmentType": {
+      "full_time": "Normă întreagă",
+      "part_time": "Normă parțială",
+      "contract": "Contract",
+      "freelance": "Freelance"
+    }
+  },
   "NotFound": {
     "title": "Pagina nu a fost găsită",
     "description": "Pagina pe care o cauți nu există."

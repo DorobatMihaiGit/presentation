@@ -10,6 +10,40 @@
   "Layout": {
     "skipToContent": "Skip to content"
   },
+  "Availability": {
+    "open": "Open to new projects",
+    "closed": "Not taking new projects"
+  },
+  "About": {
+    "title": "About",
+    "location": "Based in",
+    "experience": "Experience",
+    "years": "{count, plural, one {# year} other {# years}}",
+    "projects": "Shipped projects",
+    "availability": "Availability"
+  },
+  "Skills": {
+    "title": "The stack",
+    "intro": "Five layers, from the interface people touch to the craft that holds it together.",
+    "layer": "Layer {index}",
+    "materials": {
+      "interface": "Glass",
+      "api": "Titanium",
+      "data": "Ceramic",
+      "infra": "Circuit board",
+      "craft": "Base plate"
+    }
+  },
+  "Experience": {
+    "title": "Experience",
+    "present": "Present",
+    "employmentType": {
+      "full_time": "Full-time",
+      "part_time": "Part-time",
+      "contract": "Contract",
+      "freelance": "Freelance"
+    }
+  },
   "NotFound": {
     "title": "Page not found",
     "description": "The page you are looking for does not exist."
