@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.DS_Store
+blender/renders/
+coverage/
+playwright-report/
+test-results/
