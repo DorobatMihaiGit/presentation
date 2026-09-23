@@ -4,7 +4,21 @@
     "description": "Portofoliul și CV-ul unui dezvoltator fullstack."
   },
   "Layout": {
-    "skipToContent": "Sari la conținut"
+    "skipToContent": "Sari la conținut",
+    "backToTop": "Înapoi sus"
+  },
+  "Nav": {
+    "label": "Secțiuni",
+    "about": "Despre",
+    "skills": "Stiva",
+    "experience": "Experiență",
+    "projects": "Proiecte",
+    "contact": "Contact"
+  },
+  "LocaleSwitcher": {
+    "label": "Limbă",
+    "en": "English",
+    "ro": "Română"
   },
   "Availability": {
     "open": "Disponibil pentru proiecte noi",

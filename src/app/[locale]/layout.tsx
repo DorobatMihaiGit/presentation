@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { SiteFooter } from "@/components/site/SiteFooter";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { getCv } from "@/content/get-cv";
 import { routing } from "@/i18n/routing";
 import { mono, sans } from "../fonts";
 import "../globals.css";
@@ -27,6 +30,7 @@ export default async function LocaleLayout({
   children,
 }: LayoutProps<"/[locale]">) {
   const locale = await getLocale();
+  const cv = await getCv(locale);
   const t = await getTranslations("Layout");
 
   return (
@@ -43,9 +47,11 @@ export default async function LocaleLayout({
           {t("skipToContent")}
         </a>
         <NextIntlClientProvider>
+          <SiteHeader cv={cv} />
           <main id="main" tabIndex={-1} className="focus:outline-none">
             {children}
           </main>
+          <SiteFooter cv={cv} />
         </NextIntlClientProvider>
       </body>
     </html>

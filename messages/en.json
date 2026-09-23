@@ -4,7 +4,21 @@
     "description": "Portfolio and CV of a fullstack developer."
   },
   "Layout": {
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "backToTop": "Back to top"
+  },
+  "Nav": {
+    "label": "Sections",
+    "about": "About",
+    "skills": "Stack",
+    "experience": "Experience",
+    "projects": "Work",
+    "contact": "Contact"
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "ro": "Română"
   },
   "Availability": {
     "open": "Open to new projects",
