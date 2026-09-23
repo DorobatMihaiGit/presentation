@@ -4,6 +4,8 @@ import "./src/env";
 
 const withNextIntl = createNextIntlPlugin();
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  cacheComponents: true,
+};
 
 export default withNextIntl(nextConfig);
