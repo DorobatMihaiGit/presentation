@@ -7,6 +7,9 @@
     "title": "Dezvoltator Fullstack",
     "subtitle": "Portofoliu în construcție."
   },
+  "Layout": {
+    "skipToContent": "Sari la conținut"
+  },
   "NotFound": {
     "title": "Pagina nu a fost găsită",
     "description": "Pagina pe care o cauți nu există."

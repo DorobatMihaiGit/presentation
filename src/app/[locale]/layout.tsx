@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { mono, sans } from "../fonts";
 import "../globals.css";
 
 export function generateStaticParams() {
@@ -17,15 +18,35 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+export const viewport: Viewport = {
+  themeColor: "#0b0c0f",
+  colorScheme: "dark",
+};
+
 export default async function LocaleLayout({
   children,
 }: LayoutProps<"/[locale]">) {
   const locale = await getLocale();
+  const t = await getTranslations("Layout");
 
   return (
-    <html lang={locale} className="h-full antialiased">
-      <body className="flex min-h-full flex-col">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+    <html
+      lang={locale}
+      data-scroll-behavior="smooth"
+      className={`${sans.variable} ${mono.variable}`}
+    >
+      <body className="min-h-dvh bg-canvas font-sans text-ink">
+        <a
+          href="#main"
+          className="sr-only rounded-full bg-signal px-5 py-3 font-medium text-signal-ink focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50"
+        >
+          {t("skipToContent")}
+        </a>
+        <NextIntlClientProvider>
+          <main id="main" tabIndex={-1} className="focus:outline-none">
+            {children}
+          </main>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -1,25 +1,185 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design tokens: "The Stack", a dark studio product film.
+ * One theme (dark), one accent (signal), text only on solid surfaces so
+ * contrast stays measurable (every text/background pair is >= 4.5:1).
+ */
+@theme {
+  --color-*: initial;
+  --color-canvas: #0b0c0f;
+  --color-surface: #121419;
+  --color-raised: #1a1d24;
+  --color-line: #262a32;
+  --color-line-strong: #646b78;
+  --color-ink: #eceef2;
+  --color-ink-muted: #a9afba;
+  --color-ink-subtle: #8c93a0;
+  --color-signal: #7cc5ff;
+  --color-signal-ink: #06121c;
+
+  /* Stack layer materials: decorative edges only, never text. */
+  --color-glass: #8fcfff;
+  --color-titanium: #b7bcc6;
+  --color-ceramic: #e6e1d6;
+  --color-pcb: #4d9a72;
+  --color-base: #555c69;
+
+  --text-display: clamp(3.25rem, 1.75rem + 6.5vw, 7.5rem);
+  --text-display--line-height: 0.92;
+  --text-display--letter-spacing: -0.045em;
+  --text-display--font-weight: 650;
+  --text-title: clamp(2.25rem, 1.5rem + 3.2vw, 4.25rem);
+  --text-title--line-height: 1;
+  --text-title--letter-spacing: -0.035em;
+  --text-title--font-weight: 620;
+  --text-heading: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.015em;
+  --text-heading--font-weight: 600;
+  --text-lead: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
+  --text-lead--line-height: 1.5;
+  --text-lead--letter-spacing: -0.01em;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.06em;
+
+  --radius-control: 0.875rem;
+  --radius-panel: 1.75rem;
+
+  --spacing-gutter: clamp(1rem, 0.5rem + 2.5vw, 2.5rem);
+  --spacing-section: clamp(6rem, 3.5rem + 9vw, 11rem);
+  --container-content: 76rem;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-studio: cubic-bezier(0.32, 0.72, 0, 1);
+  --default-transition-duration: 220ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: var(--font-mona-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-martian-mono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --motion-press: 120ms;
+  --motion-quick: 220ms;
+  --motion-sweep: 2400ms;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-line);
+  }
+
+  ::selection {
+    background-color: var(--color-signal);
+    color: var(--color-signal-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 3px;
+  }
+
+  /* Long Romanian words and names must wrap, never scroll the page sideways. */
+  h1,
+  h2,
+  h3 {
+    overflow-wrap: break-word;
+    text-wrap: balance;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+@layer components {
+  /* Stack layer tints for data-layer="interface|api|data|infra|craft". */
+  [data-layer="interface"] {
+    --layer-tint: var(--color-glass);
+  }
+  [data-layer="api"] {
+    --layer-tint: var(--color-titanium);
+  }
+  [data-layer="data"] {
+    --layer-tint: var(--color-ceramic);
+  }
+  [data-layer="infra"] {
+    --layer-tint: var(--color-pcb);
+  }
+  [data-layer="craft"] {
+    --layer-tint: var(--color-base);
+  }
+
+  /* Reserved box for a future 3D scene or frame sequence (M5); a CSS studio plate until then. */
+  .stage {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-panel);
+    background:
+      radial-gradient(
+        70% 55% at 60% 30%,
+        color-mix(in oklab, var(--color-signal) 14%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(90% 60% at 50% 115%, var(--color-raised), transparent 70%),
+      var(--color-surface);
+    box-shadow: inset 0 0 0 1px var(--color-line);
+  }
+
+  .slab {
+    height: 12%;
+    border-radius: var(--radius-control);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--layer-tint) 28%, transparent),
+        transparent 65%
+      ),
+      var(--color-raised);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--layer-tint) 45%, transparent),
+      0 24px 40px -28px var(--color-canvas);
+  }
+
+  /* One softbox sweep across the plate on load, like the S1 light pass. */
+  @media (prefers-reduced-motion: no-preference) {
+    .stage::after {
+      content: "";
+      position: absolute;
+      inset: -20% auto -20% -60%;
+      width: 45%;
+      background: linear-gradient(
+        100deg,
+        transparent,
+        color-mix(in oklab, var(--color-ink) 9%, transparent),
+        transparent
+      );
+      transform: translateX(0) skewX(-12deg);
+      animation: studio-sweep var(--motion-sweep) var(--ease-studio) 300ms
+        forwards;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes studio-sweep {
+  to {
+    transform: translateX(420%) skewX(-12deg);
+  }
 }
