@@ -92,3 +92,43 @@ and server action re-checks the session against the database.
 Admin uploads (JPEG, PNG, WebP, AVIF, PDF; 4 MB max) go to Vercel Blob when
 `BLOB_READ_WRITE_TOKEN` is set. Without it they are stored in `.data/media/`
 and served by `/api/media/<key>` (local development, tests, CI).
+
+## Contact form and mail
+
+The contact form on `/en` and `/ro` posts to a Server Action. Each message is
+checked (a hidden honeypot field, at least 3 seconds between page load and
+send, at most 5 messages per IP address in 10 minutes), stored in the
+`message` table first, and then two mails go out: a notification to the owner
+(reply-to = the visitor) and a short auto-reply to the visitor in the page's
+language. If sending fails, the message is kept and shows **Email failed** in
+the admin inbox. The public pages stay static; the form adds about 1.5 KB of
+client JavaScript.
+
+The rate limit keys on an HMAC of the visitor's IP (the IP itself is never
+stored). On Vercel the IP comes from `x-real-ip` / `x-forwarded-for`, which
+Vercel's proxy sets. On any other host without a trusted proxy in front,
+clients can send their own `x-forwarded-for` and so step around the limit.
+
+Without `RESEND_API_KEY` nothing is sent: each mail is written to
+`.data/mail/<timestamp>-<id>.json` (local development, tests, CI). With the
+key set, mail goes through Resend.
+
+### Mail settings to fill in once Resend exists
+
+| Variable | Now (`.env.local`) | Later (Vercel env, M9) |
+| --- | --- | --- |
+| `RESEND_API_KEY` | empty (local outbox) | the Resend API key (`re_…`), Production and Preview |
+| `CONTACT_FROM_EMAIL` | `contact@example.com` | an address on the domain verified in Resend, for example `contact@<your domain>` |
+| `CONTACT_TO_EMAIL` | empty (= `ADMIN_EMAIL`) | the inbox for notifications, if it is not `ADMIN_EMAIL` |
+
+Setting `RESEND_API_KEY` without `CONTACT_FROM_EMAIL` fails at startup
+(`Invalid environment variables`). Resend only sends from a verified domain,
+so the domain's SPF, DKIM and DMARC records come first (M9). Until then a
+real send fails, and the message is still stored with **Email failed**.
+
+## Messages
+
+**Messages** in the admin lists contact messages in three folders: Inbox
+(new and read), Archived and Spam. A message can be marked read or unread,
+archived, flagged as spam, moved back, or deleted for good. Every change is
+written to `audit_log` (a delete keeps only the message id).
