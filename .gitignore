@@ -37,3 +37,6 @@ npm-debug.log*
 
 # lighthouse ci
 .lighthouseci/
+
+# local media uploads (no Blob token)
+.data/

@@ -2,6 +2,7 @@ import { vi } from "vitest";
 import type { AdminSession } from "@/server/auth/read-session";
 import { user } from "@/server/db/schema";
 import type { Db } from "@/server/db/types";
+import type { MediaStore } from "@/server/media/store";
 import { createTestDb } from "./test-db";
 
 // Shared state behind the vi.mock factories in the admin action tests:
@@ -18,6 +19,7 @@ export const OWNER: AdminSession = {
 export const mocks = {
   db: undefined as unknown as Db,
   session: null as AdminSession | null,
+  media: undefined as unknown as MediaStore,
   updateTag: vi.fn(),
 };
 
@@ -29,6 +31,7 @@ export const navigationModule = {
     throw new Error(`NEXT_REDIRECT ${url}`);
   },
 };
+export const mediaModule = { getMediaStore: () => mocks.media };
 
 /** Fresh PGlite with the owner user row (audit_log.user_id references it). */
 export async function setupActionDb(): Promise<() => Promise<void>> {

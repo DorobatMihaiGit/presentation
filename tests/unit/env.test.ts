@@ -105,6 +105,21 @@ describe("createAppEnv", () => {
     expect(env.ADMIN_EMAIL).toBe("owner@example.com");
   });
 
+  it("accepts a Vercel Blob token", () => {
+    const env = createAppEnv({
+      ...BASE,
+      BLOB_READ_WRITE_TOKEN: "vercel_blob_rw_store_secret",
+    });
+
+    expect(env.BLOB_READ_WRITE_TOKEN).toBe("vercel_blob_rw_store_secret");
+  });
+
+  it("treats an empty BLOB_READ_WRITE_TOKEN as unset (local media storage)", () => {
+    const env = createAppEnv({ ...BASE, BLOB_READ_WRITE_TOKEN: "" });
+
+    expect(env.BLOB_READ_WRITE_TOKEN).toBeUndefined();
+  });
+
   it("refuses to expose DATABASE_URL to client code", () => {
     const env = createAppEnv(BASE, { isServer: false });
 
