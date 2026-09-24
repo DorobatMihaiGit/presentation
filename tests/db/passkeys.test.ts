@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { upsertAdmin } from "@/server/auth/admin";
 import { type Auth, createAuth } from "@/server/auth/create-auth";
-import { passkey, user } from "@/server/db/schema";
+import { passkey, session, user } from "@/server/db/schema";
 import type { Db } from "@/server/db/types";
 import { createTestDb } from "./test-db";
 
@@ -33,6 +33,19 @@ afterAll(async () => {
   await close();
 });
 
+/** Signs in through the real endpoint and returns the Cookie header a browser would send. */
+async function signIn(): Promise<Headers> {
+  const response = await auth.api.signInEmail({
+    body: { email: ADMIN, password: PASSWORD },
+    asResponse: true,
+  });
+  const cookie = response.headers
+    .getSetCookie()
+    .map((header) => header.split(";")[0])
+    .join("; ");
+  return new Headers({ cookie });
+}
+
 describe("passkeys", () => {
   it("offers WebAuthn registration bound to the site's origin", async () => {
     const response = await auth.api.signInEmail({
@@ -50,6 +63,28 @@ describe("passkeys", () => {
 
     expect(options.rp).toEqual({ id: "localhost", name: "CV admin" });
     expect(options.user.name).toBe(ADMIN);
+  });
+
+  it("adding a passkey needs a sign-in from the last 15 minutes", async () => {
+    const stale = await signIn();
+    const current = await auth.api.getSession({ headers: stale });
+    await db
+      .update(session)
+      .set({ createdAt: new Date(Date.now() - 16 * 60 * 1000) })
+      .where(eq(session.id, current?.session.id ?? ""));
+
+    const refused = await auth.api.generatePasskeyRegistrationOptions({
+      headers: stale,
+      asResponse: true,
+    });
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: "SESSION_NOT_FRESH" });
+
+    const allowed = await auth.api.generatePasskeyRegistrationOptions({
+      headers: await signIn(),
+      asResponse: true,
+    });
+    expect(allowed.status).toBe(200);
   });
 
   it("`admin:create --reset-2fa` removes every passkey (lost laptop)", async () => {

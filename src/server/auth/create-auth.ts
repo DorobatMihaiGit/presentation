@@ -53,6 +53,8 @@ export function createAuth(config: AuthConfig) {
     session: {
       expiresIn: 60 * 60 * 24 * 7,
       updateAge: 60 * 60 * 24,
+      // A passkey sign-in skips TOTP, so registering one needs a recent sign-in.
+      freshAge: 60 * 15,
     },
     // nextCookies() must stay last: it writes Set-Cookie from server actions.
     plugins: [

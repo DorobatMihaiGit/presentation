@@ -51,7 +51,13 @@ export function PasskeySettings({ passkeys }: { passkeys: PasskeyRow[] }) {
           });
           setPending(false);
           if (result?.error) {
-            setMessage("The passkey was not added.");
+            // 403 SESSION_NOT_FRESH: the sign-in is older than session.freshAge.
+            setMessage(
+              "code" in result.error &&
+                result.error.code === "SESSION_NOT_FRESH"
+                ? "Sign in again to add a passkey."
+                : "The passkey was not added.",
+            );
             return;
           }
           setMessage("Passkey added.");
