@@ -46,7 +46,13 @@ afterAll(async () => {
 
 describe("admin server actions without a session", () => {
   it("finds the actions", () => {
-    expect(ACTIONS.map(([name]) => name)).toContain("saveProfile");
+    expect(ACTIONS.map(([name]) => name)).toEqual(
+      expect.arrayContaining([
+        "saveProfile",
+        "setMessageStatus",
+        "deleteMessage",
+      ]),
+    );
   });
 
   it.each(ACTIONS)(

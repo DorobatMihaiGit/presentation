@@ -1,4 +1,4 @@
-import { updateTag } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import { type AdminSession, getAdminSession } from "@/server/auth";
@@ -43,12 +43,15 @@ export function notFound(message: string): ActionError {
  * 2. validates the form with zod: 400 with per-field messages;
  * 3. runs the mutation and its audit row in one transaction;
  * 4. on success expires the public CV cache (`updateTag`), then redirects or
- *    returns a message.
+ *    returns a message. Actions on data the public site never shows (contact
+ *    messages) pass `publicContent: false`: the CV cache stays warm and only
+ *    the current admin page re-renders (`refresh`).
  */
 export async function runAdminAction<S extends z.ZodType>(
   formData: FormData,
   schema: S,
   run: (input: z.output<S>, ctx: ActionContext) => Promise<ActionOutcome>,
+  options: { publicContent?: boolean } = {},
 ): Promise<ActionResult> {
   const session = await getAdminSession();
   if (!session) {
@@ -89,7 +92,11 @@ export async function runAdminAction<S extends z.ZodType>(
   if (outcome.status === "error") {
     return outcome;
   }
-  updateTag(CV_TAG);
+  if (options.publicContent === false) {
+    refresh();
+  } else {
+    updateTag(CV_TAG);
+  }
   if (outcome.redirectTo) {
     redirect(outcome.redirectTo);
   }
