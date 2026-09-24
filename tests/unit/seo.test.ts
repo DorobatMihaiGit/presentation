@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getCv } from "@/content/get-cv";
+import { fixtures } from "@/content/fixtures";
+import { resolveCv } from "@/content/resolve-cv";
 import {
   buildRobots,
   buildSitemap,
@@ -76,7 +77,7 @@ describe("sitemap and robots", () => {
 
 describe("personJsonLd", () => {
   it("describes the person in the page locale", async () => {
-    const data = personJsonLd(await getCv("ro"), SITE);
+    const data = personJsonLd(resolveCv(fixtures, "ro"), SITE);
 
     expect(data).toMatchObject({
       "@context": "https://schema.org",
@@ -95,7 +96,7 @@ describe("personJsonLd", () => {
   });
 
   it("omits jobTitle and worksFor when no role is current", async () => {
-    const cv = await getCv("en");
+    const cv = resolveCv(fixtures, "en");
     const data = personJsonLd(
       {
         ...cv,

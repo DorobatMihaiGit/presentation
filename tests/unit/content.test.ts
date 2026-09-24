@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { fixtures } from "@/content/fixtures";
-import { getCv, resolveCv } from "@/content/get-cv";
 import { fallbackLang, localize } from "@/content/localize";
+import { resolveCv } from "@/content/resolve-cv";
 import { type CvRecords, STACK_LAYERS } from "@/content/types";
 
 describe("localize", () => {
@@ -56,7 +56,7 @@ describe("localize", () => {
 
 describe("resolveCv", () => {
   it("resolves Romanian copy with diacritics", async () => {
-    const cv = await getCv("ro");
+    const cv = resolveCv(fixtures, "ro");
 
     expect(cv.locale).toBe("ro");
     expect(cv.profile.headline.value).toContain("construiește");
@@ -64,7 +64,7 @@ describe("resolveCv", () => {
   });
 
   it("falls back per field, not per record", async () => {
-    const cv = await getCv("ro");
+    const cv = resolveCv(fixtures, "ro");
     const meridian = cv.experience.find((job) => job.id === "studio-meridian");
 
     expect(meridian?.roleTitle).toEqual({
@@ -75,7 +75,7 @@ describe("resolveCv", () => {
   });
 
   it("drops unpublished experience and projects", async () => {
-    const cv = await getCv("en");
+    const cv = resolveCv(fixtures, "en");
 
     expect(cv.experience.map((job) => job.id)).not.toContain("draft-role");
     expect(cv.projects.map((p) => p.slug)).not.toContain("draft-project");
@@ -103,13 +103,13 @@ describe("resolveCv", () => {
   });
 
   it("returns one stack entry per layer, top to bottom", async () => {
-    const cv = await getCv("en");
+    const cv = resolveCv(fixtures, "en");
 
     expect(cv.stack.map((entry) => entry.layer)).toEqual([...STACK_LAYERS]);
   });
 
   it("resolves project skill slugs to display names", async () => {
-    const cv = await getCv("en");
+    const cv = resolveCv(fixtures, "en");
     const ledger = cv.projects.find((p) => p.slug === "ledger-lens");
 
     expect(ledger?.skills).toEqual([
