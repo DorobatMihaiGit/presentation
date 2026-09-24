@@ -36,3 +36,15 @@ export function fallbackLang(
 ): Locale | undefined {
   return text.lang === pageLocale ? undefined : text.lang;
 }
+
+/**
+ * True when some field is filled in English but blank in Romanian: the admin
+ * shows a "RO missing" badge because /ro falls back to English there.
+ */
+export function missingTranslation<T extends Record<string, unknown>>(
+  en: T | undefined,
+  ro: T | undefined,
+  keys: ReadonlyArray<keyof T>,
+): boolean {
+  return keys.some((key) => isFilled(en?.[key]) && !isFilled(ro?.[key]));
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fixtures } from "@/content/fixtures";
-import { fallbackLang, localize } from "@/content/localize";
+import { fallbackLang, localize, missingTranslation } from "@/content/localize";
 import { resolveCv } from "@/content/resolve-cv";
 import { type CvRecords, STACK_LAYERS } from "@/content/types";
 
@@ -158,5 +158,33 @@ describe("fixtures", () => {
         expect(job.endDate >= job.startDate).toBe(true);
       }
     }
+  });
+});
+
+describe("missingTranslation (admin RO badge)", () => {
+  it("flags a field that is filled in English but blank in Romanian", () => {
+    expect(
+      missingTranslation(
+        { title: "Ledger", tags: ["a"] },
+        { title: "  ", tags: ["b"] },
+        ["title", "tags"],
+      ),
+    ).toBe(true);
+  });
+
+  it("treats a missing Romanian row as untranslated", () => {
+    expect(missingTranslation({ title: "Ledger" }, undefined, ["title"])).toBe(
+      true,
+    );
+  });
+
+  it("ignores fields that are blank in both languages", () => {
+    expect(
+      missingTranslation(
+        { title: "Ledger", body: "" },
+        { title: "Registru", body: "" },
+        ["title", "body"],
+      ),
+    ).toBe(false);
   });
 });
