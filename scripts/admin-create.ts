@@ -6,6 +6,7 @@ import { requireEnv } from "./require-env";
 
 // `pnpm admin:create` creates the owner account for ADMIN_EMAIL, or resets its
 // password. The password comes from ADMIN_PASSWORD (CI, e2e) or a hidden prompt.
+// `pnpm admin:create --reset-2fa` also turns two-factor sign-in off (lost phone).
 async function main() {
   const adminEmail = requireEnv("ADMIN_EMAIL");
   const password =
@@ -23,6 +24,9 @@ async function main() {
       password,
       name: "Owner",
       adminEmail,
+      resetSecondFactors: process.argv.includes("--reset-2fa")
+        ? { db }
+        : undefined,
     });
     console.log(
       result === "created"

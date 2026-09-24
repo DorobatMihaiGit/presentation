@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { twoFactor } from "better-auth/plugins";
 import * as schema from "@/server/db/schema";
 import type { Db } from "@/server/db/types";
 
@@ -52,7 +53,7 @@ export function createAuth(config: AuthConfig) {
       updateAge: 60 * 60 * 24,
     },
     // nextCookies() must stay last: it writes Set-Cookie from server actions.
-    plugins: [nextCookies()],
+    plugins: [twoFactor({ issuer: "CV admin" }), nextCookies()],
   });
 }
 

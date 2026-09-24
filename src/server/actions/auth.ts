@@ -24,11 +24,14 @@ export async function signIn(
   if (!parsed.success) {
     return { error: "Enter your email and password." };
   }
+  let twoFactor = false;
   try {
-    await auth.api.signInEmail({
+    const result = await auth.api.signInEmail({
       body: parsed.data,
       headers: await headers(),
     });
+    twoFactor =
+      "twoFactorRedirect" in result && result.twoFactorRedirect === true;
   } catch (error) {
     if (isAPIError(error)) {
       // One message for every failure: never reveal whether the email exists.
@@ -37,6 +40,42 @@ export async function signIn(
           error.statusCode === 429
             ? "Too many attempts. Wait a minute and try again."
             : "Wrong email or password.",
+      };
+    }
+    throw error;
+  }
+  // With 2FA on, the password only earns a short-lived "two factor" cookie.
+  redirect(twoFactor ? "/admin/login/two-factor" : "/admin");
+}
+
+const totpCode = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
+});
+
+/** Second sign-in step: the authenticator code turns the 2FA cookie into a session. */
+export async function verifySignInCode(
+  _previous: SignInState,
+  formData: FormData,
+): Promise<SignInState> {
+  const parsed = totpCode.safeParse({ code: formData.get("code") });
+  if (!parsed.success) {
+    return { error: "Enter the 6-digit code from your authenticator app." };
+  }
+  try {
+    await auth.api.verifyTOTP({
+      body: { code: parsed.data.code },
+      headers: await headers(),
+    });
+  } catch (error) {
+    if (isAPIError(error)) {
+      return {
+        error:
+          error.statusCode === 429
+            ? "Too many attempts. Wait a minute and try again."
+            : "That code is not valid, or the sign-in expired. Try again.",
       };
     }
     throw error;

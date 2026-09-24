@@ -56,6 +56,7 @@ describe("schema (migrations applied to PGlite)", () => {
       "skill",
       "skill_category",
       "skill_category_i18n",
+      "two_factor",
       "user",
       "verification",
     ]);

@@ -4,6 +4,7 @@ export type AdminSession = {
   userId: string;
   email: string;
   name: string;
+  twoFactorEnabled: boolean;
 };
 
 /**
@@ -23,5 +24,6 @@ export async function readAdminSession(
     userId: result.user.id,
     email: result.user.email,
     name: result.user.name,
+    twoFactorEnabled: result.user.twoFactorEnabled === true,
   };
 }

@@ -1,8 +1,15 @@
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // Better Auth 1.7.5 core tables, as printed by `npx auth@1.7.5 generate`
 // (relations dropped: nothing here uses drizzle's relational queries).
-// Plugin tables (two_factor, passkey) are appended by the M2b tasks.
+// Plugin tables follow the core ones.
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -15,6 +22,7 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => new Date())
     .notNull(),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
 });
 
 export const session = pgTable(
@@ -74,4 +82,24 @@ export const verification = pgTable(
       .notNull(),
   },
   (t) => [index("verification_identifier_idx").on(t.identifier)],
+);
+
+// twoFactor() plugin (TOTP + backup codes).
+export const twoFactor = pgTable(
+  "two_factor",
+  {
+    id: text("id").primaryKey(),
+    secret: text("secret").notNull(),
+    backupCodes: text("backup_codes").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    verified: boolean("verified").default(true),
+    failedVerificationCount: integer("failed_verification_count").default(0),
+    lockedUntil: timestamp("locked_until"),
+  },
+  (t) => [
+    index("twoFactor_secret_idx").on(t.secret),
+    index("twoFactor_userId_idx").on(t.userId),
+  ],
 );

@@ -49,6 +49,7 @@ async function main() {
       password: requireEnv("ADMIN_PASSWORD"),
       name: "E2E Owner",
       adminEmail,
+      resetSecondFactors: { db },
     });
     console.log(`e2e database ${name} ready`);
   } finally {

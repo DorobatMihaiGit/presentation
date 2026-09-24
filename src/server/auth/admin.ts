@@ -1,3 +1,6 @@
+import { eq } from "drizzle-orm";
+import { twoFactor, user as userTable } from "@/server/db/schema";
+import type { Db } from "@/server/db/types";
 import type { Auth } from "./create-auth";
 
 export type UpsertAdminResult = "created" | "updated";
@@ -5,7 +8,8 @@ export type UpsertAdminResult = "created" | "updated";
 /**
  * Creates the owner account, or resets its password (and signs out every
  * session) when it already exists. Public sign-up is disabled, so this is the
- * only way an account comes into being.
+ * only way an account comes into being. `resetSecondFactors` is the recovery
+ * path for a lost phone: it removes the TOTP secret and turns 2FA off.
  */
 export async function upsertAdmin(
   auth: Auth,
@@ -14,6 +18,7 @@ export async function upsertAdmin(
     password: string;
     name: string;
     adminEmail: string;
+    resetSecondFactors?: { db: Db };
   },
 ): Promise<UpsertAdminResult> {
   const email = input.email.toLowerCase();
@@ -50,6 +55,14 @@ export async function upsertAdmin(
         accountId: userId,
         password: hash,
       });
+    }
+    if (input.resetSecondFactors) {
+      const { db } = input.resetSecondFactors;
+      await db.delete(twoFactor).where(eq(twoFactor.userId, userId));
+      await db
+        .update(userTable)
+        .set({ twoFactorEnabled: false })
+        .where(eq(userTable.id, userId));
     }
     await ctx.internalAdapter.deleteUserSessions(userId);
     return "updated";

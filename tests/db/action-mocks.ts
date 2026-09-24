@@ -14,6 +14,7 @@ export const OWNER: AdminSession = {
   userId: "owner",
   email: "owner@example.com",
   name: "Owner",
+  twoFactorEnabled: false,
 };
 
 export const mocks = {
