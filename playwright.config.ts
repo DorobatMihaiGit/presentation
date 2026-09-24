@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_ADMIN } from "./tests/e2e/admin-credentials";
 
 const PORT = 3100;
 const baseURL = `http://localhost:${PORT}`;
@@ -25,7 +26,31 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "public",
+      testIgnore: /admin-.*\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      // Admin specs edit shared content, so they start after every public
+      // spec has finished reading the seeded fixtures.
+      name: "admin",
+      testMatch: /admin-.*\.spec\.ts/,
+      testIgnore: /admin-security\.spec\.ts/,
+      dependencies: ["public"],
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      // Turns 2FA on for the shared owner account, so it runs alone, last.
+      name: "security",
+      testMatch: /admin-security\.spec\.ts/,
+      dependencies: ["admin"],
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"] },
+    },
+  ],
   webServer: {
     command: `node --import tsx scripts/e2e-db.ts && next build && next start --port ${PORT}`,
     url: baseURL,
@@ -35,6 +60,11 @@ export default defineConfig({
       // Canonical URLs, hreflang, sitemap and JSON-LD are baked at build time.
       SITE_URL: baseURL,
       DATABASE_URL: databaseUrl.toString(),
+      BETTER_AUTH_SECRET: E2E_ADMIN.secret,
+      ADMIN_EMAIL: E2E_ADMIN.email,
+      ADMIN_PASSWORD: E2E_ADMIN.password,
+      // Local media storage even if .env.local has a Blob token.
+      BLOB_READ_WRITE_TOKEN: "",
     },
   },
 });

@@ -4,6 +4,8 @@ import { z } from "zod";
 export type RuntimeEnv = {
   DATABASE_URL?: string;
   SITE_URL?: string;
+  BETTER_AUTH_SECRET?: string;
+  ADMIN_EMAIL?: string;
   NEXT_PUBLIC_ASSET_BASE?: string;
 };
 
@@ -15,6 +17,8 @@ export function createAppEnv(
     server: {
       DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
       SITE_URL: z.url({ protocol: /^https?$/ }).optional(),
+      BETTER_AUTH_SECRET: z.string().min(32),
+      ADMIN_EMAIL: z.email().transform((email) => email.toLowerCase()),
     },
     client: {
       NEXT_PUBLIC_ASSET_BASE: z.url().optional(),
@@ -22,6 +26,8 @@ export function createAppEnv(
     runtimeEnv: {
       DATABASE_URL: runtimeEnv.DATABASE_URL,
       SITE_URL: runtimeEnv.SITE_URL,
+      BETTER_AUTH_SECRET: runtimeEnv.BETTER_AUTH_SECRET,
+      ADMIN_EMAIL: runtimeEnv.ADMIN_EMAIL,
       NEXT_PUBLIC_ASSET_BASE: runtimeEnv.NEXT_PUBLIC_ASSET_BASE,
     },
     emptyStringAsUndefined: true,
