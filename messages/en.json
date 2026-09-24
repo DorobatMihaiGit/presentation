@@ -75,7 +75,21 @@
       "company": "Company (optional)",
       "message": "Message",
       "submit": "Send message",
-      "pending": "The form opens soon. Until then, email me directly."
+      "sending": "Sending…",
+      "hint": "I read every message myself.",
+      "sent": "Thanks! Your message is on its way. I reply within two working days.",
+      "honeypot": "Leave this field empty",
+      "errors": {
+        "invalid": "Check the highlighted fields.",
+        "tooFast": "That was quick. Take a moment to check your message, then send it again.",
+        "rateLimited": "You have sent several messages in a short time. Try again in a few minutes, or email me directly.",
+        "failed": "Something went wrong and your message was not sent. Please email me directly."
+      },
+      "fieldErrors": {
+        "required": "Fill in this field.",
+        "invalid": "Enter a valid email address.",
+        "tooLong": "This is too long."
+      }
     }
   },
   "NotFound": {

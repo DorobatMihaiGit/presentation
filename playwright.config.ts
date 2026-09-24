@@ -65,8 +65,11 @@ export default defineConfig({
       ADMIN_PASSWORD: E2E_ADMIN.password,
       // Local media storage even if .env.local has a Blob token.
       BLOB_READ_WRITE_TOKEN: "",
-      // Mail goes to the .data/mail/ outbox even if .env.local has a Resend key.
+      // Mail goes to the .data/mail/ outbox even if .env.local has a Resend key;
+      // notifications go to ADMIN_EMAIL.
       RESEND_API_KEY: "",
+      CONTACT_FROM_EMAIL: "contact@e2e.example.com",
+      CONTACT_TO_EMAIL: "",
     },
   },
 });

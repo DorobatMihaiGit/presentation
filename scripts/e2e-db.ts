@@ -3,13 +3,14 @@ import { Client } from "pg";
 import { upsertAdmin } from "@/server/auth/admin";
 import { createAuth } from "@/server/auth/create-auth";
 import { createDb } from "@/server/db/create-db";
+import { message } from "@/server/db/schema";
 import { seedContent } from "@/server/db/seed";
 import { requireEnv } from "./require-env";
 
 // Prepares the e2e database named in DATABASE_URL (playwright.config.ts points
 // it at `cv_e2e`, never the dev database): creates it if missing, applies the
-// migrations, resets the CV content to the fixtures and (re)creates the owner
-// account from ADMIN_EMAIL / ADMIN_PASSWORD.
+// migrations, resets the CV content to the fixtures, deletes contact messages
+// and (re)creates the owner account from ADMIN_EMAIL / ADMIN_PASSWORD.
 async function main() {
   const url = new URL(requireEnv("DATABASE_URL"));
   const name = url.pathname.slice(1);
@@ -37,6 +38,8 @@ async function main() {
   try {
     await migrate(db, { migrationsFolder: "drizzle" });
     await seedContent(db, { reset: true });
+    // Messages from an earlier run would count against the contact rate limit.
+    await db.delete(message);
     const adminEmail = requireEnv("ADMIN_EMAIL");
     const auth = createAuth({
       db,

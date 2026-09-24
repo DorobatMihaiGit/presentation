@@ -62,9 +62,7 @@ test("lists published projects only, with descriptive link names", async ({
   ).toHaveAttribute("href", "https://example.com/ledger-lens");
 });
 
-test("contact form is labelled and cannot submit before M3", async ({
-  page,
-}) => {
+test("contact form is labelled", async ({ page }) => {
   await page.goto("/en");
   const form = page.getByRole("form", { name: "Send a message" });
 
@@ -74,11 +72,7 @@ test("contact form is labelled and cannot submit before M3", async ({
   await expect(form.getByLabel("Message")).toBeVisible();
   await expect(
     form.getByRole("button", { name: "Send message" }),
-  ).toBeDisabled();
-
-  await form.getByLabel("Name").fill("Ana Pop");
-  await form.getByLabel("Name").press("Enter");
-  await expect(page).toHaveURL("/en");
+  ).toBeEnabled();
 });
 
 test("plays the studio light sweep once", async ({ page }) => {

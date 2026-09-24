@@ -1,15 +1,37 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Section } from "@/components/ui/Section";
 import type { Cv } from "@/content/types";
+import { ContactForm, type ContactFormLabels } from "./ContactForm";
 
 const SOCIAL_LABELS = { github: "GitHub", linkedin: "LinkedIn" } as const;
 
-const fieldClass =
-  "mt-2 w-full rounded-control bg-canvas px-4 py-3 text-ink ring-1 ring-line-strong";
-
 export function Contact({ cv }: { cv: Cv }) {
   const t = useTranslations("Contact");
+  const locale = useLocale();
   const { profile } = cv;
+  const labels: ContactFormLabels = {
+    title: t("form.title"),
+    name: t("form.name"),
+    email: t("form.email"),
+    company: t("form.company"),
+    message: t("form.message"),
+    submit: t("form.submit"),
+    sending: t("form.sending"),
+    hint: t("form.hint"),
+    sent: t("form.sent"),
+    honeypot: t("form.honeypot"),
+    errors: {
+      invalid: t("form.errors.invalid"),
+      tooFast: t("form.errors.tooFast"),
+      rateLimited: t("form.errors.rateLimited"),
+      failed: t("form.errors.failed"),
+    },
+    fieldErrors: {
+      required: t("form.fieldErrors.required"),
+      invalid: t("form.fieldErrors.invalid"),
+      tooLong: t("form.fieldErrors.tooLong"),
+    },
+  };
 
   return (
     <Section id="contact" title={t("title")} intro={t("intro")} scene="contact">
@@ -44,65 +66,7 @@ export function Contact({ cv }: { cv: Cv }) {
             </ul>
           </div>
         </div>
-        <form
-          aria-labelledby="contact-form-title"
-          aria-describedby="contact-form-status"
-          className="flex flex-col gap-5 rounded-panel bg-surface p-6 ring-1 ring-line md:col-span-7 md:p-8"
-        >
-          <h3 id="contact-form-title" className="text-heading text-ink">
-            {t("form.title")}
-          </h3>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className="text-sm text-ink-muted">
-              {t("form.name")}
-              <input
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                className={fieldClass}
-              />
-            </label>
-            <label className="text-sm text-ink-muted">
-              {t("form.email")}
-              <input
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className={fieldClass}
-              />
-            </label>
-          </div>
-          <label className="text-sm text-ink-muted">
-            {t("form.company")}
-            <input
-              name="company"
-              type="text"
-              autoComplete="organization"
-              className={fieldClass}
-            />
-          </label>
-          <label className="text-sm text-ink-muted">
-            {t("form.message")}
-            <textarea
-              name="message"
-              rows={5}
-              required
-              className={`${fieldClass} resize-y`}
-            />
-          </label>
-          <p id="contact-form-status" className="text-sm text-ink-muted">
-            {t("form.pending")}
-          </p>
-          <button
-            type="submit"
-            disabled
-            className="self-start rounded-full bg-signal px-6 py-3 font-medium text-signal-ink disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {t("form.submit")}
-          </button>
-        </form>
+        <ContactForm locale={locale} labels={labels} />
       </div>
     </Section>
   );

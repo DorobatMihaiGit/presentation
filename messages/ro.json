@@ -75,7 +75,21 @@
       "company": "Companie (opțional)",
       "message": "Mesaj",
       "submit": "Trimite mesajul",
-      "pending": "Formularul se deschide în curând. Până atunci, scrie-mi direct pe email."
+      "sending": "Se trimite…",
+      "hint": "Citesc personal fiecare mesaj.",
+      "sent": "Mulțumesc! Mesajul tău a plecat. Îți răspund în două zile lucrătoare.",
+      "honeypot": "Lasă acest câmp gol",
+      "errors": {
+        "invalid": "Verifică câmpurile marcate.",
+        "tooFast": "A fost foarte rapid. Mai citește o dată mesajul, apoi trimite-l din nou.",
+        "rateLimited": "Ai trimis mai multe mesaje într-un timp scurt. Încearcă din nou peste câteva minute sau scrie-mi direct pe email.",
+        "failed": "Ceva nu a mers și mesajul nu a fost trimis. Te rog să îmi scrii direct pe email."
+      },
+      "fieldErrors": {
+        "required": "Completează acest câmp.",
+        "invalid": "Introdu o adresă de email validă.",
+        "tooLong": "Textul este prea lung."
+      }
     }
   },
   "NotFound": {
