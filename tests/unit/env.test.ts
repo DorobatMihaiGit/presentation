@@ -120,6 +120,74 @@ describe("createAppEnv", () => {
     expect(env.BLOB_READ_WRITE_TOKEN).toBeUndefined();
   });
 
+  it("runs without any mail settings (local outbox)", () => {
+    const env = createAppEnv({
+      ...BASE,
+      RESEND_API_KEY: "",
+      CONTACT_FROM_EMAIL: "",
+      CONTACT_TO_EMAIL: "",
+    });
+
+    expect(env.RESEND_API_KEY).toBeUndefined();
+    expect(env.CONTACT_FROM_EMAIL).toBeUndefined();
+    expect(env.CONTACT_TO_EMAIL).toBeUndefined();
+  });
+
+  it("accepts a Resend key together with a sender address", () => {
+    const env = createAppEnv({
+      ...BASE,
+      RESEND_API_KEY: "re_123456789",
+      CONTACT_FROM_EMAIL: "contact@example.com",
+      CONTACT_TO_EMAIL: "Inbox@Example.com",
+    });
+
+    expect(env.RESEND_API_KEY).toBe("re_123456789");
+    expect(env.CONTACT_FROM_EMAIL).toBe("contact@example.com");
+    expect(env.CONTACT_TO_EMAIL).toBe("inbox@example.com");
+  });
+
+  it("rejects a Resend key without a sender address", () => {
+    expect(() =>
+      createAppEnv({ ...BASE, RESEND_API_KEY: "re_123456789" }),
+    ).toThrow("Invalid environment variables");
+  });
+
+  it("rejects a RESEND_API_KEY that does not start with re_", () => {
+    expect(() =>
+      createAppEnv({
+        ...BASE,
+        RESEND_API_KEY: "sk_live_123",
+        CONTACT_FROM_EMAIL: "contact@example.com",
+      }),
+    ).toThrow("Invalid environment variables");
+  });
+
+  it("rejects a CONTACT_FROM_EMAIL with a display name or line break", () => {
+    for (const value of [
+      "CV <contact@example.com>",
+      "a@example.com\r\nBcc: x@example.com",
+    ]) {
+      expect(() =>
+        createAppEnv({ ...BASE, CONTACT_FROM_EMAIL: value }),
+      ).toThrow("Invalid environment variables");
+    }
+  });
+
+  it("refuses to expose RESEND_API_KEY to client code", () => {
+    const env = createAppEnv(
+      {
+        ...BASE,
+        RESEND_API_KEY: "re_123456789",
+        CONTACT_FROM_EMAIL: "contact@example.com",
+      },
+      { isServer: false },
+    );
+
+    expect(() => env.RESEND_API_KEY).toThrow(
+      "Attempted to access a server-side environment variable on the client",
+    );
+  });
+
   it("refuses to expose DATABASE_URL to client code", () => {
     const env = createAppEnv(BASE, { isServer: false });
 
