@@ -1,3 +1,4 @@
+import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
@@ -23,6 +24,7 @@ export const MIN_PASSWORD_LENGTH = 12;
  */
 export function createAuth(config: AuthConfig) {
   const adminEmail = config.adminEmail.toLowerCase();
+  const origin = new URL(config.baseURL);
 
   return betterAuth({
     appName: "CV admin",
@@ -53,7 +55,16 @@ export function createAuth(config: AuthConfig) {
       updateAge: 60 * 60 * 24,
     },
     // nextCookies() must stay last: it writes Set-Cookie from server actions.
-    plugins: [twoFactor({ issuer: "CV admin" }), nextCookies()],
+    plugins: [
+      twoFactor({ issuer: "CV admin" }),
+      // WebAuthn is bound to the site's host name and exact origin.
+      passkey({
+        rpID: origin.hostname,
+        rpName: "CV admin",
+        origin: origin.origin,
+      }),
+      nextCookies(),
+    ],
   });
 }
 

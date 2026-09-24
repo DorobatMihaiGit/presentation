@@ -59,3 +59,40 @@ test("TOTP: set up, sign in with a code, turn off", async ({ page }) => {
     .click();
   await expect(page.getByText("Two-factor sign-in is off.")).toBeVisible();
 });
+
+test("passkey: register one, then sign in with it", async ({
+  page,
+  context,
+}) => {
+  // Chrome's virtual authenticator stands in for Touch ID / Windows Hello.
+  const cdp = await context.newCDPSession(page);
+  await cdp.send("WebAuthn.enable");
+  await cdp.send("WebAuthn.addVirtualAuthenticator", {
+    options: {
+      protocol: "ctap2",
+      transport: "internal",
+      hasResidentKey: true,
+      hasUserVerification: true,
+      isUserVerified: true,
+    },
+  });
+
+  await signInAsOwner(page);
+  await page.goto("/admin/security");
+  await page.getByRole("textbox", { name: "Passkey name" }).fill("Test laptop");
+  await page.getByRole("button", { name: "Add a passkey" }).click();
+  await expect(page.getByText("Passkey added.")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Remove Test laptop" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL("/admin/login");
+  await page.getByRole("button", { name: "Sign in with a passkey" }).click();
+  await expect(page).toHaveURL("/admin/profile");
+
+  await page.goto("/admin/security");
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Remove Test laptop" }).click();
+  await expect(page.getByText("No passkeys yet.")).toBeVisible();
+});

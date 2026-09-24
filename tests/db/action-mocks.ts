@@ -26,7 +26,7 @@ export const mocks = {
 
 export const dbModule = { getDb: () => mocks.db };
 export const authModule = { getAdminSession: async () => mocks.session };
-export const cacheModule = { updateTag: mocks.updateTag };
+export const cacheModule = { updateTag: mocks.updateTag, refresh: vi.fn() };
 export const navigationModule = {
   redirect: (url: string): never => {
     throw new Error(`NEXT_REDIRECT ${url}`);

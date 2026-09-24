@@ -15,6 +15,13 @@
       "when": 1790241589939,
       "tag": "0001_two_factor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790241788713,
+      "tag": "0002_passkey",
+      "breakpoints": true
     }
   ]
 }

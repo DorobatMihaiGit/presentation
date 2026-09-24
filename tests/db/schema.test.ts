@@ -47,6 +47,7 @@ describe("schema (migrations applied to PGlite)", () => {
       "experience_skill",
       "media",
       "message",
+      "passkey",
       "profile",
       "profile_i18n",
       "project",
