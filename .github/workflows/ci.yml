@@ -14,6 +14,7 @@ permissions:
 
 env:
   DATABASE_URL: postgres://cv:cv@localhost:5432/cv
+  ADMIN_EMAIL: ci-owner@example.com
   NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
@@ -21,6 +22,20 @@ jobs:
     name: Typecheck, lint, unit, build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: cv
+          POSTGRES_PASSWORD: cv
+          POSTGRES_DB: cv
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cv -d cv"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -28,10 +43,15 @@ jobs:
         with:
           node-version-file: package.json
           cache: pnpm
+      # Throwaway per-run secret: CI databases never hold real sessions.
+      - run: echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      # The public pages are prerendered from Postgres at build time.
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
       - run: pnpm build
 
   e2e:
@@ -41,6 +61,22 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.63.0-noble
       options: --user 1001
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: cv
+          POSTGRES_PASSWORD: cv
+          POSTGRES_DB: cv
+        options: >-
+          --health-cmd "pg_isready -U cv -d cv"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      # Inside a job container the service is reached by its name, not localhost.
+      # playwright.config.ts switches to the cv_e2e database on this server.
+      DATABASE_URL: postgres://cv:cv@postgres:5432/cv
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -61,6 +97,20 @@ jobs:
     name: Lighthouse (desktop)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: cv
+          POSTGRES_PASSWORD: cv
+          POSTGRES_DB: cv
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cv -d cv"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -68,7 +118,10 @@ jobs:
         with:
           node-version-file: package.json
           cache: pnpm
+      - run: echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
       - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
       - run: pnpm build
         env:
           SITE_URL: http://localhost:3200
