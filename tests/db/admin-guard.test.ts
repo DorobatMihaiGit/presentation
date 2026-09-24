@@ -18,11 +18,16 @@ vi.mock("next/navigation", () =>
 );
 vi.mock("@/server/media", () => ({ getMediaStore: () => null }));
 
-// Every export of every module in src/server/actions/ except auth.ts (sign-in
-// and sign-out run before there is a session). A module or action added later
-// is covered without touching this test.
+// Every export of every module in src/server/actions/ except the two public
+// ones: auth.ts (sign-in and sign-out run before there is a session) and
+// contact.ts (the visitor contact form, tests/db/contact-action.test.ts). A
+// module or action added later is covered without touching this test.
 const modules = import.meta.glob(
-  ["../../src/server/actions/*.ts", "!../../src/server/actions/auth.ts"],
+  [
+    "../../src/server/actions/*.ts",
+    "!../../src/server/actions/auth.ts",
+    "!../../src/server/actions/contact.ts",
+  ],
   { eager: true },
 ) as Record<string, Record<string, AdminFormAction>>;
 const ACTIONS = Object.values(modules).flatMap((mod) => Object.entries(mod));
