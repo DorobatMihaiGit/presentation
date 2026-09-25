@@ -1,0 +1,105 @@
+{
+  "sourceHash": "74ef370e4a57bd69",
+  "shots": {
+    "hero-start": {
+      "landscape": {
+        "width": 1920,
+        "height": 1080,
+        "avif": [
+          {
+            "width": 640,
+            "src": "/posters/hero-start-landscape-640.57bf0525.avif"
+          },
+          {
+            "width": 1280,
+            "src": "/posters/hero-start-landscape-1280.1f3925e8.avif"
+          },
+          {
+            "width": 1920,
+            "src": "/posters/hero-start-landscape-1920.0a66ba31.avif"
+          }
+        ],
+        "webp": [
+          {
+            "width": 640,
+            "src": "/posters/hero-start-landscape-640.c62efed9.webp"
+          },
+          {
+            "width": 1280,
+            "src": "/posters/hero-start-landscape-1280.d7f51043.webp"
+          },
+          {
+            "width": 1920,
+            "src": "/posters/hero-start-landscape-1920.24b2422e.webp"
+          }
+        ]
+      },
+      "portrait": {
+        "width": 828,
+        "height": 1792,
+        "avif": [
+          {
+            "width": 828,
+            "src": "/posters/hero-start-portrait-828.5be05b11.avif"
+          }
+        ],
+        "webp": [
+          {
+            "width": 828,
+            "src": "/posters/hero-start-portrait-828.38bccfe9.webp"
+          }
+        ]
+      }
+    },
+    "hero-end": {
+      "landscape": {
+        "width": 1920,
+        "height": 1080,
+        "avif": [
+          {
+            "width": 640,
+            "src": "/posters/hero-end-landscape-640.06f54541.avif"
+          },
+          {
+            "width": 1280,
+            "src": "/posters/hero-end-landscape-1280.a2a88683.avif"
+          },
+          {
+            "width": 1920,
+            "src": "/posters/hero-end-landscape-1920.11df2752.avif"
+          }
+        ],
+        "webp": [
+          {
+            "width": 640,
+            "src": "/posters/hero-end-landscape-640.b1589b41.webp"
+          },
+          {
+            "width": 1280,
+            "src": "/posters/hero-end-landscape-1280.cc5b3e71.webp"
+          },
+          {
+            "width": 1920,
+            "src": "/posters/hero-end-landscape-1920.352f46d7.webp"
+          }
+        ]
+      },
+      "portrait": {
+        "width": 828,
+        "height": 1792,
+        "avif": [
+          {
+            "width": 828,
+            "src": "/posters/hero-end-portrait-828.056b9b87.avif"
+          }
+        ],
+        "webp": [
+          {
+            "width": 828,
+            "src": "/posters/hero-end-portrait-828.4dabe0c4.webp"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -19,7 +19,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db-migrate.ts",
     "db:seed": "node --env-file-if-exists=.env.local --import tsx scripts/db-seed.ts",
-    "admin:create": "node --env-file-if-exists=.env.local --import tsx scripts/admin-create.ts"
+    "admin:create": "node --env-file-if-exists=.env.local --import tsx scripts/admin-create.ts",
+    "assets:posters": "node --import tsx scripts/posters.ts"
   },
   "dependencies": {
     "@better-auth/passkey": "1.7.5",
