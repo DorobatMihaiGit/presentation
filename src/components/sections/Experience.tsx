@@ -10,13 +10,13 @@ export function Experience({ cv }: { cv: Cv }) {
 
   return (
     <Section id="experience" title={t("title")} scene="experience">
-      <ol className="flex flex-col gap-4">
+      <ol className="flex flex-col gap-4 lg:w-7/12">
         {cv.experience.map((job) => (
           <li
             key={job.id}
-            className="grid gap-4 rounded-panel bg-surface p-6 ring-1 ring-line md:grid-cols-12 md:gap-8 md:p-8"
+            className="flex flex-col gap-3 rounded-panel bg-surface p-6 ring-1 ring-line md:p-8"
           >
-            <p className="font-mono text-label uppercase text-ink-subtle md:col-span-3">
+            <p className="font-mono text-label uppercase text-ink-subtle">
               <time dateTime={job.startDate}>
                 {formatYearMonth(job.startDate, locale)}
               </time>
@@ -29,7 +29,7 @@ export function Experience({ cv }: { cv: Cv }) {
                 t("present")
               )}
             </p>
-            <div className="md:col-span-9">
+            <div>
               <h3
                 lang={fallbackLang(job.roleTitle, locale)}
                 className="text-heading text-ink"

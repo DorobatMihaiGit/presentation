@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useRef } from "react";
+import { announceContactSent } from "@/experience/events";
 import type { Locale } from "@/i18n/routing";
 import { sendContactMessage } from "@/server/actions/contact";
 import {
@@ -72,6 +73,8 @@ export function ContactForm({
   useEffect(() => {
     if (state.status === "sent") {
       formRef.current?.reset();
+      // The stage (if it is up) pulses the LED on the base plate.
+      announceContactSent();
     }
   }, [state]);
 
@@ -114,7 +117,7 @@ export function ContactForm({
         startTransition(() => formAction(data));
       }}
       aria-labelledby="contact-form-title"
-      className="relative flex flex-col gap-5 rounded-panel bg-surface p-6 ring-1 ring-line md:col-span-7 md:p-8"
+      className="relative flex flex-col gap-5 rounded-panel bg-surface p-6 ring-1 ring-line md:p-8"
     >
       <h3 id="contact-form-title" className="text-heading text-ink">
         {labels.title}

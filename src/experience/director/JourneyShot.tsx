@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import type { RefObject } from "react";
+import { type RefObject, useMemo } from "react";
 import type {
   Material,
   MeshStandardMaterial,
@@ -12,12 +12,16 @@ import type { PulseUniforms } from "../scenes/materials";
 import { STACK_SHADOW } from "../scenes/StudioLights";
 import { STACK_OBJECTS, stackLayout } from "../scenes/stack-layout";
 import { coverViewOffset, orientationOf, REFERENCE_SIZE } from "./framing";
-import type { JourneyFrame } from "./journey";
+import { type JourneyFrame, litJob } from "./journey";
 import type { Motion } from "./motion";
+import { anchorRows, findPageLinks, markLit } from "./page-links";
 import { SHOT_FOV } from "./shots";
 
 /** Pointer parallax: camera orbit (rad) and rim-light swing at full tilt. */
 const PARALLAX = { yaw: 0.06, pitch: 0.035, light: 0.3 } as const;
+
+/** Journey time during which Skills rows follow their layers. */
+const ANCHORED = { from: 1.8, to: 3.3 } as const;
 
 function materialOf<T extends Material = MeshStandardMaterial>(
   scene: Object3D,
@@ -42,6 +46,8 @@ export function JourneyShot({
   motion: Motion;
   frame: RefObject<JourneyFrame>;
 }) {
+  const links = useMemo(findPageLinks, []);
+
   useFrame((state) => {
     const current = frame.current;
     const camera = state.camera as PerspectiveCamera;
@@ -131,6 +137,11 @@ export function JourneyShot({
         edge.material.opacity = glow;
       }
     }
+
+    if (current.time > ANCHORED.from && current.time < ANCHORED.to) {
+      anchorRows(links, scene, camera, width, height, current.skillRows);
+    }
+    markLit(links, motion.lit, litJob(current, links.jobs.length));
   });
 
   return null;

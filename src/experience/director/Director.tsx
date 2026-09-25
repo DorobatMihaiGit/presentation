@@ -4,6 +4,7 @@ import type { Capture } from "../capture-mode";
 import { startLoop, trackJourney } from "../scroll/loop";
 import { createFrameMonitor } from "./frame-monitor";
 import { orientationOf } from "./framing";
+import { wireInputs } from "./inputs";
 import { JourneyShot } from "./JourneyShot";
 import { type JourneyFrame, journeyFrame, stopTime } from "./journey";
 import { createMotion, stepGlow, stepMotion } from "./motion";
@@ -18,8 +19,8 @@ type DirectorProps = {
 };
 
 /**
- * Owns the frame loop: turns the store (the scroll position) into springs
- * and a journey frame, renders (R3F `advance`) only while something
+ * Owns the frame loop: turns the store (scroll, pointer, footer, LED) into
+ * springs and a journey frame, renders (R3F `advance`) only while something
  * changed or is still settling, never while the tab is hidden, and reports
  * sustained slow frames through `onDecline`.
  */
@@ -82,6 +83,11 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
           // Journey time on the layer (tests, debugging); not styled.
           layer.current.dataset.journey = label;
         }
+        const pulsing = motion.led > 0;
+        if (layer.current?.hasAttribute("data-led") !== pulsing) {
+          // Likewise while the LED pulses after a sent message.
+          layer.current?.toggleAttribute("data-led", pulsing);
+        }
         if (layer.current && opacity !== shown) {
           shown = opacity;
           layer.current.style.opacity = String(opacity);
@@ -107,8 +113,10 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
       { smooth: !capture },
     );
     const stopJourney = capture ? null : trackJourney(store);
+    const stopInputs = capture ? null : wireInputs(store);
 
     return () => {
+      stopInputs?.();
       stopJourney?.();
       stopLoop();
     };

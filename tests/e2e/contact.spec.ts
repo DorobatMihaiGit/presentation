@@ -148,6 +148,33 @@ test.describe("the rate limit", () => {
   });
 });
 
+test.describe("a message sent with the live stage up", () => {
+  postFrom("192.0.2.14");
+
+  test("pulses the LED on the base plate", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto("/en?tier=1");
+    await expect(page.locator("html")).toHaveAttribute("data-canvas", "live", {
+      timeout: 60_000,
+    });
+    const form = await fillContactForm(page, {
+      name: "Radu",
+      email: uniqueVisitor("radu"),
+      message: "Hello from the stage.",
+    });
+    await page.waitForTimeout(3_100);
+
+    await form.getByRole("button", { name: "Send message" }).click();
+
+    const layer = page.locator(".stage-layer");
+    await expect(layer).toHaveAttribute("data-led", "", { timeout: 30_000 });
+    // Three beats in 2.4 s, then dark again.
+    await expect(layer).not.toHaveAttribute("data-led", "", {
+      timeout: 30_000,
+    });
+  });
+});
+
 test("the honeypot field is hidden from people and assistive technology", async ({
   page,
 }) => {

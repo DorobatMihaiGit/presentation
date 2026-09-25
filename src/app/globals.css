@@ -37,6 +37,10 @@
   --text-heading--line-height: 1.2;
   --text-heading--letter-spacing: -0.015em;
   --text-heading--font-weight: 600;
+  --text-statement: clamp(1.375rem, 1.1rem + 1vw, 2rem);
+  --text-statement--line-height: 1.35;
+  --text-statement--letter-spacing: -0.015em;
+  --text-statement--font-weight: 450;
   --text-lead: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
   --text-lead--line-height: 1.5;
   --text-lead--letter-spacing: -0.01em;
@@ -241,4 +245,111 @@ html[data-capture] .stage-layer {
 body > footer {
   position: relative;
   z-index: 1;
+}
+
+/*
+ * M6 scenes. Skills rows and jobs the stage lights up (data-lit, set by
+ * src/experience/director/page-links.ts).
+ */
+:is(#skills, #experience) li[data-lit] {
+  outline: 1px solid var(--color-signal);
+  outline-offset: -1px;
+}
+
+/*
+ * Wide landscape screens with the live stage: Skills pins for 200lvh while
+ * the exploded stack turns, and each row sits next to its layer (--ax/--ay,
+ * the layer's left edge on screen), no wider than the room between the
+ * title column (18rem) and the layer. Everywhere else the rows stay a list.
+ */
+@media (orientation: landscape) and (min-width: 80rem) {
+  html:is([data-canvas="loading"], [data-canvas="live"]) #skills {
+    height: 300lvh;
+    padding-block: 0;
+  }
+
+  /* One object, less text: the "Layer n · material" line stays for screen readers only. */
+  html[data-canvas="live"] .skills-layers > li > div > p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  html[data-canvas="live"] #skills > .section-body {
+    position: sticky;
+    top: 0;
+    height: 100lvh;
+    max-width: none;
+    padding-top: 7rem;
+    padding-inline: max(
+      var(--spacing-gutter),
+      calc((100% - var(--container-content)) / 2 + var(--spacing-gutter))
+    );
+  }
+
+  html[data-canvas="live"] #skills > .section-body > :is(h2, p) {
+    max-width: 18rem;
+  }
+
+  html[data-canvas="live"] .skills-layers {
+    /* Where the rows may begin: the section's left padding, 18rem, a gap. */
+    --rows-start: calc(
+      max(
+        var(--spacing-gutter),
+        calc((100vw - var(--container-content)) / 2 + var(--spacing-gutter))
+      ) +
+      20rem
+    );
+    position: absolute;
+    inset: 0;
+    width: auto;
+  }
+
+  html[data-canvas="live"] .skills-layers > li {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: min(30rem, calc(var(--ax, 0px) - var(--rows-start)));
+    padding: 0.625rem 1rem;
+    opacity: var(--rows, 0);
+    transform: translate3d(
+      calc(var(--ax, -200vw) - 100%),
+      calc(var(--ay, 0px) - 50%),
+      0
+    );
+  }
+
+  html[data-canvas="live"] .skills-layers > li > div + ul {
+    margin-top: 0.5rem;
+  }
+
+  html[data-canvas="live"] .skills-layers h3 {
+    margin-top: 0;
+    font-size: 1.125rem;
+  }
+
+  html[data-canvas="live"] .skills-layers li li {
+    padding: 0.1875rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Short wide screens (720-768px tall): tighter rows, so neighbours never overlap. */
+@media (orientation: landscape) and (min-width: 80rem) and (max-height: 48rem) {
+  html[data-canvas="live"] .skills-layers > li {
+    padding-block: 0.375rem;
+  }
+
+  html[data-canvas="live"] .skills-layers > li > div + ul {
+    margin-top: 0.25rem;
+  }
+
+  html[data-canvas="live"] .skills-layers li li {
+    padding-block: 0.0625rem;
+    font-size: 0.75rem;
+  }
 }

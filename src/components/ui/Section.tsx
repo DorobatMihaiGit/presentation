@@ -21,12 +21,14 @@ export function Section({ id, title, intro, scene, children }: SectionProps) {
       data-scene={scene}
       className="py-section"
     >
-      <div className="mx-auto w-full max-w-content px-gutter">
+      <div className="section-body mx-auto w-full max-w-content px-gutter">
         <h2 id={titleId} className="text-title text-ink">
           {title}
         </h2>
         {intro ? (
-          <p className="mt-5 max-w-[60ch] text-lead text-ink-muted">{intro}</p>
+          <p className="mt-5 max-w-[60ch] text-lead text-ink-muted lg:w-7/12">
+            {intro}
+          </p>
         ) : null}
         <div className="mt-12 md:mt-16">{children}</div>
       </div>

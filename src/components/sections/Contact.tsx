@@ -35,8 +35,8 @@ export function Contact({ cv }: { cv: Cv }) {
 
   return (
     <Section id="contact" title={t("title")} intro={t("intro")} scene="contact">
-      <div className="grid gap-12 md:grid-cols-12">
-        <div className="flex flex-col gap-8 md:col-span-5">
+      <div className="flex flex-col gap-12 lg:w-7/12">
+        <div className="grid gap-8 sm:grid-cols-2">
           <div>
             <h3 className="font-mono text-label uppercase text-ink-subtle">
               {t("email")}

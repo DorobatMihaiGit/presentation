@@ -8,7 +8,7 @@ export function Skills({ cv }: { cv: Cv }) {
 
   return (
     <Section id="skills" title={t("title")} intro={t("intro")} scene="skills">
-      <ol className="flex flex-col gap-3">
+      <ol className="skills-layers flex flex-col gap-3 lg:w-7/12">
         {cv.stack.map((entry, index) => (
           <li
             key={entry.layer}

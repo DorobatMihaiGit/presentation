@@ -19,14 +19,14 @@ export function About({ cv }: { cv: Cv }) {
 
   return (
     <Section id="about" title={t("title")} scene="about">
-      <div className="grid gap-12 md:grid-cols-12">
+      <div className="flex flex-col gap-12 lg:w-7/12">
         <p
           lang={fallbackLang(profile.summary, locale)}
-          className="max-w-[60ch] text-lead text-ink md:col-span-7"
+          className="text-statement text-ink"
         >
           {profile.summary.value}
         </p>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-8 md:col-span-4 md:col-start-9">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
           {facts.map((fact) => (
             <div key={fact.term}>
               <dt className="font-mono text-label uppercase text-ink-subtle">
