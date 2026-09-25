@@ -18,7 +18,7 @@ export function SiteHeader({ cv }: { cv: Cv }) {
   return (
     <header
       id="top"
-      className="mx-auto flex w-full max-w-content flex-wrap items-center justify-between gap-3 px-gutter pt-6"
+      className="absolute inset-x-0 top-0 z-10 mx-auto flex w-full max-w-content flex-wrap items-center justify-between gap-3 px-gutter pt-6"
     >
       <a
         href="#top"

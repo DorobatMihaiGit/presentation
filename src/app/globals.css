@@ -126,11 +126,10 @@
     --layer-tint: var(--color-base);
   }
 
-  /* Reserved box for a future 3D scene or frame sequence (M5); a CSS studio plate until then. */
+  /* Studio plate behind a scene poster; also what shows while a poster loads. */
   .stage {
     position: relative;
     overflow: hidden;
-    border-radius: var(--radius-panel);
     background:
       radial-gradient(
         70% 55% at 60% 30%,
@@ -139,22 +138,6 @@
       ),
       radial-gradient(90% 60% at 50% 115%, var(--color-raised), transparent 70%),
       var(--color-surface);
-    box-shadow: inset 0 0 0 1px var(--color-line);
-  }
-
-  .slab {
-    height: 12%;
-    border-radius: var(--radius-control);
-    background:
-      linear-gradient(
-        180deg,
-        color-mix(in oklab, var(--layer-tint) 28%, transparent),
-        transparent 65%
-      ),
-      var(--color-raised);
-    box-shadow:
-      inset 0 1px 0 color-mix(in oklab, var(--layer-tint) 45%, transparent),
-      0 24px 40px -28px var(--color-canvas);
   }
 
   /* One softbox sweep across the plate on load, like the S1 light pass. */
@@ -182,4 +165,63 @@
   to {
     transform: translateX(420%) skewX(-12deg);
   }
+}
+
+/*
+ * Motion core (M5). The live stage is a fixed canvas under the page; every
+ * other child of <main> sits above it. html[data-canvas] is set by StageLoader:
+ * "loading" and "live" pin the hero, "live" fades its poster out.
+ */
+.stage-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+main > :not(.stage-layer) {
+  position: relative;
+  z-index: 1;
+}
+
+html:is([data-canvas="loading"], [data-canvas="live"]) .hero {
+  height: 300lvh;
+}
+
+.hero-poster {
+  transition: opacity 600ms var(--ease-out-quint);
+}
+
+html[data-canvas="live"] .hero-poster {
+  opacity: 0;
+}
+
+/* Keeps the copy readable over any frame: from the left in landscape, from the top in portrait. */
+.hero-scrim {
+  background: linear-gradient(
+    90deg,
+    var(--color-canvas) 30%,
+    color-mix(in oklab, var(--color-canvas) 55%, transparent) 45%,
+    transparent 68%
+  );
+}
+
+@media (orientation: portrait) {
+  .hero-scrim {
+    background: linear-gradient(
+      180deg,
+      var(--color-canvas) 22%,
+      color-mix(in oklab, var(--color-canvas) 60%, transparent) 40%,
+      transparent 65%
+    );
+  }
+}
+
+/* Poster capture (scripts/posters.ts): only the canvas is visible. */
+html[data-capture] body {
+  visibility: hidden;
+}
+
+html[data-capture] .stage-layer {
+  visibility: visible;
 }

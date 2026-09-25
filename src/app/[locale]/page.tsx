@@ -7,6 +7,7 @@ import { Hero } from "@/components/sections/Hero";
 import { Projects } from "@/components/sections/Projects";
 import { Skills } from "@/components/sections/Skills";
 import { getCv } from "@/content/get-cv";
+import { StageLoader } from "@/experience/StageLoader";
 import {
   languageAlternates,
   localeUrl,
@@ -45,6 +46,7 @@ export default async function HomePage() {
           __html: serializeJsonLd(personJsonLd(cv, siteUrl)),
         }}
       />
+      <StageLoader />
       <Hero cv={cv} />
       <About cv={cv} />
       <Skills cv={cv} />
