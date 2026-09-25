@@ -1,7 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
-// `pnpm perf:local`: long tasks, frame times and memory while scrolling the
-// live hero, on this machine's real GPU (spec §9). Needs `pnpm build` first.
+// `pnpm perf:local`: long tasks, frame rate per section and memory while
+// scrolling the whole page on the live stage, on this machine's real GPU
+// (spec §9). Needs `pnpm build` first.
 // Not part of CI: GitHub runners have no GPU, and SwiftShader numbers would
 // say nothing about Intel Iris Xe.
 const PORT = 3300;

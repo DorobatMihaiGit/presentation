@@ -1,17 +1,29 @@
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
-// Spec §7 M5 acceptance on the reference machine: no long task > 50 ms while
-// scrolling the hero, tab memory < 400 MB.
+// M6 acceptance on the reference machine (Intel Iris Xe): scrolling the WHOLE
+// page (every scene of the journey) holds >= 55 fps with no long task over
+// 50 ms, and the tab stays under 400 MB. Mount-time long tasks (the stage
+// starting after the load event, before any scrolling) are reported.
 const LONG_TASK_BUDGET_MS = 50;
 const MEMORY_BUDGET_MB = 400;
+const MIN_FPS = 55;
+const STOPS = [
+  "hero",
+  "about",
+  "skills",
+  "experience",
+  "projects",
+  "contact",
+] as const;
 
 type Sample = { start: number; duration: number };
 
 declare global {
   interface Window {
     __longTasks: Sample[];
-    __frames: number[];
+    /** [rAF timestamp, journey time shown by the stage] */
+    __frames: [number, number][];
   }
 }
 
@@ -23,15 +35,13 @@ function privateMb(pid: number): number {
   return (kb("Private_Clean") + kb("Private_Dirty") + kb("SwapPss")) / 1024;
 }
 
-async function scrollHero(page: Page) {
-  const length = await page.evaluate(() => {
-    const hero = document.querySelector(".hero");
-    return (hero?.getBoundingClientRect().height ?? 0) - window.innerHeight;
-  });
+async function scrollPage(page: Page) {
+  const length = await page.evaluate(
+    () => document.documentElement.scrollHeight - window.innerHeight,
+  );
   await page.mouse.move(720, 450);
-  // Wheel notches like a mouse (Lenis smooths them), through the whole pin
-  // and a screen past it, so the stage fade-out is measured too.
-  const steps = Math.ceil((length + 900) / 100);
+  // Wheel notches like a mouse (Lenis smooths them), top to bottom.
+  const steps = Math.ceil(length / 100) + 10;
   for (let step = 0; step < steps; step += 1) {
     await page.mouse.wheel(0, 100);
     await page.waitForTimeout(40);
@@ -39,8 +49,18 @@ async function scrollHero(page: Page) {
   await page.waitForTimeout(1500);
 }
 
-for (const tier of ["auto", "1"] as const) {
-  test(`scrolling the hero (tier ${tier}) stays smooth and lean`, async ({
+function stats(intervals: number[]) {
+  const sorted = [...intervals].sort((a, b) => a - b);
+  const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+  return {
+    frames: intervals.length,
+    fps: Number((1000 / mean).toFixed(1)),
+    p95: Number((sorted[Math.floor(sorted.length * 0.95)] ?? 0).toFixed(1)),
+  };
+}
+
+for (const tier of ["auto", "1", "3"] as const) {
+  test(`scrolling the whole journey (tier ${tier}) stays smooth and lean`, async ({
     page,
     browser,
   }, testInfo) => {
@@ -56,7 +76,8 @@ for (const tier of ["auto", "1"] as const) {
         }
       }).observe({ type: "longtask", buffered: true });
       const frame = (now: number) => {
-        window.__frames.push(now);
+        const layer = document.querySelector<HTMLElement>(".stage-layer");
+        window.__frames.push([now, Number(layer?.dataset.journey ?? 0)]);
         requestAnimationFrame(frame);
       };
       requestAnimationFrame(frame);
@@ -71,18 +92,21 @@ for (const tier of ["auto", "1"] as const) {
       "No hardware WebGL here: the classifier chose posters.",
     );
     await expect(html).toHaveAttribute("data-canvas", "live");
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     const scrollStart = await page.evaluate(() => performance.now());
-    await scrollHero(page);
-    const { longTasks, frames, scrolled } = await page.evaluate((start) => {
-      const frames = window.__frames.filter((time) => time >= start);
-      return {
+    await scrollPage(page);
+    const { longTasks, frames, scrolled, end } = await page.evaluate(
+      (start) => ({
         longTasks: window.__longTasks,
-        frames: frames.slice(1).map((time, i) => time - frames[i]),
+        frames: window.__frames.filter(([time]) => time >= start),
         scrolled: window.scrollY,
-      };
-    }, scrollStart);
+        end: Number(
+          document.querySelector<HTMLElement>(".stage-layer")?.dataset.journey,
+        ),
+      }),
+      scrollStart,
+    );
 
     const cdp = await page.context().newCDPSession(page);
     await cdp.send("Performance.enable");
@@ -101,18 +125,25 @@ for (const tier of ["auto", "1"] as const) {
     const rendererMb = privateMb(renderer.id);
     const gpuMb = gpu ? privateMb(gpu.id) : 0;
 
-    const sorted = [...frames].sort((a, b) => a - b);
-    const p95 = sorted[Math.floor(sorted.length * 0.95)] ?? 0;
+    // Frame intervals grouped by the journey stop on screen.
+    const byStop = STOPS.map(() => [] as number[]);
+    for (let i = 1; i < frames.length; i += 1) {
+      const stop = Math.min(STOPS.length - 1, Math.floor(frames[i][1]));
+      byStop[stop].push(frames[i][0] - frames[i - 1][0]);
+    }
+    const perStop = Object.fromEntries(
+      STOPS.map((stop, index) => [stop, stats(byStop[index])]),
+    );
+    const all = stats(byStop.flat());
     const during = longTasks.filter((task) => task.start >= scrollStart);
     const before = longTasks.filter((task) => task.start < scrollStart);
     const report = {
       tier: await html.getAttribute("data-tier"),
       scrolledPx: scrolled,
-      frames: frames.length,
-      frameP95Ms: Number(p95.toFixed(1)),
-      fps: Number(
-        (1000 / (frames.reduce((a, b) => a + b, 0) / frames.length)).toFixed(1),
-      ),
+      journeyEnd: end,
+      fps: all.fps,
+      frameP95Ms: all.p95,
+      perStop,
       longTasksWhileScrolling: during.map((task) => Math.round(task.duration)),
       longTasksBeforeScrolling: before.map((task) => Math.round(task.duration)),
       jsHeapMb: Number(heapMb.toFixed(1)),
@@ -126,10 +157,17 @@ for (const tier of ["auto", "1"] as const) {
       contentType: "application/json",
     });
 
-    expect(scrolled).toBeGreaterThan(900);
+    // The whole page was scrolled and the journey reached its end.
+    expect(end).toBeGreaterThan(5.9);
     expect(
       Math.max(0, ...during.map((task) => task.duration)),
     ).toBeLessThanOrEqual(LONG_TASK_BUDGET_MS);
     expect(report.tabMb).toBeLessThan(MEMORY_BUDGET_MB);
+    // Tier 3 is meant for discrete GPUs; on this iGPU it is only reported.
+    if (tier !== "3") {
+      for (const stop of STOPS) {
+        expect(perStop[stop].fps, stop).toBeGreaterThanOrEqual(MIN_FPS);
+      }
+    }
   });
 }
