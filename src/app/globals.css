@@ -188,7 +188,14 @@ html:is([data-canvas="loading"], [data-canvas="live"]) .hero {
   height: 300lvh;
 }
 
+/*
+ * The poster shows only where the scrim below is not solid. Besides keeping
+ * the copy on a flat background, this matters for LCP: Chrome skips images
+ * whose visible rect covers the whole viewport (it treats them as
+ * backgrounds), and the poster must be the LCP element.
+ */
 .hero-poster {
+  clip-path: inset(0 0 0 30%);
   transition: opacity 600ms var(--ease-out-quint);
 }
 
@@ -207,6 +214,10 @@ html[data-canvas="live"] .hero-poster {
 }
 
 @media (orientation: portrait) {
+  .hero-poster {
+    clip-path: inset(22% 0 0 0);
+  }
+
   .hero-scrim {
     background: linear-gradient(
       180deg,

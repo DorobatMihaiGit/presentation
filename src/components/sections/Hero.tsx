@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { fallbackLang } from "@/content/localize";
 import type { Cv } from "@/content/types";
+import { HeroPoster } from "./HeroPoster";
 
 /**
  * Shot S1. The copy is SSR text over a full-bleed poster; once the live stage
@@ -16,11 +17,7 @@ export function Hero({ cv }: { cv: Cv }) {
   return (
     <section aria-labelledby="hero-title" data-scene="hero" className="hero">
       <div className="sticky top-0 flex min-h-lvh items-center overflow-hidden">
-        <div
-          aria-hidden="true"
-          data-stage="hero"
-          className="stage hero-poster absolute inset-0"
-        />
+        <HeroPoster />
         <div aria-hidden="true" className="hero-scrim absolute inset-0" />
         <div className="relative mx-auto w-full max-w-content px-gutter pt-28 pb-16">
           <div className="md:w-7/12">
