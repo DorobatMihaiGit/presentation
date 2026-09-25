@@ -1,5 +1,6 @@
 import { useTranslations } from "next-intl";
 import type { Cv } from "@/content/types";
+import { MotionToggle } from "@/experience/MotionToggle";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
 const SECTIONS = [
@@ -12,11 +13,12 @@ const SECTIONS = [
 
 export function SiteHeader({ cv }: { cv: Cv }) {
   const t = useTranslations("Nav");
+  const motion = useTranslations("Motion");
 
   return (
     <header
       id="top"
-      className="mx-auto flex w-full max-w-content items-center justify-between gap-6 px-gutter pt-6"
+      className="mx-auto flex w-full max-w-content flex-wrap items-center justify-between gap-3 px-gutter pt-6"
     >
       <a
         href="#top"
@@ -38,7 +40,16 @@ export function SiteHeader({ cv }: { cv: Cv }) {
           ))}
         </ul>
       </nav>
-      <LocaleSwitcher locale={cv.locale} />
+      <div className="flex items-center gap-2">
+        <MotionToggle
+          labels={{
+            label: motion("label"),
+            on: motion("on"),
+            off: motion("off"),
+          }}
+        />
+        <LocaleSwitcher locale={cv.locale} />
+      </div>
     </header>
   );
 }

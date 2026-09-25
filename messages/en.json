@@ -16,6 +16,11 @@
     "en": "English",
     "ro": "Română"
   },
+  "Motion": {
+    "label": "Motion",
+    "on": "On",
+    "off": "Off"
+  },
   "Availability": {
     "open": "Open to new projects",
     "closed": "Not taking new projects"

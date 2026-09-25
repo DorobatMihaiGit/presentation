@@ -16,6 +16,11 @@
     "en": "English",
     "ro": "Română"
   },
+  "Motion": {
+    "label": "Animație",
+    "on": "Pornită",
+    "off": "Oprită"
+  },
   "Availability": {
     "open": "Disponibil pentru proiecte noi",
     "closed": "Nu preiau proiecte noi"
