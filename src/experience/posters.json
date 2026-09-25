@@ -1,5 +1,5 @@
 {
-  "sourceHash": "95a8f57e219a3c6e",
+  "sourceHash": "1bfb24b2432cb0ee",
   "shots": {
     "hero-start": {
       "landscape": {
@@ -90,13 +90,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.dcd78333.avif"
+            "src": "/posters/hero-end-portrait-828.d278771c.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.566fc1ec.webp"
+            "src": "/posters/hero-end-portrait-828.21b67519.webp"
           }
         ]
       }

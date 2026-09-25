@@ -3,11 +3,8 @@ import { useRef } from "react";
 import type { Mesh, MeshStandardMaterial, PerspectiveCamera } from "three";
 import { STACK_OBJECTS } from "../scenes/stack-layout";
 import { coverViewOffset, orientationOf, REFERENCE_SIZE } from "./framing";
-import { heroFrame } from "./shots";
+import { heroFrame, SHOT_FOV } from "./shots";
 import type { StageStore } from "./store";
-
-/** Vertical field of view per reference frame (a long product lens). */
-const FOV = { landscape: 30, portrait: 42 } as const;
 
 /** Shot S1: applies `heroFrame(progress)` to the camera, environment and etching. */
 export function HeroShot({ store }: { store: StageStore }) {
@@ -25,7 +22,7 @@ export function HeroShot({ store }: { store: StageStore }) {
       height,
       reference.width / reference.height,
     );
-    camera.fov = FOV[orientation];
+    camera.fov = SHOT_FOV[orientation];
     camera.aspect = reference.width / reference.height;
     camera.setViewOffset(
       view.fullWidth,

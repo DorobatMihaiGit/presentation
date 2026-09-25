@@ -9,6 +9,12 @@ export type CameraKey = {
   target: Vec3;
 };
 
+/** Vertical field of view per reference frame (a long product lens). */
+export const SHOT_FOV: Record<Orientation, number> = {
+  landscape: 30,
+  portrait: 42,
+};
+
 export const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 /** 0 below `from`, 1 above `to`, smooth in between. */
@@ -48,7 +54,7 @@ export function sampleCameraKeys(
   keys: readonly CameraKey[],
   progress: number,
 ): { position: Vec3; target: Vec3 } {
-  const p = clamp01(progress);
+  const p = Math.min(keys[keys.length - 1].at, Math.max(keys[0].at, progress));
   let index = 0;
   while (index < keys.length - 2 && p > keys[index + 1].at) {
     index += 1;
@@ -89,7 +95,7 @@ export const HERO_KEYS: Record<Orientation, readonly CameraKey[]> = {
     { at: 0, position: [0.3, 0.035, 0.42], target: [0.04, 0.03, 0.19] },
     { at: 0.28, position: [0.02, 0.13, 0.52], target: [0, 0.12, 0.19] },
     { at: 0.55, position: [0, 0.62, 0.36], target: [0, 0.25, 0.04] },
-    { at: 1, position: [0.7, 0.85, 1.6], target: [0.1, 0.3, 0] },
+    { at: 1, position: [0.72, 0.78, 1.72], target: [0, 0.2, 0] },
   ],
 };
 

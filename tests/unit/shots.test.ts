@@ -1,10 +1,17 @@
+import { PerspectiveCamera, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
+import { REFERENCE_SIZE } from "@/experience/director/framing";
 import {
   HERO_KEYS,
   heroFrame,
+  SHOT_FOV,
   sampleCameraKeys,
   smoothstep,
 } from "@/experience/director/shots";
+import {
+  STACK_FOOTPRINT,
+  STACK_HEIGHT,
+} from "@/experience/scenes/stack-layout";
 
 const distance = (a: readonly number[], b: readonly number[]) =>
   Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
@@ -24,6 +31,17 @@ describe("sampleCameraKeys", () => {
     it(`clamps ${orientation} progress outside 0..1`, () => {
       expect(sampleCameraKeys(keys, -1)).toEqual(sampleCameraKeys(keys, 0));
       expect(sampleCameraKeys(keys, 2)).toEqual(sampleCameraKeys(keys, 1));
+    });
+
+    it(`clamps to the first and last of any ${orientation} keys`, () => {
+      // The journey (M6) keys run past 1: T 0..6 over the whole page.
+      const later = keys.map((key) => ({ ...key, at: key.at * 5 + 1 }));
+      expect(sampleCameraKeys(later, 0)).toEqual(sampleCameraKeys(later, 1));
+      expect(sampleCameraKeys(later, 9)).toEqual(sampleCameraKeys(later, 6));
+      const last = keys[keys.length - 1].position;
+      expect(distance(sampleCameraKeys(later, 6).position, last)).toBeLessThan(
+        1e-9,
+      );
     });
 
     it(`moves the ${orientation} camera without jumps`, () => {
@@ -68,6 +86,34 @@ describe("heroFrame", () => {
       );
     }
   });
+});
+
+describe("the hero's end frame", () => {
+  for (const orientation of ["landscape", "portrait"] as const) {
+    it(`shows the whole monolith (${orientation})`, () => {
+      const { width, height } = REFERENCE_SIZE[orientation];
+      const camera = new PerspectiveCamera(
+        SHOT_FOV[orientation],
+        width / height,
+        0.01,
+        30,
+      );
+      const end = heroFrame(1, orientation);
+      camera.position.set(...end.position);
+      camera.lookAt(...end.target);
+      camera.updateMatrixWorld();
+      const half = STACK_FOOTPRINT / 2;
+      for (const x of [-half, half]) {
+        for (const y of [0, STACK_HEIGHT]) {
+          for (const z of [-half, half]) {
+            const corner = new Vector3(x, y, z).project(camera);
+            expect(Math.abs(corner.x), `x of ${x},${y},${z}`).toBeLessThan(0.9);
+            expect(Math.abs(corner.y), `y of ${x},${y},${z}`).toBeLessThan(0.9);
+          }
+        }
+      }
+    });
+  }
 });
 
 describe("smoothstep", () => {
