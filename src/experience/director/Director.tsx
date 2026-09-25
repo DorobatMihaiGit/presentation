@@ -1,5 +1,6 @@
 import { advance, useThree } from "@react-three/fiber";
 import { type RefObject, useEffect, useRef } from "react";
+import type { Vector3 } from "three";
 import type { Capture } from "../capture-mode";
 import { startLoop, trackJourney } from "../scroll/loop";
 import { createFrameMonitor } from "./frame-monitor";
@@ -16,6 +17,8 @@ type DirectorProps = {
   layer: RefObject<HTMLDivElement | null>;
   capture: Capture | null;
   onDecline: () => void;
+  /** Kept on the journey's focus point (tier 3 depth of field). */
+  focus: Vector3;
 };
 
 /**
@@ -24,7 +27,13 @@ type DirectorProps = {
  * changed or is still settling, never while the tab is hidden, and reports
  * sustained slow frames through `onDecline`.
  */
-export function Director({ store, layer, capture, onDecline }: DirectorProps) {
+export function Director({
+  store,
+  layer,
+  capture,
+  onDecline,
+  focus,
+}: DirectorProps) {
   const three = useThree((state) => state.get);
   const motion = useRef(createMotion()).current;
   const frame = useRef<JourneyFrame>(journeyFrame(0, "landscape"));
@@ -77,6 +86,7 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
         if (moving) {
           state.invalidate();
         }
+        focus.set(...frame.current.focus);
         const { opacity, time } = frame.current;
         const label = time.toFixed(2);
         if (layer.current && layer.current.dataset.journey !== label) {
@@ -120,7 +130,7 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
       stopJourney?.();
       stopLoop();
     };
-  }, [store, layer, capture, three, motion]);
+  }, [store, layer, capture, three, motion, focus]);
 
   return <JourneyShot motion={motion} frame={frame} />;
 }

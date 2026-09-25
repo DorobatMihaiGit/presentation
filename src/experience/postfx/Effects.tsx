@@ -9,17 +9,30 @@ import {
   ToneMappingMode,
 } from "postprocessing";
 import { useEffect, useMemo } from "react";
-import { HalfFloatType } from "three";
+import { HalfFloatType, type Vector3 } from "three";
+
+/** The tier 3 module (its own chunk): ambient occlusion and depth of field. */
+export type Tier3Module = typeof import("./tier3");
 
 /**
  * Tier 2+ post chain, built on `postprocessing` directly (the
- * @react-three/postprocessing bundle also ships N8AO and every other effect).
- * The composer renders into a float buffer, where the renderer's tone mapping
- * does not apply, so AgX runs as an effect, before anti-aliasing. FXAA, not
- * SMAA: SMAA embeds its lookup textures (+54 KB gz in the lazy chunk).
- * Tier 3 extras (bokeh DOF, N8AO, chromatic aberration) arrive in M6.
+ * @react-three/postprocessing bundle also ships every effect). The composer
+ * renders into a float buffer, where the renderer's tone mapping does not
+ * apply, so AgX runs as an effect, before anti-aliasing. FXAA, not SMAA:
+ * SMAA embeds its lookup textures (+54 KB gz in the lazy chunk). Tier 3 adds
+ * ambient occlusion (N8AO) and bokeh depth of field (`extras`).
  */
-export function Effects() {
+export function Effects({
+  extras,
+  focus,
+  onChange,
+}: {
+  extras: Tier3Module | null;
+  /** World point the depth of field keeps sharp (tier 3). */
+  focus: Vector3;
+  /** Called when the chain changed and a new frame is due. */
+  onChange: () => void;
+}) {
   const gl = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
   const camera = useThree((state) => state.camera);
@@ -32,9 +45,14 @@ export function Effects() {
       multisampling: 0,
     });
     composer.addPass(new RenderPass(scene, camera));
+    const t3 = extras?.tier3Effects(scene, camera, focus, 1, 1);
+    if (t3) {
+      composer.addPass(t3.ao);
+    }
     composer.addPass(
       new EffectPass(
         camera,
+        ...(t3 ? [t3.depthOfField] : []),
         new BloomEffect({
           mipmapBlur: true,
           luminanceThreshold: 0.9,
@@ -45,12 +63,13 @@ export function Effects() {
     );
     composer.addPass(new EffectPass(camera, new FXAAEffect()));
     return composer;
-  }, [gl, scene, camera]);
+  }, [gl, scene, camera, extras, focus]);
 
   // setSize reads the renderer's pixel ratio, so a DPR change resizes too.
   useEffect(() => {
     if (dpr > 0) composer.setSize(size.width, size.height);
-  }, [composer, size, dpr]);
+    onChange();
+  }, [composer, size, dpr, onChange]);
 
   useEffect(() => () => composer.dispose(), [composer]);
 
