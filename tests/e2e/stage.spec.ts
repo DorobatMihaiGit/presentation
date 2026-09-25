@@ -80,6 +80,37 @@ test("a lost WebGL context falls back to the poster", async ({ page }) => {
   await expect(page.locator('[data-stage="hero"]')).toHaveCSS("opacity", "1");
 });
 
+test("a context lost by an old canvas leaves the new stage alone", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/en?tier=1");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-canvas", "live", {
+    timeout: 60_000,
+  });
+  const old = await page.locator(".stage-layer canvas").elementHandle();
+  const motion = page
+    .getByRole("banner")
+    .getByRole("button", { name: "Motion" });
+
+  await motion.click();
+  await expect(html).toHaveAttribute("data-canvas", "poster");
+  await motion.click();
+  await expect(html).toHaveAttribute("data-canvas", "live", {
+    timeout: 60_000,
+  });
+  // R3F forces a context loss on an unmounted canvas a little later; if the
+  // new stage is up by then, it must not go back to the posters.
+  await old?.evaluate((canvas) =>
+    canvas.dispatchEvent(new Event("webglcontextlost", { cancelable: true })),
+  );
+
+  await page.waitForTimeout(500);
+  await expect(html).toHaveAttribute("data-canvas", "live");
+  await expect(page.locator(".stage-layer canvas")).toHaveCount(1);
+});
+
 test("a software renderer gets posters and never downloads the 3D chunk", async ({
   page,
 }) => {

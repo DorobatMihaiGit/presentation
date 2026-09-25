@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgXToneMapping } from "three";
 import type { Capture } from "./capture-mode";
+import { watchContextLoss } from "./context-loss";
 import { Director } from "./director/Director";
 import { createStageStore } from "./director/store";
 import { type LiveTier, lowerTier } from "./gpu-tier";
@@ -36,6 +37,7 @@ export default function Stage({
   const [tier, setTier] = useState<LiveTier>(initialTier);
   const store = useMemo(createStageStore, []);
   const layer = useRef<HTMLDivElement>(null);
+  const unwatch = useRef<(() => void) | null>(null);
 
   const decline = useCallback(() => {
     const next = lowerTier(tier);
@@ -51,6 +53,8 @@ export default function Stage({
     store.getState().invalidate();
   }, [tier, store]);
 
+  useEffect(() => () => unwatch.current?.(), []);
+
   return (
     <div ref={layer} className="stage-layer" aria-hidden="true">
       <Canvas
@@ -63,10 +67,8 @@ export default function Stage({
           toneMapping: AgXToneMapping,
         }}
         onCreated={({ gl }) => {
-          gl.domElement.addEventListener("webglcontextlost", (event) => {
-            event.preventDefault();
-            onFallback();
-          });
+          unwatch.current?.();
+          unwatch.current = watchContextLoss(gl.domElement, onFallback);
         }}
       >
         <Director
