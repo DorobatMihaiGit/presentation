@@ -42,10 +42,56 @@ gave `pnpm admin:create`).
 | `pnpm test` | Vitest unit tests (`tests/unit`) |
 | `pnpm test:e2e` | Playwright e2e (`tests/e2e`, incl. axe); builds and serves on port 3100 |
 | `pnpm lhci` | Lighthouse CI, desktop preset, on port 3200; asserts >= 0.95 in all 4 categories. Run `pnpm build` first |
+| `pnpm assets:posters` | Capture the hero posters from the 3D scene into `public/posters` + `src/experience/posters.json` (port 3400). Run `pnpm build` first |
+| `pnpm perf:local` | Long tasks, frame times and memory while scrolling the live hero, on this machine's GPU (port 3300). Run `pnpm build` first |
 | `pnpm db:generate --name <name>` | Drizzle Kit: write a SQL migration in `drizzle/` from schema changes (no database needed) |
 | `pnpm db:migrate` | Apply pending migrations to `DATABASE_URL` |
 | `pnpm db:seed` | Load the fixture CV into an empty database; `--reset` replaces all CV content |
 | `pnpm admin:create` | Create the owner account for `ADMIN_EMAIL` or reset its password; `--reset-2fa` also removes TOTP and passkeys |
+
+## Motion and 3D
+
+The hero is a real-time three.js scene (React Three Fiber): a procedural
+"stack" of five slabs, scrubbed by scroll. Everything 3D lives in
+`src/experience/` and loads as one lazy chunk after the page has loaded, so
+the first paint is the server-rendered text over a poster image.
+
+- **Tiers.** After the load event, `StageLoader` picks a tier from the WebGL
+  renderer string: 0 = posters only (no WebGL 2 or a software renderer),
+  1 = light scene (DPR 1, no glass transmission, no post-processing), 2 =
+  reference (Intel Iris Xe, DPR up to 1.5, bloom + FXAA), 3 = discrete GPUs
+  (DPR up to 2). If frames stay slower than 40 fps while scrolling, the stage
+  steps down a tier, and below tier 1 it gives up and shows the poster. A lost
+  WebGL context also falls back to the poster.
+- **Motion switch.** The **Motion** button in the header turns all of it off
+  (posters, native scrolling, no pinned hero) and remembers the choice.
+  `prefers-reduced-motion` and Save-Data start with motion off.
+- **Query flags** (any page): `?tier=0..3` forces a tier;
+  `?capture=hero&p=0..1` renders one frame of the hero shot for poster capture.
+- **Posters.** `public/posters` holds content-hashed AVIF/WebP captures of
+  the first and last hero frame, landscape and portrait. They are the LCP
+  image, the tier-0 hero, and what reduced motion shows (the last frame).
+  After changing anything in `src/experience/{Stage.tsx,director,postfx,scenes}`
+  regenerate and commit them, or `pnpm test` fails. The capture runs against
+  the production build; build again afterwards so the page uses the new
+  manifest:
+
+  ```bash
+  pnpm build
+  pnpm assets:posters
+  pnpm build
+  ```
+
+  `POSTERS_SOFTWARE=1 pnpm assets:posters` renders with SwiftShader where no
+  GPU is available (slower, slightly different pixels).
+- **Performance check.** `pnpm build && pnpm perf:local` scrolls the hero on
+  the real GPU and fails on a long task over 50 ms or more than 400 MB of tab
+  memory. The JS budgets (160 KB gz before 3D, 350 KB gz for the 3D chunk)
+  are e2e tests (`tests/e2e/budgets.spec.ts`), so CI enforces them.
+- **Swapping in a modelled stack.** Shots find objects by the asset-contract
+  names (`layer_interface` … `layer_craft`, `engrave_hero`,
+  `engrave_contact`, `led_status`, `pcb_traces`); a `stack.glb` with the same
+  names can replace `ProceduralStack` in `src/experience/scenes/StackModel.tsx`.
 
 ## Local database
 
