@@ -12,8 +12,6 @@ Design spec: [`docs/superpowers/specs/2026-09-23-cinematic-cv-design.md`](docs/s
   pinned in `package.json#packageManager` (pnpm 11.27.1). Run pnpm only inside
   this repo: `/home/mihai/package.json` pins yarn for everything else under `~`.
 - Docker with Compose v2 (local Postgres)
-- git-lfs (`sudo apt install git-lfs && git lfs install`) before committing
-  anything under `public/seq/`, `public/3d/` or any `*.blend` file
 
 ## Setup
 
