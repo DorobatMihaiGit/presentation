@@ -21,6 +21,34 @@ export const PCB_TRACE_PATH: readonly Point2[] = [
   [-0.15, 0.03],
 ];
 
+/** The point at fraction `u` (0..1) of the path's length. */
+export function pointOnPath(path: readonly Point2[], u: number): Point2 {
+  const lengths = [0];
+  for (let i = 1; i < path.length; i += 1) {
+    const [x0, z0] = path[i - 1];
+    const [x1, z1] = path[i];
+    lengths.push(lengths[i - 1] + Math.hypot(x1 - x0, z1 - z0));
+  }
+  const distance = Math.min(1, Math.max(0, u)) * lengths[lengths.length - 1];
+  let i = 1;
+  while (i < path.length - 1 && lengths[i] < distance) {
+    i += 1;
+  }
+  const span = lengths[i] - lengths[i - 1];
+  const t = span > 0 ? (distance - lengths[i - 1]) / span : 0;
+  const [x0, z0] = path[i - 1];
+  const [x1, z1] = path[i];
+  return [x0 + (x1 - x0) * t, z0 + (z1 - z0) * t];
+}
+
+/**
+ * Where the chip of job `index` (of `count`, in page order) sits along the
+ * trace: the middle of the stretch over which the pulse lights that job.
+ */
+export function jobChipU(index: number, count: number): number {
+  return (index + 0.5) / count;
+}
+
 export type Ribbon = {
   positions: Float32Array;
   uvs: Float32Array;

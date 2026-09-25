@@ -1,8 +1,17 @@
 import { Texture } from "three";
 import { describe, expect, it } from "vitest";
 import { STACK_LAYERS } from "@/content/types";
-import { createStackMaterials } from "@/experience/scenes/materials";
-import { PCB_TRACE_PATH, traceRibbon } from "@/experience/scenes/pcb-traces";
+import { edgeFrameGeometry, edgeObjectName } from "@/experience/scenes/edges";
+import {
+  createStackMaterials,
+  injectPulse,
+} from "@/experience/scenes/materials";
+import {
+  jobChipU,
+  PCB_TRACE_PATH,
+  pointOnPath,
+  traceRibbon,
+} from "@/experience/scenes/pcb-traces";
 import {
   LAYER_HEIGHT,
   STACK_GAP,
@@ -128,5 +137,67 @@ describe("createStackMaterials", () => {
     const materials = createStackMaterials(2, textures, maps);
     expect(materials.etchHero.opacity).toBe(0);
     expect(materials.etchContact.opacity).toBe(0);
+  });
+
+  it("wires the PCB pulse into the copper shader", () => {
+    const { copper, pulse } = createStackMaterials(2, textures, maps);
+    expect(copper.userData.pulse).toBe(pulse);
+    const shader = {
+      uniforms: {} as Record<string, { value: unknown }>,
+      vertexShader: "#include <common>\n#include <uv_vertex>",
+      fragmentShader: "#include <common>\n#include <emissivemap_fragment>",
+    };
+    injectPulse(shader, pulse);
+    expect(shader.uniforms.uPulse).toBe(pulse.uPulse);
+    expect(shader.vertexShader).toContain("vTraceU = uv.x;");
+    expect(shader.fragmentShader).toContain("uniform float uPulse;");
+    expect(shader.fragmentShader).toContain("totalEmissiveRadiance +=");
+  });
+});
+
+describe("pointOnPath", () => {
+  it("walks the trace by length, from its first to its last point", () => {
+    expect(pointOnPath(PCB_TRACE_PATH, 0)).toEqual(PCB_TRACE_PATH[0]);
+    expect(pointOnPath(PCB_TRACE_PATH, 1)).toEqual(PCB_TRACE_PATH.at(-1));
+    const [x, z] = pointOnPath(
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+      ],
+      0.75,
+    );
+    expect(x).toBeCloseTo(1);
+    expect(z).toBeCloseTo(0.5);
+  });
+});
+
+describe("jobChipU", () => {
+  it("spreads the job chips evenly along the trace, first job first", () => {
+    expect([0, 1, 2].map((index) => jobChipU(index, 3))).toEqual([
+      1 / 6,
+      0.5,
+      5 / 6,
+    ]);
+    expect(jobChipU(0, 1)).toBe(0.5);
+  });
+});
+
+describe("edgeFrameGeometry", () => {
+  it("is a flat ring around the slab's top edge", () => {
+    const geometry = edgeFrameGeometry(0.4, 0.005, 0.008);
+    geometry.computeBoundingBox();
+    const box = geometry.boundingBox;
+    expect(box?.max.x).toBeCloseTo(0.2);
+    expect(box?.min.z).toBeCloseTo(-0.2);
+    expect(box?.max.y).toBeCloseTo(0);
+    // Hollow: no vertex near the centre.
+    const positions = geometry.getAttribute("position");
+    for (let i = 0; i < positions.count; i += 1) {
+      expect(
+        Math.max(Math.abs(positions.getX(i)), Math.abs(positions.getZ(i))),
+      ).toBeGreaterThan(0.19);
+    }
+    expect(edgeObjectName("data")).toBe("edge_data");
   });
 });

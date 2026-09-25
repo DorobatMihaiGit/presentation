@@ -90,6 +90,9 @@ function studioScene(): Scene {
   return studio;
 }
 
+/** Name of the contact shadow; shots turn it with the stack. */
+export const STACK_SHADOW = "stack_shadow";
+
 /** Soft square falloff, baked once: the monolith's contact shadow. */
 function shadowTexture(): CanvasTexture {
   const size = 256;
@@ -138,7 +141,12 @@ export function StudioLights() {
   return (
     <>
       <color attach="background" args={["#0b0c0f"]} />
-      <mesh rotation-x={-Math.PI / 2} position-y={0.0002} renderOrder={-1}>
+      <mesh
+        name={STACK_SHADOW}
+        rotation-x={-Math.PI / 2}
+        position-y={0.0002}
+        renderOrder={-1}
+      >
         <planeGeometry args={[0.62, 0.62]} />
         <meshBasicMaterial
           color="#000000"

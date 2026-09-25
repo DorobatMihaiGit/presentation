@@ -1,16 +1,25 @@
 import { useEffect, useMemo } from "react";
 import {
+  BoxGeometry,
   BufferAttribute,
   BufferGeometry,
   CylinderGeometry,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
   PlaneGeometry,
 } from "three";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
-import type { StackLayer } from "@/content/types";
+import { STACK_LAYERS, type StackLayer } from "@/content/types";
 import type { Tier } from "../gpu-tier";
 import surfaceMapManifest from "../textures.json";
+import { edgeFrameGeometry, edgeObjectName } from "./edges";
 import { createStackMaterials, disposeMaterials } from "./materials";
-import { PCB_TRACE_PATH, traceRibbon } from "./pcb-traces";
+import {
+  jobChipU,
+  PCB_TRACE_PATH,
+  pointOnPath,
+  traceRibbon,
+} from "./pcb-traces";
 import {
   LAYER_HEIGHT,
   STACK_FOOTPRINT,
@@ -43,6 +52,8 @@ export type StackModelProps = {
   tier: Tier;
   /** The detail maps are in (or failed): time for a new frame. */
   onReady: () => void;
+  /** Jobs in the Experience section: one chip each along the PCB trace. */
+  jobs: number;
 };
 
 const ASSET_BASE = (process.env.NEXT_PUBLIC_ASSET_BASE ?? "").replace(
@@ -80,11 +91,36 @@ function createGeometries() {
     etchHero: new PlaneGeometry(0.34, 0.085).rotateX(-Math.PI / 2),
     etchContact: new PlaneGeometry(0.16, 0.04),
     led: new CylinderGeometry(0.0035, 0.0035, 0.002, 24).rotateX(Math.PI / 2),
+    edge: edgeFrameGeometry(STACK_FOOTPRINT + 0.003, 0.0045, 0.008),
+    chip: new BoxGeometry(0.022, 0.003, 0.016),
   };
 }
 
-function ProceduralStack({ tier, onReady }: StackModelProps) {
+function createDecor() {
+  return {
+    edges: Object.fromEntries(
+      STACK_LAYERS.map((layer) => [
+        layer,
+        new MeshBasicMaterial({
+          color: "#9fd6ff",
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      ]),
+    ) as Record<StackLayer, MeshBasicMaterial>,
+    chip: new MeshStandardMaterial({
+      color: "#15181d",
+      roughness: 0.35,
+      metalness: 0.2,
+    }),
+  };
+}
+
+function ProceduralStack({ tier, onReady, jobs }: StackModelProps) {
   const geometries = useMemo(createGeometries, []);
+  const decor = useMemo(createDecor, []);
   const maps = useMemo(neutralSurfaceMaps, []);
   const textures = useMemo(
     () => ({
@@ -123,8 +159,12 @@ function ProceduralStack({ tier, onReady }: StackModelProps) {
       geometries.etchHero.dispose();
       geometries.etchContact.dispose();
       geometries.led.dispose();
+      geometries.edge.dispose();
+      geometries.chip.dispose();
+      for (const material of Object.values(decor.edges)) material.dispose();
+      decor.chip.dispose();
     },
-    [geometries, textures, maps],
+    [geometries, textures, maps, decor],
   );
 
   return (
@@ -137,6 +177,14 @@ function ProceduralStack({ tier, onReady }: StackModelProps) {
           geometry={geometries.layers[layer]}
           material={materials.layers[layer]}
         >
+          <mesh
+            name={edgeObjectName(layer)}
+            position-y={height + 0.0006}
+            geometry={geometries.edge}
+            material={decor.edges[layer]}
+            renderOrder={2}
+            visible={false}
+          />
           {layer === "interface" ? (
             <mesh
               name={STACK_OBJECTS.engraveHero}
@@ -147,12 +195,29 @@ function ProceduralStack({ tier, onReady }: StackModelProps) {
             />
           ) : null}
           {layer === "infra" ? (
-            <mesh
-              name={STACK_OBJECTS.pcbTraces}
-              position-y={height + SURFACE}
-              geometry={geometries.traces}
-              material={materials.copper}
-            />
+            <>
+              <mesh
+                name={STACK_OBJECTS.pcbTraces}
+                position-y={height + SURFACE}
+                geometry={geometries.traces}
+                material={materials.copper}
+              />
+              {Array.from({ length: jobs }, (_, index) => {
+                const [x, z] = pointOnPath(
+                  PCB_TRACE_PATH,
+                  jobChipU(index, jobs),
+                );
+                return (
+                  <mesh
+                    // biome-ignore lint/suspicious/noArrayIndexKey: chips are positional
+                    key={index}
+                    position={[x, height + 0.0015, z]}
+                    geometry={geometries.chip}
+                    material={decor.chip}
+                  />
+                );
+              })}
+            </>
           ) : null}
           {layer === "craft" ? (
             <>

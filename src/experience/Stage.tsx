@@ -36,6 +36,10 @@ export default function Stage({
 }: StageProps) {
   const [tier, setTier] = useState<LiveTier>(initialTier);
   const store = useMemo(createStageStore, []);
+  // One chip per job on the PCB trace, in page order (read once, like SSR).
+  const [jobs] = useState(
+    () => document.querySelectorAll("#experience ol > li").length,
+  );
   const layer = useRef<HTMLDivElement>(null);
   const unwatch = useRef<(() => void) | null>(null);
 
@@ -78,7 +82,11 @@ export default function Stage({
           onDecline={decline}
         />
         <StudioLights />
-        <StackModel tier={tier} onReady={store.getState().setReady} />
+        <StackModel
+          tier={tier}
+          jobs={jobs}
+          onReady={store.getState().setReady}
+        />
         {tier >= 2 ? <Effects /> : null}
       </Canvas>
     </div>
