@@ -3,9 +3,10 @@ import { expect, type Page, test } from "@playwright/test";
 
 // M6 acceptance on the reference machine (Intel Iris Xe): scrolling the WHOLE
 // page (every scene of the journey) holds >= 55 fps with no long task over
-// 50 ms, and the tab stays under 400 MB. Mount-time long tasks (the stage
-// starting after the load event, before any scrolling) are reported.
+// 50 ms, and the tab stays under 400 MB. Mounting the stage (after the load
+// event, before any scrolling) is reported and has no task over 100 ms.
 const LONG_TASK_BUDGET_MS = 50;
+const MOUNT_BUDGET_MS = 100;
 const MEMORY_BUDGET_MB = 400;
 const MIN_FPS = 55;
 const STOPS = [
@@ -162,6 +163,12 @@ for (const tier of ["auto", "1", "3"] as const) {
     expect(
       Math.max(0, ...during.map((task) => task.duration)),
     ).toBeLessThanOrEqual(LONG_TASK_BUDGET_MS);
+    // The stage mounts in short steps (Stage.tsx, warmup.ts). M5 mounted it
+    // in one go: long tasks of up to 172 ms. Evaluating the chunk can still
+    // take about 50 ms on a busy machine, hence the looser budget.
+    expect(
+      Math.max(0, ...before.map((task) => task.duration)),
+    ).toBeLessThanOrEqual(MOUNT_BUDGET_MS);
     expect(report.tabMb).toBeLessThan(MEMORY_BUDGET_MB);
     // Tier 3 is meant for discrete GPUs; on this iGPU it is only reported.
     if (tier !== "3") {

@@ -8,7 +8,7 @@ import {
   ToneMappingEffect,
   ToneMappingMode,
 } from "postprocessing";
-import { useEffect, useMemo } from "react";
+import { type RefObject, useEffect, useMemo } from "react";
 import { HalfFloatType, type Vector3 } from "three";
 
 /** The tier 3 module (its own chunk): ambient occlusion and depth of field. */
@@ -26,12 +26,15 @@ export function Effects({
   extras,
   focus,
   onChange,
+  chain,
 }: {
   extras: Tier3Module | null;
   /** World point the depth of field keeps sharp (tier 3). */
   focus: Vector3;
   /** Called when the chain changed and a new frame is due. */
   onChange: () => void;
+  /** Receives the composer, so the stage can compile its passes early. */
+  chain: RefObject<EffectComposer | null>;
 }) {
   const gl = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
@@ -71,7 +74,13 @@ export function Effects({
     onChange();
   }, [composer, size, dpr, onChange]);
 
-  useEffect(() => () => composer.dispose(), [composer]);
+  useEffect(() => {
+    chain.current = composer;
+    return () => {
+      chain.current = null;
+      composer.dispose();
+    };
+  }, [composer, chain]);
 
   // Priority 1 takes over rendering from R3F.
   useFrame((_, delta) => composer.render(delta), 1);
