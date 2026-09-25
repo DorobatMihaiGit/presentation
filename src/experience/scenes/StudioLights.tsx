@@ -53,6 +53,14 @@ const SOFTBOXES: Softbox[] = [
     scale: [10, 10],
     intensity: 0.25,
   },
+  // Soft cyclorama behind and above the stack: what top faces and the
+  // glass reflect at the journey's high camera angles
+  {
+    position: [0, 2.6, -3],
+    rotation: [-Math.PI / 7, 0, 0],
+    scale: [12, 4.5],
+    intensity: 0.7,
+  },
   // Dim wall behind the camera, so brushed metal never reflects pure black
   {
     position: [0, 0.5, 4],

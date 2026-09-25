@@ -66,7 +66,7 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
         if (document.hidden) {
           return;
         }
-        const { opacity, consume, invalidate } = store.getState();
+        const { opacity, ready, consume, invalidate } = store.getState();
         const { size: nextSize, viewport } = three();
         if (nextSize !== size || viewport.dpr !== dpr) {
           size = nextSize;
@@ -86,7 +86,8 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
             root.dataset.canvas = "live";
             // A second frame, so capture waits for everything drawn once.
             invalidate();
-          } else if (frames === 2 && capture) {
+          } else if (capture && ready) {
+            // Drawn at least twice, the last time with the detail maps.
             root.dataset.canvas = "captured";
           }
         }

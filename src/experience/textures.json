@@ -1,0 +1,18 @@
+{
+  "brushed-normal": {
+    "src": "/textures/brushed-normal.5950fb39.webp",
+    "size": 512,
+    "bytes": 57430,
+    "source": "https://polyhaven.com/a/brushed_concrete_04",
+    "author": "Amal Kumar",
+    "license": "CC0-1.0"
+  },
+  "smudge-roughness": {
+    "src": "/textures/smudge-roughness.bd899429.webp",
+    "size": 512,
+    "bytes": 71682,
+    "source": "https://polyhaven.com/a/smooth_concrete_floor",
+    "author": "Dimitrios Savva",
+    "license": "CC0-1.0"
+  }
+}

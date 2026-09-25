@@ -11,11 +11,14 @@ export type StageState = {
   active: SceneId;
   /** Opacity of the fixed canvas layer (fades out after the hero). */
   opacity: number;
+  /** The model's detail maps are in (poster capture waits for them). */
+  ready: boolean;
   /** Something changed since the last rendered frame. */
   dirty: boolean;
   setProgress: (scene: SceneId, value: number) => void;
   setOpacity: (value: number) => void;
   setActive: (scene: SceneId) => void;
+  setReady: () => void;
   /** Forces a frame (resize, tier change, new textures). */
   invalidate: () => void;
   /** Returns whether a frame is due and clears the flag. */
@@ -29,6 +32,7 @@ export function createStageStore() {
     progress: { hero: 0, about: 0, skills: 0, experience: 0, contact: 0 },
     active: "hero",
     opacity: 1,
+    ready: false,
     dirty: true,
     setProgress: (scene, value) => {
       const next = clamp01(value);
@@ -50,6 +54,7 @@ export function createStageStore() {
         set({ active: scene, dirty: true });
       }
     },
+    setReady: () => set({ ready: true, dirty: true }),
     invalidate: () => set({ dirty: true }),
     consume: () => {
       if (!get().dirty) {

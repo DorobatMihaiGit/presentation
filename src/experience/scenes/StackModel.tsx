@@ -8,6 +8,7 @@ import {
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import type { StackLayer } from "@/content/types";
 import type { Tier } from "../gpu-tier";
+import surfaceMapManifest from "../textures.json";
 import { createStackMaterials, disposeMaterials } from "./materials";
 import { PCB_TRACE_PATH, traceRibbon } from "./pcb-traces";
 import {
@@ -16,6 +17,11 @@ import {
   STACK_OBJECTS,
   stackLayout,
 } from "./stack-layout";
+import {
+  loadSurfaceMaps,
+  neutralSurfaceMaps,
+  type SurfaceMapManifest,
+} from "./surface-maps";
 import {
   ENGRAVE_CONTACT_TEXT,
   ENGRAVE_HERO_TEXT,
@@ -29,9 +35,20 @@ import {
  * artist-made `stack.glb` with the same names can replace ProceduralStack
  * without touching the director.
  */
-export function StackModel({ tier }: { tier: Tier }) {
-  return <ProceduralStack tier={tier} />;
+export function StackModel(props: StackModelProps) {
+  return <ProceduralStack {...props} />;
 }
+
+export type StackModelProps = {
+  tier: Tier;
+  /** The detail maps are in (or failed): time for a new frame. */
+  onReady: () => void;
+};
+
+const ASSET_BASE = (process.env.NEXT_PUBLIC_ASSET_BASE ?? "").replace(
+  /\/$/,
+  "",
+);
 
 const HALF = STACK_FOOTPRINT / 2;
 const SURFACE = 0.0008;
@@ -66,8 +83,9 @@ function createGeometries() {
   };
 }
 
-function ProceduralStack({ tier }: { tier: Tier }) {
+function ProceduralStack({ tier, onReady }: StackModelProps) {
   const geometries = useMemo(createGeometries, []);
+  const maps = useMemo(neutralSurfaceMaps, []);
   const textures = useMemo(
     () => ({
       pcb: pcbTexture(),
@@ -77,14 +95,28 @@ function ProceduralStack({ tier }: { tier: Tier }) {
     [],
   );
   const materials = useMemo(
-    () => createStackMaterials(tier, textures),
-    [tier, textures],
+    () => createStackMaterials(tier, textures, maps),
+    [tier, textures, maps],
   );
 
   useEffect(() => () => disposeMaterials(materials), [materials]);
+  useEffect(() => {
+    let current = true;
+    loadSurfaceMaps(
+      maps,
+      surfaceMapManifest as SurfaceMapManifest,
+      ASSET_BASE,
+    ).then(() => {
+      if (current) onReady();
+    });
+    return () => {
+      current = false;
+    };
+  }, [maps, onReady]);
   useEffect(
     () => () => {
       for (const texture of Object.values(textures)) texture.dispose();
+      for (const texture of Object.values(maps)) texture.dispose();
       for (const geometry of Object.values(geometries.layers))
         geometry.dispose();
       geometries.traces.dispose();
@@ -92,7 +124,7 @@ function ProceduralStack({ tier }: { tier: Tier }) {
       geometries.etchContact.dispose();
       geometries.led.dispose();
     },
-    [geometries, textures],
+    [geometries, textures, maps],
   );
 
   return (

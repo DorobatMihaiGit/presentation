@@ -1,5 +1,5 @@
 {
-  "sourceHash": "030bd2ab6dc7db7e",
+  "sourceHash": "4117bfb6aebefd7f",
   "shots": {
     "hero-start": {
       "landscape": {
@@ -8,29 +8,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/hero-start-landscape-640.57bf0525.avif"
+            "src": "/posters/hero-start-landscape-640.d123bfe3.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-start-landscape-1280.1f3925e8.avif"
+            "src": "/posters/hero-start-landscape-1280.b82ce762.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-start-landscape-1920.0a66ba31.avif"
+            "src": "/posters/hero-start-landscape-1920.33628e72.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/hero-start-landscape-640.c62efed9.webp"
+            "src": "/posters/hero-start-landscape-640.85d2a414.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-start-landscape-1280.d7f51043.webp"
+            "src": "/posters/hero-start-landscape-1280.dadf5bfc.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-start-landscape-1920.24b2422e.webp"
+            "src": "/posters/hero-start-landscape-1920.4af057cf.webp"
           }
         ]
       },
@@ -40,13 +40,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/hero-start-portrait-828.5be05b11.avif"
+            "src": "/posters/hero-start-portrait-828.9fa685c5.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/hero-start-portrait-828.38bccfe9.webp"
+            "src": "/posters/hero-start-portrait-828.25cab8e1.webp"
           }
         ]
       }
@@ -58,29 +58,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/hero-end-landscape-640.06f54541.avif"
+            "src": "/posters/hero-end-landscape-640.7c0ac31c.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-end-landscape-1280.a2a88683.avif"
+            "src": "/posters/hero-end-landscape-1280.9304b007.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-end-landscape-1920.11df2752.avif"
+            "src": "/posters/hero-end-landscape-1920.72304c4a.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/hero-end-landscape-640.b1589b41.webp"
+            "src": "/posters/hero-end-landscape-640.ccef2f88.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-end-landscape-1280.cc5b3e71.webp"
+            "src": "/posters/hero-end-landscape-1280.ccb8e667.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-end-landscape-1920.352f46d7.webp"
+            "src": "/posters/hero-end-landscape-1920.4873e4f9.webp"
           }
         ]
       },
@@ -90,13 +90,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.056b9b87.avif"
+            "src": "/posters/hero-end-portrait-828.dcd78333.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.4dabe0c4.webp"
+            "src": "/posters/hero-end-portrait-828.566fc1ec.webp"
           }
         ]
       }

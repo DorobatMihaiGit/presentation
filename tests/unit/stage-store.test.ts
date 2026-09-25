@@ -45,4 +45,15 @@ describe("createStageStore", () => {
     store.getState().invalidate();
     expect(store.getState().consume()).toBe(true);
   });
+
+  it("records when the detail maps are in, with a frame to show them", () => {
+    const store = createStageStore();
+    store.getState().consume();
+    expect(store.getState().ready).toBe(false);
+
+    store.getState().setReady();
+
+    expect(store.getState().ready).toBe(true);
+    expect(store.getState().consume()).toBe(true);
+  });
 });

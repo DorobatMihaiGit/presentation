@@ -92,29 +92,40 @@ describe("createStackMaterials", () => {
     etchHero: new Texture(),
     etchContact: new Texture(),
   };
+  const maps = {
+    "brushed-normal": new Texture(),
+    "smudge-roughness": new Texture(),
+  };
 
-  it("uses real glass (transmission) from tier 2", () => {
-    const glass = createStackMaterials(2, textures).layers.interface;
+  it("uses real, frosted glass (transmission) from tier 2", () => {
+    const glass = createStackMaterials(2, textures, maps).layers.interface;
     expect(glass.transmission).toBe(1);
-    expect(glass.iridescence).toBe(1);
+    expect(glass.iridescence).toBeGreaterThan(0);
     expect(glass.transparent).toBe(false);
+    // Frosted by the smudge map, so what lies beneath blurs instead of
+    // refracting into a hard dark band (M5 look issue).
+    expect(glass.roughnessMap).toBe(maps["smudge-roughness"]);
+    expect(glass.roughness).toBeGreaterThan(0.1);
   });
 
   it("fakes the glass at tier 1 (no transmission pass)", () => {
-    const glass = createStackMaterials(1, textures).layers.interface;
+    const glass = createStackMaterials(1, textures, maps).layers.interface;
     expect(glass.transmission).toBe(0);
     expect(glass.transparent).toBe(true);
   });
 
-  it("brushes the titanium and anodized base (anisotropy)", () => {
-    const { layers } = createStackMaterials(2, textures);
+  it("brushes the titanium and anodized base (anisotropy + grooves)", () => {
+    const { layers } = createStackMaterials(2, textures, maps);
     expect(layers.api.anisotropy).toBeGreaterThan(0);
     expect(layers.craft.anisotropy).toBeGreaterThan(0);
+    expect(layers.api.normalMap).toBe(maps["brushed-normal"]);
+    expect(layers.craft.normalMap).toBe(maps["brushed-normal"]);
+    expect(layers.data.clearcoatRoughnessMap).toBe(maps["smudge-roughness"]);
     expect(layers.infra.map).toBe(textures.pcb);
   });
 
   it("starts both etchings invisible", () => {
-    const materials = createStackMaterials(2, textures);
+    const materials = createStackMaterials(2, textures, maps);
     expect(materials.etchHero.opacity).toBe(0);
     expect(materials.etchContact.opacity).toBe(0);
   });

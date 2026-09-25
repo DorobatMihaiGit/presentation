@@ -3,9 +3,11 @@ import {
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   type Texture,
+  Vector2,
 } from "three";
 import type { StackLayer } from "@/content/types";
 import type { Tier } from "../gpu-tier";
+import type { SurfaceMaps } from "./surface-maps";
 
 export type StackMaterials = {
   layers: Record<StackLayer, MeshPhysicalMaterial>;
@@ -33,7 +35,11 @@ function etching(alphaMap: Texture) {
   });
 }
 
-/** Tier 1 drops transmission (an extra full-scene render pass per frame). */
+/**
+ * Tier 1 drops transmission (an extra full-scene render pass per frame).
+ * `maps` are the Poly Haven detail maps (neutral stand-ins until loaded):
+ * brushed grooves on the two metals, smudges on glass and ceramic.
+ */
 export function createStackMaterials(
   tier: Tier,
   textures: {
@@ -41,39 +47,49 @@ export function createStackMaterials(
     etchHero: Texture;
     etchContact: Texture;
   },
+  maps: SurfaceMaps,
 ): StackMaterials {
   const transmissive = tier >= 2;
+  const brushed = maps["brushed-normal"];
+  const smudge = maps["smudge-roughness"];
   return {
     layers: {
+      // Frosted glass: the smudged roughness blurs what lies beneath instead
+      // of refracting it into a hard dark band.
       interface: new MeshPhysicalMaterial({
-        color: "#e4f3ff",
-        roughness: 0.04,
+        color: "#eef7ff",
+        roughness: 0.2,
+        roughnessMap: smudge,
         metalness: 0,
         ior: 1.5,
         transmission: transmissive ? 1 : 0,
-        thickness: 0.05,
-        attenuationColor: "#bfe2ff",
-        attenuationDistance: 0.6,
+        thickness: 0.012,
+        attenuationColor: "#d6ecff",
+        attenuationDistance: 1.2,
         transparent: !transmissive,
-        opacity: transmissive ? 1 : 0.4,
-        iridescence: 1,
+        opacity: transmissive ? 1 : 0.55,
+        iridescence: 0.7,
         iridescenceIOR: 1.3,
         iridescenceThicknessRange: [140, 420],
         specularIntensity: 1,
+        clearcoat: 1,
+        clearcoatRoughness: 0.04,
       }),
       api: new MeshPhysicalMaterial({
-        color: "#c9ced6",
+        color: "#d3d8e0",
         metalness: 1,
-        roughness: 0.3,
-        anisotropy: 0.9,
-        anisotropyRotation: Math.PI / 2,
+        roughness: 0.34,
+        normalMap: brushed,
+        normalScale: new Vector2(0.18, 0.18),
+        anisotropy: 0.35,
       }),
       data: new MeshPhysicalMaterial({
         color: "#e6e1d6",
         metalness: 0,
-        roughness: 0.45,
+        roughness: 0.5,
         clearcoat: 0.8,
-        clearcoatRoughness: 0.14,
+        clearcoatRoughness: 0.35,
+        clearcoatRoughnessMap: smudge,
       }),
       infra: new MeshPhysicalMaterial({
         map: textures.pcb,
@@ -83,9 +99,11 @@ export function createStackMaterials(
         clearcoatRoughness: 0.3,
       }),
       craft: new MeshPhysicalMaterial({
-        color: "#6f7a8c",
+        color: "#7b8698",
         metalness: 1,
-        roughness: 0.4,
+        roughness: 0.42,
+        normalMap: brushed,
+        normalScale: new Vector2(0.12, 0.12),
         anisotropy: 0.45,
         clearcoat: 0.25,
         clearcoatRoughness: 0.2,

@@ -78,7 +78,7 @@ export default function Stage({
           onDecline={decline}
         />
         <StudioLights />
-        <StackModel tier={tier} />
+        <StackModel tier={tier} onReady={store.getState().setReady} />
         {tier >= 2 ? <Effects /> : null}
       </Canvas>
     </div>
