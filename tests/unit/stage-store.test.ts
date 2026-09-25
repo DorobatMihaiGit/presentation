@@ -9,37 +9,42 @@ describe("createStageStore", () => {
     expect(store.getState().consume()).toBe(false);
   });
 
-  it("asks for a frame only when progress really changes", () => {
+  it("asks for a frame only when the journey really moves", () => {
     const store = createStageStore();
     store.getState().consume();
 
-    store.getState().setProgress("hero", 0.00005);
+    store.getState().setJourney(0.00005);
     expect(store.getState().consume()).toBe(false);
 
-    store.getState().setProgress("hero", 0.4);
-    expect(store.getState().progress.hero).toBe(0.4);
+    store.getState().setJourney(2.4);
+    expect(store.getState().journey).toBe(2.4);
     expect(store.getState().consume()).toBe(true);
   });
 
-  it("clamps progress and opacity to 0..1", () => {
+  it("clamps the journey at 0 and the pointer to -1..1", () => {
     const store = createStageStore();
 
-    store.getState().setProgress("skills", 1.7);
-    store.getState().setOpacity(-0.2);
+    store.getState().setJourney(-3);
+    store.getState().setPointer(1.7, -4);
 
-    expect(store.getState().progress.skills).toBe(1);
-    expect(store.getState().opacity).toBe(0);
+    expect(store.getState().journey).toBe(0);
+    expect(store.getState().pointer).toEqual({ x: 1, y: -1 });
   });
 
-  it("marks a frame due when the active section or the size changes", () => {
+  it("marks a frame due when hover, idle, the LED or the size change", () => {
     const store = createStageStore();
     store.getState().consume();
 
-    store.getState().setActive("hero");
+    store.getState().setHoverLayer(null);
+    store.getState().setIdle(false);
     expect(store.getState().consume()).toBe(false);
 
-    store.getState().setActive("about");
-    expect(store.getState().active).toBe("about");
+    store.getState().setHoverLayer("data");
+    expect(store.getState().consume()).toBe(true);
+    store.getState().setIdle(true);
+    expect(store.getState().consume()).toBe(true);
+    store.getState().pulseLed(1234);
+    expect(store.getState().ledPulseAt).toBe(1234);
     expect(store.getState().consume()).toBe(true);
 
     store.getState().invalidate();

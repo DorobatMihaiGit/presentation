@@ -15,6 +15,8 @@ import { StudioLights } from "./scenes/StudioLights";
 export type StageProps = {
   tier: LiveTier;
   capture: Capture | null;
+  /** `?tier=` chose the tier: keep it, however slow the frames. */
+  pinned: boolean;
   /** Live 3D is over (context lost, or too slow even at tier 1): show posters. */
   onFallback: () => void;
 };
@@ -32,6 +34,7 @@ const DPR: Record<LiveTier, number | [number, number]> = {
 export default function Stage({
   tier: initialTier,
   capture,
+  pinned,
   onFallback,
 }: StageProps) {
   const [tier, setTier] = useState<LiveTier>(initialTier);
@@ -44,13 +47,16 @@ export default function Stage({
   const unwatch = useRef<(() => void) | null>(null);
 
   const decline = useCallback(() => {
-    const next = lowerTier(tier);
-    if (next === null) {
+    if (pinned) {
+      return;
+    }
+    const lower = lowerTier(tier);
+    if (lower === null) {
       onFallback();
     } else {
-      setTier(next);
+      setTier(lower);
     }
-  }, [tier, onFallback]);
+  }, [tier, pinned, onFallback]);
 
   useEffect(() => {
     document.documentElement.dataset.tier = String(tier);

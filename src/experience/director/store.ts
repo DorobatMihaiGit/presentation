@@ -1,59 +1,79 @@
 import { createStore } from "zustand/vanilla";
-import type { SceneId } from "@/components/ui/Section";
+import type { StackLayer } from "@/content/types";
 
 /** Changes smaller than this do not trigger a new frame. */
 const EPSILON = 1e-4;
 
+export type Pointer = { x: number; y: number };
+
 export type StageState = {
-  /** Scroll progress through each section's ScrollTrigger, 0..1. */
-  progress: Record<SceneId, number>;
-  /** The section crossing the middle of the viewport; picks the shot. */
-  active: SceneId;
-  /** Opacity of the fixed canvas layer (fades out after the hero). */
-  opacity: number;
+  /** Journey time the scroll position asks for (0..JOURNEY_END). */
+  journey: number;
+  /** Fine pointer, -1..1 per axis from the viewport centre; 0,0 when away. */
+  pointer: Pointer;
+  /** Stack layer under the pointer or keyboard focus in Skills. */
+  hoverLayer: StackLayer | null;
+  /** The footer is on screen: the stack turns slowly (turntable). */
+  idle: boolean;
+  /** performance.now() of the last contact message sent (LED pulse). */
+  ledPulseAt: number | null;
   /** The model's detail maps are in (poster capture waits for them). */
   ready: boolean;
   /** Something changed since the last rendered frame. */
   dirty: boolean;
-  setProgress: (scene: SceneId, value: number) => void;
-  setOpacity: (value: number) => void;
-  setActive: (scene: SceneId) => void;
+  setJourney: (value: number) => void;
+  setPointer: (x: number, y: number) => void;
+  setHoverLayer: (layer: StackLayer | null) => void;
+  setIdle: (idle: boolean) => void;
+  pulseLed: (at: number) => void;
   setReady: () => void;
-  /** Forces a frame (resize, tier change, new textures). */
+  /** Forces a frame (resize, tier change, new textures, moving springs). */
   invalidate: () => void;
   /** Returns whether a frame is due and clears the flag. */
   consume: () => boolean;
 };
 
-const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
 
 export function createStageStore() {
   return createStore<StageState>()((set, get) => ({
-    progress: { hero: 0, about: 0, skills: 0, experience: 0, contact: 0 },
-    active: "hero",
-    opacity: 1,
+    journey: 0,
+    pointer: { x: 0, y: 0 },
+    hoverLayer: null,
+    idle: false,
+    ledPulseAt: null,
     ready: false,
     dirty: true,
-    setProgress: (scene, value) => {
-      const next = clamp01(value);
-      const { progress } = get();
-      if (Math.abs(progress[scene] - next) < EPSILON) {
+    setJourney: (value) => {
+      const next = Math.max(0, value);
+      if (Math.abs(get().journey - next) < EPSILON) {
         return;
       }
-      set({ progress: { ...progress, [scene]: next }, dirty: true });
+      set({ journey: next, dirty: true });
     },
-    setOpacity: (value) => {
-      const next = clamp01(value);
-      if (Math.abs(get().opacity - next) < EPSILON) {
+    setPointer: (x, y) => {
+      const next = { x: clamp(x, -1, 1), y: clamp(y, -1, 1) };
+      const { pointer } = get();
+      if (
+        Math.abs(pointer.x - next.x) < EPSILON &&
+        Math.abs(pointer.y - next.y) < EPSILON
+      ) {
         return;
       }
-      set({ opacity: next, dirty: true });
+      set({ pointer: next, dirty: true });
     },
-    setActive: (scene) => {
-      if (get().active !== scene) {
-        set({ active: scene, dirty: true });
+    setHoverLayer: (layer) => {
+      if (get().hoverLayer !== layer) {
+        set({ hoverLayer: layer, dirty: true });
       }
     },
+    setIdle: (idle) => {
+      if (get().idle !== idle) {
+        set({ idle, dirty: true });
+      }
+    },
+    pulseLed: (at) => set({ ledPulseAt: at, dirty: true }),
     setReady: () => set({ ready: true, dirty: true }),
     invalidate: () => set({ dirty: true }),
     consume: () => {

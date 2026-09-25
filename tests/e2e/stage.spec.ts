@@ -41,26 +41,41 @@ test("tier 2 puts one hidden canvas behind a pinned hero", async ({ page }) => {
   expect(Math.round(hero / viewport)).toBe(3);
 });
 
-test("the stage fades out once the hero has scrolled away", async ({
+/** Scrolls so that the top of `selector` sits `offset` viewports below the top. */
+async function scrollToSection(page: Page, selector: string, offset = 0) {
+  await page.evaluate(
+    ({ selector, offset }) => {
+      const top = document.querySelector(selector)?.getBoundingClientRect().top;
+      window.scrollTo(0, window.scrollY + (top ?? 0) + offset * innerHeight);
+    },
+    { selector, offset },
+  );
+}
+
+test("the stage stays for About and steps back behind Projects", async ({
   page,
 }) => {
-  await page.goto("/en?tier=2");
+  // SwiftShader frames are slow and the springs take a few seconds to settle.
+  test.setTimeout(120_000);
+  const settle = { timeout: 30_000 };
+  await page.goto("/en?tier=1");
   await expect(page.locator("html")).toHaveAttribute("data-canvas", "live", {
     timeout: 60_000,
   });
-
-  await page.locator("#about").scrollIntoViewIfNeeded();
-  await page.evaluate(() => {
-    const about = document.querySelector("#about");
-    window.scrollTo(
-      0,
-      window.scrollY + (about?.getBoundingClientRect().top ?? 0),
-    );
-  });
-
   const layer = page.locator(".stage-layer");
-  await expect(layer).toHaveCSS("visibility", "hidden");
+
+  await scrollToSection(page, "#about");
+  await expect(layer).toHaveAttribute("data-journey", /^1\./, settle);
+  await expect(layer).toHaveCSS("visibility", "visible");
+  await expect(layer).toHaveCSS("opacity", "1");
+
+  await scrollToSection(page, "#projects", 0.2);
+  await expect(layer).toHaveCSS("visibility", "hidden", settle);
   await expect(layer).toHaveCSS("opacity", "0");
+
+  await scrollToSection(page, "#contact");
+  await expect(layer).toHaveAttribute("data-journey", /^5\./, settle);
+  await expect(layer).toHaveCSS("visibility", "visible");
 });
 
 test("a lost WebGL context falls back to the poster", async ({ page }) => {

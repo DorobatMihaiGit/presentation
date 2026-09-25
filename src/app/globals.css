@@ -236,3 +236,9 @@ html[data-capture] body {
 html[data-capture] .stage-layer {
   visibility: visible;
 }
+
+/* The footer sits outside <main>; keep it above the stage layer too. */
+body > footer {
+  position: relative;
+  z-index: 1;
+}

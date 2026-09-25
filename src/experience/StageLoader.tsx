@@ -26,6 +26,7 @@ export function StageLoader() {
   const [live, setLive] = useState<{
     tier: LiveTier;
     capture: Capture | null;
+    pinned: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -45,9 +46,8 @@ export function StageLoader() {
     }
     let cancelled = false;
     const cancel = afterLoadAndIdle(async () => {
-      const tier =
-        tierOverride(location.search) ??
-        (capture ? 2 : classifyTier(readGpuSignals()));
+      const forced = tierOverride(location.search);
+      const tier = forced ?? (capture ? 2 : classifyTier(readGpuSignals()));
       if (tier === 0) {
         root.dataset.canvas = "poster";
         return;
@@ -58,7 +58,7 @@ export function StageLoader() {
       }
       if (!cancelled) {
         root.dataset.canvas = "loading";
-        setLive({ tier, capture });
+        setLive({ tier, capture, pinned: forced !== null });
       }
     });
     return () => {
@@ -74,6 +74,7 @@ export function StageLoader() {
     <Stage
       tier={live.tier}
       capture={live.capture}
+      pinned={live.pinned}
       onFallback={() => {
         document.documentElement.dataset.canvas = "poster";
         setLive(null);

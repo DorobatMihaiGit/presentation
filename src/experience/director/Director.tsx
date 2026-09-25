@@ -1,49 +1,32 @@
 import { advance, useThree } from "@react-three/fiber";
-import {
-  type ComponentType,
-  type RefObject,
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-} from "react";
-import type { SceneId } from "@/components/ui/Section";
+import { type RefObject, useEffect, useRef } from "react";
 import type { Capture } from "../capture-mode";
-import { startLoop, trackSections } from "../scroll/loop";
+import { startLoop, trackJourney } from "../scroll/loop";
 import { createFrameMonitor } from "./frame-monitor";
-import { HeroShot } from "./HeroShot";
+import { orientationOf } from "./framing";
+import { JourneyShot } from "./JourneyShot";
+import { type JourneyFrame, journeyFrame, stopTime } from "./journey";
+import { createMotion, stepGlow, stepMotion } from "./motion";
 import type { StageStore } from "./store";
-
-export type ShotProps = { store: StageStore };
-
-/**
- * One shot per section. M6 registers about, skills, experience and contact;
- * until then a section without a shot keeps the last one (the stage has
- * faded out by then anyway).
- */
-const SHOTS: Partial<Record<SceneId, ComponentType<ShotProps>>> = {
-  hero: HeroShot,
-};
 
 type DirectorProps = {
   store: StageStore;
-  /** The fixed layer around the canvas; its opacity follows the store. */
+  /** The fixed layer around the canvas; its opacity follows the journey. */
   layer: RefObject<HTMLDivElement | null>;
   capture: Capture | null;
   onDecline: () => void;
 };
 
 /**
- * Owns the frame loop: renders (R3F `advance`) only when the store says
- * something changed, never while the tab is hidden, and reports sustained
- * slow frames through `onDecline`.
+ * Owns the frame loop: turns the store (the scroll position) into springs
+ * and a journey frame, renders (R3F `advance`) only while something
+ * changed or is still settling, never while the tab is hidden, and reports
+ * sustained slow frames through `onDecline`.
  */
 export function Director({ store, layer, capture, onDecline }: DirectorProps) {
   const three = useThree((state) => state.get);
-  const active = useSyncExternalStore(
-    store.subscribe,
-    () => store.getState().active,
-  );
-  const Shot = SHOTS[active] ?? HeroShot;
+  const motion = useRef(createMotion()).current;
+  const frame = useRef<JourneyFrame>(journeyFrame(0, "landscape"));
   const decline = useRef(onDecline);
 
   useEffect(() => {
@@ -55,38 +38,64 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
     const monitor = createFrameMonitor();
     let frames = 0;
     let shown = -1;
+    let last: number | null = null;
     let size = three().size;
     let dpr = three().viewport.dpr;
     if (capture) {
-      store.getState().setProgress(capture.scene, capture.progress);
+      store.getState().setJourney(stopTime(capture.scene, capture.progress));
     }
 
     const stopLoop = startLoop(
       (seconds) => {
         if (document.hidden) {
+          last = null;
           return;
         }
-        const { opacity, ready, consume, invalidate } = store.getState();
+        // The springs are exact for any step; the cap only keeps a stall
+        // (debugger, GC) from skipping the motion altogether.
+        const dt = last === null ? 0 : Math.min(0.5, seconds - last);
+        last = seconds;
+        const state = store.getState();
         const { size: nextSize, viewport } = three();
         if (nextSize !== size || viewport.dpr !== dpr) {
           size = nextSize;
           dpr = viewport.dpr;
-          invalidate();
+          state.invalidate();
+        }
+        const snap = capture !== null;
+        let moving = stepMotion(motion, state, dt, performance.now(), snap);
+        frame.current = journeyFrame(
+          motion.journey.value,
+          orientationOf(size.width, size.height),
+        );
+        const lit =
+          frame.current.explode > 0.5
+            ? (state.hoverLayer ?? frame.current.highlight)
+            : null;
+        moving = stepGlow(motion, lit, dt, snap) || moving;
+        if (moving) {
+          state.invalidate();
+        }
+        const { opacity, time } = frame.current;
+        const label = time.toFixed(2);
+        if (layer.current && layer.current.dataset.journey !== label) {
+          // Journey time on the layer (tests, debugging); not styled.
+          layer.current.dataset.journey = label;
         }
         if (layer.current && opacity !== shown) {
           shown = opacity;
           layer.current.style.opacity = String(opacity);
           layer.current.style.visibility = opacity > 0 ? "" : "hidden";
         }
-        const due = opacity > 0 && consume();
+        const due = opacity > 0 && state.consume();
         if (due) {
           advance(seconds);
           frames += 1;
           if (frames === 1) {
             root.dataset.canvas = "live";
             // A second frame, so capture waits for everything drawn once.
-            invalidate();
-          } else if (capture && ready) {
+            state.invalidate();
+          } else if (capture && state.ready) {
             // Drawn at least twice, the last time with the detail maps.
             root.dataset.canvas = "captured";
           }
@@ -97,13 +106,13 @@ export function Director({ store, layer, capture, onDecline }: DirectorProps) {
       },
       { smooth: !capture },
     );
-    const stopSections = capture ? null : trackSections(store);
+    const stopJourney = capture ? null : trackJourney(store);
 
     return () => {
-      stopSections?.();
+      stopJourney?.();
       stopLoop();
     };
-  }, [store, layer, capture, three]);
+  }, [store, layer, capture, three, motion]);
 
-  return <Shot store={store} />;
+  return <JourneyShot motion={motion} frame={frame} />;
 }
