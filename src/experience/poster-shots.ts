@@ -7,6 +7,12 @@ export const POSTER_SHOTS = [
   { name: "hero-start", scene: "hero", progress: 0 },
   // Last frame of S1: the hero for reduced motion (nothing will play).
   { name: "hero-end", scene: "hero", progress: 1 },
+  // One frame per later scene, behind its section when the stage is off
+  // (tier 0, reduced motion, Motion off, fallback). Named like the section.
+  { name: "about", scene: "about", progress: 0.6 },
+  { name: "skills", scene: "skills", progress: 0.5 },
+  { name: "experience", scene: "experience", progress: 0.5 },
+  { name: "contact", scene: "contact", progress: 1 },
 ] as const satisfies readonly {
   name: string;
   scene: SceneId;
@@ -14,6 +20,16 @@ export const POSTER_SHOTS = [
 }[];
 
 export type PosterName = (typeof POSTER_SHOTS)[number]["name"];
+
+/** Sections with a poster of their own (the hero has two). */
+export type SectionPosterName = Exclude<PosterName, `hero-${string}`>;
+
+export const SECTION_POSTERS: readonly SectionPosterName[] = [
+  "about",
+  "skills",
+  "experience",
+  "contact",
+];
 
 /** Encoded widths per reference frame (spec §3: 1920/1280/640 landscape, 828 portrait). */
 export const POSTER_WIDTHS: Record<Orientation, readonly number[]> = {

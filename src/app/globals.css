@@ -232,6 +232,35 @@ html[data-canvas="live"] .hero-poster {
   }
 }
 
+/*
+ * Section posters (SectionPoster): with the stage off, each scene's still sits
+ * behind its section's first screen, where the live stage would be. It fades
+ * in from the copy side and out towards the next section, so text keeps the
+ * plain canvas behind it; portrait dims it like the live stage does.
+ */
+.section-poster {
+  display: none;
+}
+
+html[data-canvas="poster"] .section-poster {
+  display: block;
+  position: absolute;
+  inset: 0 0 auto;
+  height: 100lvh;
+  pointer-events: none;
+  mask-image:
+    linear-gradient(90deg, transparent 28%, #000 62%),
+    linear-gradient(180deg, #000 55%, transparent);
+  mask-composite: intersect;
+}
+
+@media (orientation: portrait) {
+  html[data-canvas="poster"] .section-poster {
+    opacity: 0.3;
+    mask-image: linear-gradient(180deg, #000 55%, transparent);
+  }
+}
+
 /* Poster capture (scripts/posters.ts): only the canvas is visible. */
 html[data-capture] body {
   visibility: hidden;

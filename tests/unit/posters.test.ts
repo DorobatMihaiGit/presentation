@@ -4,9 +4,11 @@ import {
   POSTER_SHOTS,
   POSTER_WIDTHS,
   type PosterManifest,
+  SECTION_POSTERS,
   srcSet,
 } from "@/experience/poster-shots";
 import posters from "@/experience/posters.json";
+import { SCENE_IDS } from "@/experience/scene-ids";
 import { posterSourceHash } from "../../scripts/poster-sources";
 
 const manifest = posters as PosterManifest;
@@ -31,6 +33,13 @@ describe("committed posters", () => {
     }
   });
 
+  it("include one poster per scene section after the hero", () => {
+    expect(SECTION_POSTERS).toEqual(SCENE_IDS.filter((id) => id !== "hero"));
+    for (const name of SECTION_POSTERS) {
+      expect(manifest.shots[name], name).toBeDefined();
+    }
+  });
+
   it("point at files in public/posters, and nothing else is there", () => {
     const referenced = Object.values(manifest.shots)
       .flatMap((shot) => Object.values(shot))
@@ -43,12 +52,19 @@ describe("committed posters", () => {
     expect(readdirSync("public/posters").sort()).toEqual(referenced.sort());
   });
 
-  it("stay small (spec §3: initial transfer <= 1.5 MB)", () => {
-    const total = readdirSync("public/posters").reduce(
-      (sum, file) => sum + statSync(`public/posters/${file}`).size,
-      0,
-    );
-    expect(total).toBeLessThan(400 * 1024);
+  it("cost a visitor at most 400 KB (spec §3 budget)", () => {
+    // A browser picks one file per poster: at worst the widest WebP of every
+    // shot in its orientation (both hero frames counted, though it gets one).
+    for (const orientation of ["landscape", "portrait"] as const) {
+      const worst = Object.values(manifest.shots).reduce((sum, shot) => {
+        const sizes = [
+          ...shot[orientation].avif,
+          ...shot[orientation].webp,
+        ].map((source) => statSync(`public${source.src}`).size);
+        return sum + Math.max(...sizes);
+      }, 0);
+      expect(worst / 1024, orientation).toBeLessThanOrEqual(400);
+    }
   });
 });
 

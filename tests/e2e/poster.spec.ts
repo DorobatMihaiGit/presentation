@@ -55,6 +55,51 @@ test.describe("with reduced motion", () => {
   });
 });
 
+test.describe("with the stage off", () => {
+  test.use({ reducedMotion: "reduce" });
+
+  test("every scene section shows its own poster", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.locator("html")).toHaveAttribute("data-canvas", "poster");
+
+    for (const name of ["about", "skills", "experience", "contact"]) {
+      const poster = page.locator(`#${name} > [data-poster="${name}"]`);
+      await poster.scrollIntoViewIfNeeded();
+      await expect(poster).toHaveAttribute("aria-hidden", "true");
+      await expect
+        .poll(() =>
+          poster
+            .locator("img")
+            .evaluate(
+              (img: HTMLImageElement) => img.complete && img.currentSrc,
+            ),
+        )
+        .toMatch(
+          new RegExp(`/posters/${name}-landscape-\\d+\\.[0-9a-f]{8}\\.avif$`),
+        );
+    }
+  });
+});
+
+test("live visitors never download the section posters", async ({ page }) => {
+  test.setTimeout(120_000);
+  const posters: string[] = [];
+  page.on("request", (request) => {
+    const { pathname } = new URL(request.url());
+    if (pathname.startsWith("/posters/")) posters.push(pathname);
+  });
+  await page.goto("/en?tier=1");
+  await expect(page.locator("html")).toHaveAttribute("data-canvas", "live", {
+    timeout: 60_000,
+  });
+  for (const id of ["about", "skills", "experience", "contact"]) {
+    await page.locator(`#${id}`).scrollIntoViewIfNeeded();
+  }
+  await page.waitForTimeout(500);
+
+  expect(posters.every((path) => path.startsWith("/posters/hero-"))).toBe(true);
+});
+
 test("posters are cached as immutable", async ({ page, request }) => {
   await page.goto("/en");
   const src = await page

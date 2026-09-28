@@ -87,7 +87,9 @@ export function Director({
           state.invalidate();
         }
         focus.set(...frame.current.focus);
-        const { opacity, time } = frame.current;
+        const { time } = frame.current;
+        // Posters are captured at full strength; the page dims them itself.
+        const opacity = capture ? 1 : frame.current.opacity;
         const label = time.toFixed(2);
         if (layer.current && layer.current.dataset.journey !== label) {
           // Journey time on the layer (tests, debugging); not styled.
