@@ -42,8 +42,9 @@ gave `pnpm admin:create`).
 | `pnpm test` | Vitest unit tests (`tests/unit`) |
 | `pnpm test:e2e` | Playwright e2e (`tests/e2e`, incl. axe); builds and serves on port 3100 |
 | `pnpm lhci` | Lighthouse CI, desktop preset, on port 3200; asserts >= 0.95 in all 4 categories. Run `pnpm build` first |
-| `pnpm assets:posters` | Capture the hero posters from the 3D scene into `public/posters` + `src/experience/posters.json` (port 3400). Run `pnpm build` first |
-| `pnpm perf:local` | Long tasks, frame times and memory while scrolling the live hero, on this machine's GPU (port 3300). Run `pnpm build` first |
+| `pnpm assets:posters` | Capture the hero and section posters from the 3D scene into `public/posters` + `src/experience/posters.json` (port 3400). Run `pnpm build` first |
+| `pnpm assets:textures` | Download the Poly Haven (CC0) detail maps once, convert them to WebP in `public/textures` + `src/experience/textures.json` |
+| `pnpm perf:local` | Long tasks, frame rate per section and memory while scrolling the whole page on the live stage, on this machine's GPU (port 3300). Run `pnpm build` first |
 | `pnpm db:generate --name <name>` | Drizzle Kit: write a SQL migration in `drizzle/` from schema changes (no database needed) |
 | `pnpm db:migrate` | Apply pending migrations to `DATABASE_URL` |
 | `pnpm db:seed` | Load the fixture CV into an empty database; `--reset` replaces all CV content |
@@ -51,26 +52,39 @@ gave `pnpm admin:create`).
 
 ## Motion and 3D
 
-The hero is a real-time three.js scene (React Three Fiber): a procedural
-"stack" of five slabs, scrubbed by scroll. Everything 3D lives in
-`src/experience/` and loads as one lazy chunk after the page has loaded, so
-the first paint is the server-rendered text over a poster image.
+The page sits on one real-time three.js scene (React Three Fiber): a
+procedural "stack" of five slabs and one camera that travels through it as
+you scroll. The hero dollies over the base plate to the etched name; About
+turns the stack and lifts the glass; Skills pins the exploded stack with each
+row next to its layer (hover a row to light that layer's edge); Experience
+follows a light pulse along the circuit board, lighting each job as it
+passes; the stage steps back behind Projects; Contact closes the stack on the
+"Let's build" etching and pulses the LED when a message is sent; the footer
+turns it slowly. Springs give every move weight: the camera trails the
+scroll and settles, never overshoots. A fine pointer tilts the view a few
+degrees (never on touch screens). Everything 3D lives in `src/experience/`
+and loads lazily after the page has loaded, so the first paint is the
+server-rendered text over a poster image; all text stays in the HTML.
 
 - **Tiers.** After the load event, `StageLoader` picks a tier from the WebGL
   renderer string: 0 = posters only (no WebGL 2 or a software renderer),
   1 = light scene (DPR 1, no glass transmission, no post-processing), 2 =
   reference (Intel Iris Xe, DPR up to 1.5, bloom + FXAA), 3 = discrete GPUs
-  (DPR up to 2). If frames stay slower than 40 fps while scrolling, the stage
+  (DPR up to 2, plus ambient occlusion and depth of field from a chunk of
+  their own). If frames stay slower than 40 fps while scrolling, the stage
   steps down a tier, and below tier 1 it gives up and shows the poster. A lost
   WebGL context also falls back to the poster.
 - **Motion switch.** The **Motion** button in the header turns all of it off
   (posters, native scrolling, no pinned hero) and remembers the choice.
   `prefers-reduced-motion` and Save-Data start with motion off.
-- **Query flags** (any page): `?tier=0..3` forces a tier;
-  `?capture=hero&p=0..1` renders one frame of the hero shot for poster capture.
+- **Query flags** (any page): `?tier=0..3` forces a tier and keeps it (no
+  runtime step-down); `?capture=<scene>&p=0..1` renders one frame of a scene
+  (`hero`, `about`, `skills`, `experience`, `contact`) for poster capture.
 - **Posters.** `public/posters` holds content-hashed AVIF/WebP captures of
-  the first and last hero frame, landscape and portrait. They are the LCP
-  image, the tier-0 hero, and what reduced motion shows (the last frame).
+  the first and last hero frame and one frame per scene section, landscape
+  and portrait. The first hero frame is the LCP image; with the stage off
+  (tier 0, reduced motion, **Motion** off, a lost context) the hero shows the
+  last frame and each section its own poster behind its first screen.
   After changing anything in `src/experience/{Stage.tsx,director,postfx,scenes}`
   regenerate and commit them, or `pnpm test` fails. The capture runs against
   the production build; build again afterwards so the page uses the new
@@ -84,10 +98,20 @@ the first paint is the server-rendered text over a poster image.
 
   `POSTERS_SOFTWARE=1 pnpm assets:posters` renders with SwiftShader where no
   GPU is available (slower, slightly different pixels).
-- **Performance check.** `pnpm build && pnpm perf:local` scrolls the hero on
-  the real GPU and fails on a long task over 50 ms or more than 400 MB of tab
-  memory. The JS budgets (160 KB gz before 3D, 350 KB gz for the 3D chunk)
-  are e2e tests (`tests/e2e/budgets.spec.ts`), so CI enforces them.
+- **Textures.** Two 512 px detail maps from Poly Haven (CC0): brushed
+  grooves for the metals, smudges for glass and ceramic. `pnpm assets:textures`
+  rebuilds them; `tests/unit/textures.test.ts` holds the texture budget
+  (256 KB on disk, 512 px).
+- **Mounting.** The stage starts in steps, one per idle period (renderer,
+  studio light, model, post chain, shader programs, first frame), and hands
+  every shader to the GPU before its first use, so no step blocks the page
+  for long even without `KHR_parallel_shader_compile`.
+- **Performance check.** `pnpm build && pnpm perf:local` scrolls the whole
+  page on the real GPU at the auto tier, tier 1 and tier 3, and fails on a
+  long task over 50 ms, less than 55 fps in any section (tiers auto and 1)
+  or more than 400 MB of tab memory. The JS budgets (160 KB gz before 3D,
+  350 KB gz for the 3D chunks, 100 KB gz more for tier 3) are e2e tests
+  (`tests/e2e/budgets.spec.ts`), so CI enforces them.
 - **Swapping in a modelled stack.** Shots find objects by the asset-contract
   names (`layer_interface` … `layer_craft`, `engrave_hero`,
   `engrave_contact`, `led_status`, `pcb_traces`); a `stack.glb` with the same
