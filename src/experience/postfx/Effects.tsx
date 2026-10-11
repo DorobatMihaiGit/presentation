@@ -19,8 +19,10 @@ export type Tier3Module = typeof import("./tier3");
  * @react-three/postprocessing bundle also ships every effect). The composer
  * renders into a float buffer, where the renderer's tone mapping does not
  * apply, so AgX runs as an effect, before anti-aliasing. FXAA, not SMAA:
- * SMAA embeds its lookup textures (+54 KB gz in the lazy chunk). Tier 3 adds
- * ambient occlusion (N8AO) and bokeh depth of field (`extras`).
+ * SMAA embeds its lookup textures (+54 KB gz in the lazy chunk). The scene
+ * renders with 4x MSAA: sub-pixel highlights on the bevels and the glowing
+ * edge bands broke into rows of dots without it, which FXAA cannot join.
+ * Tier 3 adds ambient occlusion (N8AO) and bokeh depth of field (`extras`).
  */
 export function Effects({
   extras,
@@ -45,7 +47,7 @@ export function Effects({
   const composer = useMemo(() => {
     const composer = new EffectComposer(gl, {
       frameBufferType: HalfFloatType,
-      multisampling: 0,
+      multisampling: 4,
     });
     composer.addPass(new RenderPass(scene, camera));
     const t3 = extras?.tier3Effects(scene, camera, focus, 1, 1);
@@ -64,7 +66,11 @@ export function Effects({
         new ToneMappingEffect({ mode: ToneMappingMode.AGX }),
       ),
     );
-    composer.addPass(new EffectPass(camera, new FXAAEffect()));
+    const output = new EffectPass(camera, new FXAAEffect());
+    // The studio's dark gradients (the contact shadow on the floor) band
+    // in 8 bits; a little noise hides the steps.
+    output.dithering = true;
+    composer.addPass(output);
     return composer;
   }, [gl, scene, camera, extras, focus]);
 

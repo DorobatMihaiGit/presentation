@@ -13,7 +13,11 @@ import { STACK_LAYERS, type StackLayer } from "@/content/types";
 import type { Tier } from "../gpu-tier";
 import surfaceMapManifest from "../textures.json";
 import { edgeFrameGeometry, edgeObjectName } from "./edges";
-import { createStackMaterials, disposeMaterials } from "./materials";
+import {
+  createStackMaterials,
+  disposeMaterials,
+  layerMaterials,
+} from "./materials";
 import {
   jobChipU,
   PCB_TRACE_PATH,
@@ -35,6 +39,8 @@ import {
   ENGRAVE_CONTACT_TEXT,
   ENGRAVE_HERO_TEXT,
   etchingTexture,
+  pcbEdgeTexture,
+  pcbSurfaceTexture,
   pcbTexture,
 } from "./textures";
 
@@ -64,6 +70,12 @@ const ASSET_BASE = (process.env.NEXT_PUBLIC_ASSET_BASE ?? "").replace(
 const HALF = STACK_FOOTPRINT / 2;
 const SURFACE = 0.0008;
 
+/**
+ * Edge radius (m) and its segments: wide enough for the softboxes to draw a
+ * clean highlight line along every edge, even from across the room.
+ */
+const BEVEL = { glass: 0.01, metal: 0.008, segments: 5 } as const;
+
 function createGeometries() {
   const layers = Object.fromEntries(
     Object.entries(LAYER_HEIGHT).map(([layer, height]) => [
@@ -72,8 +84,8 @@ function createGeometries() {
         STACK_FOOTPRINT,
         height,
         STACK_FOOTPRINT,
-        4,
-        layer === "interface" ? 0.008 : 0.005,
+        BEVEL.segments,
+        layer === "interface" ? BEVEL.glass : BEVEL.metal,
       ).translate(0, height / 2, 0),
     ]),
   ) as Record<StackLayer, RoundedBoxGeometry>;
@@ -125,6 +137,8 @@ function ProceduralStack({ tier, onReady, jobs }: StackModelProps) {
   const textures = useMemo(
     () => ({
       pcb: pcbTexture(),
+      pcbSurface: pcbSurfaceTexture(),
+      pcbEdge: pcbEdgeTexture(),
       etchHero: etchingTexture(ENGRAVE_HERO_TEXT),
       etchContact: etchingTexture(ENGRAVE_CONTACT_TEXT),
     }),
@@ -175,7 +189,7 @@ function ProceduralStack({ tier, onReady, jobs }: StackModelProps) {
           name={name}
           position-y={y}
           geometry={geometries.layers[layer]}
-          material={materials.layers[layer]}
+          material={layerMaterials(materials, layer)}
         >
           <mesh
             name={edgeObjectName(layer)}

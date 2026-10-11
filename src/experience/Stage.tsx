@@ -183,7 +183,7 @@ export default function Stage({
           whenIdle(next);
         }}
       >
-        {step >= STEP.environment ? <StudioLights /> : null}
+        {step >= STEP.environment ? <StudioLights tier={tier} /> : null}
         {step >= STEP.model ? (
           <StackModel
             tier={tier}
