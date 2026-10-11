@@ -135,7 +135,7 @@ server-rendered text over a poster image; all text stays in the HTML.
   on Vulkan with Intel's driver). Linux and CI keep every budget above; on
   Windows only, `perf:local` allows 70 ms long tasks, 150 ms mount tasks and
   750 MB per tab (Windows counts the GPU driver's memory: the pre-M7 stage
-  already used 440 to 584 MB), with the same 55 fps; local e2e runs 2
+  already used 440 to 584 MB), with the same 55 fps; e2e runs 2
   workers; and `pnpm lhci:windows` stands in for `pnpm lhci`, whose Chrome
   launcher fails on its temp profile there (EPERM), with a performance
   budget of 0.65 (the stage's mount costs ~0.9 s of TBT under the desktop

@@ -19,10 +19,11 @@ databaseUrl.pathname = "/cv_e2e";
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
-  // A local Windows laptop (4 cores) running the default 4 workers slowed the
+  // A Windows laptop (4 cores) running the default 4 workers slowed the
   // server and SwiftShader enough to break timed checks (the contact rate
-  // limit, the poster LCP, the stage) that pass on their own; CI is unchanged.
-  workers: process.platform === "win32" && !process.env.CI ? 2 : undefined,
+  // limit, the poster LCP, the stage) that pass on their own, also with
+  // CI=1's retries. CI runs on Ubuntu and keeps the default.
+  workers: process.platform === "win32" ? 2 : undefined,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
