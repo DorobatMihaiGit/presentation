@@ -87,6 +87,12 @@
     border-color: var(--color-line);
   }
 
+  /* Controls show their own pressed state; no grey flash on tap. */
+  a,
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   ::selection {
     background-color: var(--color-signal);
     color: var(--color-signal-ink);
@@ -217,11 +223,17 @@ html[data-canvas="live"] .hero-poster {
 
 /*
  * Posters are cropped like the live camera (framing.ts): landscape keeps the
- * right edge of the frame, where the stack is; portrait stays centred.
+ * right edge of the frame, portrait the bottom: where the stack is.
  */
 @media (orientation: landscape) {
   :is(.hero-poster, .section-poster) img {
     object-position: right center;
+  }
+}
+
+@media (orientation: portrait) {
+  :is(.hero-poster, .section-poster) img {
+    object-position: center bottom;
   }
 }
 
@@ -240,12 +252,14 @@ html[data-canvas="live"] .hero-poster {
     clip-path: inset(22% 0 0 0);
   }
 
+  /* The copy sits at the top (11-48% of a phone's height), the finished
+     stack below it (from 56%): solid behind the copy, clear by the stack. */
   .hero-scrim {
     background: linear-gradient(
       180deg,
-      var(--color-canvas) 22%,
-      color-mix(in oklab, var(--color-canvas) 60%, transparent) 40%,
-      transparent 65%
+      var(--color-canvas) 36%,
+      color-mix(in oklab, var(--color-canvas) 60%, transparent) 50%,
+      transparent 66%
     );
   }
 }

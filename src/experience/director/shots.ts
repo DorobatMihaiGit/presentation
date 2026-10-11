@@ -81,8 +81,8 @@ export function sampleCameraKeys(
  * Shot S1 (hero), metres, stack centred on the origin (asset contract):
  * macro dolly along the anodized base plate, up the front faces, over the
  * glass top where a softbox sweep reveals `engrave_hero`, then a pull-back to
- * the whole monolith. Landscape keeps the monolith right of the copy; portrait
- * keeps it in the lower half.
+ * the whole monolith. Landscape ends with the monolith in the right half,
+ * portrait under the copy, in the lowest 40% of a phone's screen.
  */
 export const HERO_KEYS: Record<Orientation, readonly CameraKey[]> = {
   landscape: [
@@ -95,7 +95,7 @@ export const HERO_KEYS: Record<Orientation, readonly CameraKey[]> = {
     { at: 0, position: [0.3, 0.035, 0.42], target: [0.04, 0.03, 0.19] },
     { at: 0.28, position: [0.02, 0.13, 0.52], target: [0, 0.12, 0.19] },
     { at: 0.55, position: [0, 0.62, 0.36], target: [0, 0.25, 0.04] },
-    { at: 1, position: [0.72, 0.78, 1.72], target: [0, 0.2, 0] },
+    { at: 1, position: [0.622, 0.947, 1.538], target: [-0.044, 0.41, -0.053] },
   ],
 };
 

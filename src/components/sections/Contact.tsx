@@ -45,7 +45,7 @@ export function Contact({ cv }: { cv: Cv }) {
             </h3>
             <a
               href={`mailto:${profile.email}`}
-              className="mt-2 inline-block text-heading text-ink wrap-anywhere underline decoration-line-strong underline-offset-8 transition-colors hover:decoration-signal"
+              className="mt-2 inline-block text-heading text-ink wrap-anywhere underline decoration-line-strong underline-offset-8 transition-colors hover:decoration-signal pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
             >
               {profile.email}
             </a>
@@ -59,7 +59,7 @@ export function Contact({ cv }: { cv: Cv }) {
                 <li key={social.network}>
                   <a
                     href={social.url}
-                    className="text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-signal"
+                    className="text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-signal pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
                   >
                     {SOCIAL_LABELS[social.network]}
                   </a>

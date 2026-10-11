@@ -32,7 +32,7 @@ export function SiteHeader({ cv, path }: { cv: Cv; path: string | null }) {
     >
       <a
         href="#top"
-        className="rounded-full py-1.5 text-sm font-semibold text-ink"
+        className="inline-flex items-center rounded-full py-1.5 text-sm font-semibold text-ink pointer-coarse:min-h-11"
       >
         {cv.profile.fullName.value}
       </a>

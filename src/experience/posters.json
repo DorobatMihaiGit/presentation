@@ -1,5 +1,5 @@
 {
-  "sourceHash": "08868306217afe05",
+  "sourceHash": "9dbf761a668b0abe",
   "shots": {
     "hero-start": {
       "landscape": {
@@ -90,13 +90,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.88b6b5de.avif"
+            "src": "/posters/hero-end-portrait-828.b5574f0e.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.96c978ea.webp"
+            "src": "/posters/hero-end-portrait-828.bace06c0.webp"
           }
         ]
       }
@@ -140,13 +140,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/about-portrait-828.b385d31d.avif"
+            "src": "/posters/about-portrait-828.5e8c7e30.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/about-portrait-828.4304054b.webp"
+            "src": "/posters/about-portrait-828.314798b4.webp"
           }
         ]
       }
