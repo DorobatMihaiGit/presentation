@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
@@ -28,8 +29,24 @@ declare global {
   }
 }
 
-/** Private (unshared) memory of a process in MB, from /proc (Linux). */
+/**
+ * Private (unshared) memory of a process in MB: /proc on Linux, the private
+ * working set on Windows (resident like Linux's Private_*, unlike the commit
+ * charge, which counts every driver reservation).
+ */
 function privateMb(pid: number): number {
+  if (process.platform === "win32") {
+    const bytes = execFileSync(
+      "powershell",
+      [
+        "-NoProfile",
+        "-Command",
+        `(Get-CimInstance Win32_PerfRawData_PerfProc_Process -Filter "IDProcess=${pid}").WorkingSetPrivate`,
+      ],
+      { encoding: "utf8" },
+    );
+    return Number(bytes.trim()) / 1024 / 1024;
+  }
   const rollup = readFileSync(`/proc/${pid}/smaps_rollup`, "utf8");
   const kb = (field: string) =>
     Number(new RegExp(`^${field}:\\s+(\\d+) kB`, "m").exec(rollup)?.[1] ?? 0);
@@ -178,3 +195,120 @@ for (const tier of ["auto", "1", "3"] as const) {
     }
   });
 }
+
+test("three trips to a project page and back keep the stage smooth and lean", async ({
+  page,
+  browser,
+}, testInfo) => {
+  // Next keeps the home page in a hidden <Activity> while a project page is
+  // open; the stage drops its WebGL context then and mounts a new one on the
+  // way back (StageLoader). Each remount must stay in short tasks, and the
+  // contexts must not pile up in memory.
+  test.setTimeout(240_000);
+  await page.addInitScript(() => {
+    window.__longTasks = [];
+    window.__frames = [];
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        window.__longTasks.push({
+          start: entry.startTime,
+          duration: entry.duration,
+        });
+      }
+    }).observe({ type: "longtask", buffered: true });
+    const frame = (now: number) => {
+      const layer = document.querySelector<HTMLElement>(".stage-layer");
+      window.__frames.push([now, Number(layer?.dataset.journey ?? 0)]);
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+  await page.goto("/en");
+  const html = page.locator("html");
+  await expect(html).toHaveAttribute("data-canvas", /live|poster/, {
+    timeout: 30_000,
+  });
+  test.skip(
+    (await html.getAttribute("data-canvas")) === "poster",
+    "No hardware WebGL here: the classifier chose posters.",
+  );
+
+  const remounts: number[][] = [];
+  for (let trip = 0; trip < 3; trip += 1) {
+    await page.locator("#projects").scrollIntoViewIfNeeded();
+    await page
+      .locator("#projects")
+      .getByRole("link", { name: "Tramline", exact: true })
+      .click();
+    await expect(page).toHaveURL("/en/projects/tramline");
+    await expect(page.locator(".stage-layer")).toHaveCount(0);
+    await page.waitForTimeout(500);
+    const left = await page.evaluate(() => performance.now());
+    await page.getByRole("link", { name: "All work" }).click();
+    await expect(page).toHaveURL("/en#projects");
+    // Up to About, where the stage shows (it steps back behind Projects).
+    await page.locator("#about").scrollIntoViewIfNeeded();
+    await expect(html).toHaveAttribute("data-canvas", "live", {
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(1500);
+    remounts.push(
+      await page.evaluate(
+        (since) =>
+          window.__longTasks
+            .filter((task) => task.start >= since)
+            .map((task) => Math.round(task.duration)),
+        left,
+      ),
+    );
+  }
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(1500);
+  const scrollStart = await page.evaluate(() => performance.now());
+  await scrollPage(page);
+  const { longTasks, frames } = await page.evaluate(
+    (start) => ({
+      longTasks: window.__longTasks.filter((task) => task.start >= start),
+      frames: window.__frames.filter(([time]) => time >= start),
+    }),
+    scrollStart,
+  );
+  const byStop = STOPS.map(() => [] as number[]);
+  for (let i = 1; i < frames.length; i += 1) {
+    const stop = Math.min(STOPS.length - 1, Math.floor(frames[i][1]));
+    byStop[stop].push(frames[i][0] - frames[i - 1][0]);
+  }
+  const perStop = Object.fromEntries(
+    STOPS.map((stop, index) => [stop, stats(byStop[index]).fps]),
+  );
+  const browserCdp = await browser.newBrowserCDPSession();
+  const { processInfo } = await browserCdp.send("SystemInfo.getProcessInfo");
+  const renderer = processInfo
+    .filter((info) => info.type === "renderer")
+    .sort((a, b) => b.cpuTime - a.cpuTime)[0];
+  const gpu = processInfo.find((info) => info.type === "GPU");
+  const tabMb = privateMb(renderer.id) + (gpu ? privateMb(gpu.id) : 0);
+  const report = {
+    remountLongTasks: remounts,
+    perStop,
+    longTasksWhileScrolling: longTasks.map((task) => Math.round(task.duration)),
+    tabMb: Number(tabMb.toFixed(1)),
+  };
+  console.log(JSON.stringify(report));
+  await testInfo.attach("round-trips.json", {
+    body: JSON.stringify(report, null, 2),
+    contentType: "application/json",
+  });
+
+  for (const tasks of remounts) {
+    expect(Math.max(0, ...tasks)).toBeLessThanOrEqual(MOUNT_BUDGET_MS);
+  }
+  expect(
+    Math.max(0, ...longTasks.map((task) => task.duration)),
+  ).toBeLessThanOrEqual(LONG_TASK_BUDGET_MS);
+  for (const stop of STOPS) {
+    expect(perStop[stop], stop).toBeGreaterThanOrEqual(MIN_FPS);
+  }
+  expect(report.tabMb).toBeLessThan(MEMORY_BUDGET_MB);
+});

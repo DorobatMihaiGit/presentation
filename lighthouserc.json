@@ -3,7 +3,11 @@
     "collect": {
       "startServerCommand": "next start --port 3200",
       "startServerReadyPattern": "Ready in",
-      "url": ["http://localhost:3200/en", "http://localhost:3200/ro"],
+      "url": [
+        "http://localhost:3200/en",
+        "http://localhost:3200/ro",
+        "http://localhost:3200/en/projects/ledger-lens"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop"
