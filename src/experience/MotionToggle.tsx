@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { setMotionChoice } from "./motion-preference";
 import { useMotion } from "./use-motion";
 
@@ -7,11 +8,19 @@ export type MotionToggleLabels = { label: string; on: string; off: string };
 
 /**
  * Visible "Motion" switch. Off = posters only (tier 0): no smooth scrolling,
- * no pinned hero, no 3D. The choice is kept in localStorage.
+ * no pinned hero, no 3D, no animated page transitions. The choice is kept
+ * in localStorage and mirrored to html[data-motion] on every page.
  */
 export function MotionToggle({ labels }: { labels: MotionToggleLabels }) {
+  const motion = useMotion();
   // Before hydration the state is unknown: render "off" (no motion yet).
-  const on = useMotion() === true;
+  const on = motion === true;
+
+  useEffect(() => {
+    if (motion !== null) {
+      document.documentElement.dataset.motion = motion ? "on" : "off";
+    }
+  }, [motion]);
 
   return (
     <button

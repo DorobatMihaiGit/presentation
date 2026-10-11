@@ -32,6 +32,7 @@ export function ProjectNav({
           <li>
             <Link
               href={`/${locale}${projectPath(previous.slug)}`}
+              transitionTypes={["nav-back"]}
               className={card}
             >
               <span className="font-mono text-label uppercase text-ink-subtle">
@@ -51,6 +52,7 @@ export function ProjectNav({
           <li className="sm:col-start-2">
             <Link
               href={`/${locale}${projectPath(next.slug)}`}
+              transitionTypes={["nav-forward"]}
               className={`${card} sm:items-end sm:text-right`}
             >
               <span className="font-mono text-label uppercase text-ink-subtle">

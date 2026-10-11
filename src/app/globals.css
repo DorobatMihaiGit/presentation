@@ -364,6 +364,101 @@ html[data-canvas="poster"] .section-poster {
   padding: 0;
 }
 
+/*
+ * View Transitions (M7, React <ViewTransition>): project pages slide forward
+ * and back (DirectionalTransition), the cover morphs between the grid card
+ * and the page (CoverTransition). The old page leaves quickly, the new one
+ * arrives a moment later; no motion with reduced motion or Motion off.
+ */
+:root {
+  --vt-exit: 150ms;
+  --vt-enter: 210ms;
+  --vt-move: 400ms;
+}
+
+@keyframes vt-fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+@keyframes vt-slide {
+  from {
+    translate: var(--vt-offset);
+  }
+  to {
+    translate: 0;
+  }
+}
+
+@keyframes vt-blur {
+  30% {
+    filter: blur(3px);
+  }
+}
+
+::view-transition {
+  /* Clicks during a transition reach the new page. */
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion="off"])::view-transition-old(.nav-forward),
+  html:not([data-motion="off"])::view-transition-old(.nav-back) {
+    animation:
+      var(--vt-exit) ease-out both vt-fade reverse,
+      var(--vt-move) var(--ease-studio) both vt-slide reverse;
+  }
+
+  html:not([data-motion="off"])::view-transition-new(.nav-forward),
+  html:not([data-motion="off"])::view-transition-new(.nav-back) {
+    animation:
+      var(--vt-enter) var(--ease-out-quint) var(--vt-exit) both vt-fade,
+      var(--vt-move) var(--ease-studio) both vt-slide;
+  }
+
+  html:not([data-motion="off"])::view-transition-group(.morph) {
+    animation-duration: var(--vt-move);
+    animation-timing-function: var(--ease-studio);
+  }
+
+  html:not([data-motion="off"])::view-transition-image-pair(.morph) {
+    animation-name: vt-blur;
+  }
+}
+
+::view-transition-old(.nav-forward),
+::view-transition-new(.nav-back) {
+  --vt-offset: -60px;
+}
+
+::view-transition-new(.nav-forward),
+::view-transition-old(.nav-back) {
+  --vt-offset: 60px;
+}
+
+/* No motion at all: the browser's own cross-fades and morphs stop too. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+}
+
+html[data-motion="off"]::view-transition-group(*),
+html[data-motion="off"]::view-transition-image-pair(*),
+html[data-motion="off"]::view-transition-old(*),
+html[data-motion="off"]::view-transition-new(*) {
+  animation: none;
+}
+
 /* Poster capture (scripts/posters.ts): only the canvas is visible. */
 html[data-capture] body {
   visibility: hidden;

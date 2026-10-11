@@ -45,7 +45,11 @@ export function SiteHeader({ cv, path }: { cv: Cv; path: string | null }) {
                   {t(id)}
                 </a>
               ) : (
-                <Link href={`/${cv.locale}#${id}`} className={link}>
+                <Link
+                  href={`/${cv.locale}#${id}`}
+                  transitionTypes={["nav-back"]}
+                  className={link}
+                >
                   {t(id)}
                 </Link>
               )}

@@ -60,6 +60,9 @@ test("lists published projects only, with descriptive link names", async ({
   await expect(
     work.getByRole("link", { name: "Live site: Ledger Lens" }),
   ).toHaveAttribute("href", "https://example.com/ledger-lens");
+  await expect(
+    work.getByRole("link", { name: "Ledger Lens", exact: true }),
+  ).toHaveAttribute("href", "/en/projects/ledger-lens");
 });
 
 test("contact form is labelled", async ({ page }) => {

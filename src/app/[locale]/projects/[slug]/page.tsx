@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CaseStudy } from "@/components/projects/CaseStudy";
+import { CoverTransition } from "@/components/projects/CoverTransition";
 import { ProjectCover } from "@/components/projects/ProjectCover";
 import { ProjectLinks } from "@/components/projects/ProjectLinks";
 import { ProjectNav } from "@/components/projects/ProjectNav";
@@ -114,6 +115,7 @@ export default async function ProjectPage({
         <header className="relative mx-auto w-full max-w-content px-gutter pt-36 md:pt-40">
           <Link
             href={`/${locale}#projects`}
+            transitionTypes={["nav-back"]}
             className="-ml-1 inline-flex min-h-11 items-center gap-2 px-1 font-mono text-label uppercase text-ink-muted transition-colors hover:text-ink"
           >
             <span aria-hidden="true">←</span>
@@ -185,14 +187,16 @@ export default async function ProjectPage({
         </header>
         {project.cover ? (
           <figure className="relative mx-auto mt-16 w-full max-w-content px-gutter">
-            <div className="overflow-hidden rounded-panel ring-1 ring-line">
-              <ProjectCover
-                cover={project.cover}
-                locale={locale}
-                sizes="(min-width: 76rem) 76rem, 100vw"
-                preload
-              />
-            </div>
+            <CoverTransition slug={project.slug}>
+              <div className="overflow-hidden rounded-panel ring-1 ring-line">
+                <ProjectCover
+                  cover={project.cover}
+                  locale={locale}
+                  sizes="(min-width: 76rem) 76rem, 100vw"
+                  preload
+                />
+              </div>
+            </CoverTransition>
           </figure>
         ) : null}
         {project.body.value ? (
