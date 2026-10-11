@@ -104,12 +104,6 @@
     overflow-wrap: break-word;
     text-wrap: balance;
   }
-
-  @media (prefers-reduced-motion: no-preference) {
-    html {
-      scroll-behavior: smooth;
-    }
-  }
 }
 
 @layer components {
@@ -186,6 +180,15 @@
 main > :not(.stage-layer) {
   position: relative;
   z-index: 1;
+}
+
+/* A stage mounted mid-page (e.g. back from a project) fades in. */
+html:not([data-capture]) .stage-layer canvas {
+  transition: opacity 600ms var(--ease-out-quint);
+}
+
+html[data-canvas="loading"] .stage-layer canvas {
+  opacity: 0;
 }
 
 html:is([data-canvas="loading"], [data-canvas="live"]) .hero {

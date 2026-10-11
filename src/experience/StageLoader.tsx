@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { type Capture, captureFromSearch } from "./capture-mode";
 import {
   classifyTier,
@@ -28,6 +28,21 @@ export function StageLoader() {
     capture: Capture | null;
     pinned: boolean;
   } | null>(null);
+
+  // Next keeps a page it navigates away from in a hidden <Activity>: its
+  // effects are cleaned up (R3F then forces the WebGL context lost) but its
+  // state is kept. Drop the stage while hidden, so showing the page again
+  // mounts a fresh one, and keep the hero pinned with its poster meanwhile.
+  useLayoutEffect(
+    () => () => {
+      setLive(null);
+      const root = document.documentElement;
+      if (root.dataset.canvas === "live") {
+        root.dataset.canvas = "loading";
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (motion === null) {

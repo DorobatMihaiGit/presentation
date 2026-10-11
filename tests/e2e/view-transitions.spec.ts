@@ -215,3 +215,36 @@ test("browsers without View Transitions still navigate", async ({ page }) => {
   await expect(page).toHaveURL("/en#projects");
   expect(errors).toEqual([]);
 });
+
+test("browser back returns to the grid at once, without scrolling the page", async ({
+  page,
+}) => {
+  await page.goto("/en");
+  await hydrated(page);
+  const card = page
+    .locator("#projects")
+    .getByRole("link", { name: "Tramline", exact: true });
+  await card.scrollIntoViewIfNeeded();
+  await card.click();
+  await expect(page).toHaveURL("/en/projects/tramline");
+  // A reader goes back after the page has slid in. Back during the slide
+  // lands at the end of the home page instead (Verified facts).
+  await page.waitForFunction(() => !document.activeViewTransition);
+  await page.evaluate(() => {
+    const seen: number[] = [];
+    (window as unknown as { __scrolls: number[] }).__scrolls = seen;
+    addEventListener("scroll", () => seen.push(Math.round(window.scrollY)));
+  });
+
+  await page.goBack();
+  await expect(page).toHaveURL("/en");
+  await expect(card).toBeInViewport();
+  const { scrolls, end } = await page.evaluate(() => ({
+    scrolls: (window as unknown as { __scrolls: number[] }).__scrolls,
+    end: Math.round(window.scrollY),
+  }));
+  // Back at the grid in one step: no smooth scroll through the sections
+  // (M6's CSS smooth scrolling animated the restore from the top).
+  expect(end).toBeGreaterThan(1000);
+  expect(scrolls.filter((y) => y > 200 && y < end - 200)).toEqual([]);
+});
