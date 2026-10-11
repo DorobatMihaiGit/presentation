@@ -22,7 +22,10 @@ export type Tier3Module = typeof import("./tier3");
  * SMAA embeds its lookup textures (+54 KB gz in the lazy chunk). The scene
  * renders with 4x MSAA: sub-pixel highlights on the bevels and the glowing
  * edge bands broke into rows of dots without it, which FXAA cannot join.
- * Tier 3 adds ambient occlusion (N8AO) and bokeh depth of field (`extras`).
+ * Tier 3 adds ambient occlusion (N8AO) and bokeh depth of field (`extras`)
+ * and renders without MSAA: on a Tiger Lake Iris Xe (Windows, ANGLE Vulkan)
+ * N8AO and the depth of field on a multisampled buffer dropped the journey
+ * from 60 to 39 fps (2x: 44 fps) and added 150 MB of GPU memory.
  */
 export function Effects({
   extras,
@@ -47,7 +50,7 @@ export function Effects({
   const composer = useMemo(() => {
     const composer = new EffectComposer(gl, {
       frameBufferType: HalfFloatType,
-      multisampling: 4,
+      multisampling: extras ? 0 : 4,
     });
     composer.addPass(new RenderPass(scene, camera));
     const t3 = extras?.tier3Effects(scene, camera, focus, 1, 1);
