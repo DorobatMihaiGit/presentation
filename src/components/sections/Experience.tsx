@@ -37,7 +37,17 @@ export function Experience({ cv }: { cv: Cv }) {
                 {job.roleTitle.value}
               </h3>
               <p className="mt-1 text-ink-muted">
-                {job.company} · {t(`employmentType.${job.employmentType}`)}
+                {job.url ? (
+                  <a
+                    href={job.url}
+                    className="underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink hover:decoration-signal"
+                  >
+                    {job.company}
+                  </a>
+                ) : (
+                  job.company
+                )}{" "}
+                · {t(`employmentType.${job.employmentType}`)}
               </p>
               <p
                 lang={fallbackLang(job.description, locale)}

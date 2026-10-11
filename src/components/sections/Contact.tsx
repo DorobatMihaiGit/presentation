@@ -2,11 +2,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { Section } from "@/components/ui/Section";
 import type { Cv } from "@/content/types";
 import { ContactForm, type ContactFormLabels } from "./ContactForm";
+import { CvDownload } from "./CvDownload";
 
 const SOCIAL_LABELS = { github: "GitHub", linkedin: "LinkedIn" } as const;
 
 export function Contact({ cv }: { cv: Cv }) {
   const t = useTranslations("Contact");
+  const cvText = useTranslations("Cv");
   const locale = useLocale();
   const { profile } = cv;
   const labels: ContactFormLabels = {
@@ -65,6 +67,18 @@ export function Contact({ cv }: { cv: Cv }) {
               ))}
             </ul>
           </div>
+          {profile.cvPdf ? (
+            <div>
+              <h3 className="font-mono text-label uppercase text-ink-subtle">
+                {cvText("title")}
+              </h3>
+              <CvDownload
+                cvPdf={profile.cvPdf}
+                locale={cv.locale}
+                className="mt-1 text-ink"
+              />
+            </div>
+          ) : null}
         </div>
         <ContactForm locale={locale} labels={labels} />
       </div>

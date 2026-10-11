@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
-import sharp from "sharp";
+import { expect, test } from "@playwright/test";
 import { signInAsOwner } from "./admin-login";
+import { deleteMedia, mediaId, pngFile, uploadMedia } from "./media-library";
 
 test.beforeEach(async ({ page }) => {
   await signInAsOwner(page);
@@ -40,35 +40,21 @@ test("a project is created with a markdown preview and published", async ({
   await expect(page).toHaveURL("/admin/projects");
 });
 
-/** Uploads a 1600x1000 PNG to the media library under `alt`. */
-async function uploadCover(page: Page, alt: { en: string; ro: string }) {
-  await page.goto("/admin/media");
-  const buffer = await sharp({
-    create: { width: 1600, height: 1000, channels: 3, background: "#27496d" },
-  })
-    .png()
-    .toBuffer();
-  await page.getByLabel(/^File/).setInputFiles({
-    name: "cover.png",
-    mimeType: "image/png",
-    buffer,
-  });
-  await page.getByLabel("Alt text (EN)", { exact: true }).fill(alt.en);
-  await page.getByLabel("Alt text (RO)", { exact: true }).fill(alt.ro);
-  await page.getByRole("button", { name: "Upload" }).click();
-  await expect(page.getByRole("status").first()).toHaveText("Uploaded.");
-}
-
 test("a cover, a case study and links from the admin reach the project page", async ({
   page,
   request,
 }) => {
-  await uploadCover(page, {
+  await uploadMedia(page, await pngFile("cover.png", 1600, 1000), {
     en: "The pass planner at dawn",
     ro: "Planificatorul de treceri în zori",
   });
 
   await page.goto("/admin/projects/new");
+  const coverId = await mediaId(
+    page,
+    "Cover image",
+    "The pass planner at dawn",
+  );
   await page.getByLabel("Slug").fill("pass-planner");
   await page.getByLabel("Year").fill("2026");
   await page.getByLabel("Live URL").fill("https://example.com/pass-planner");
@@ -206,12 +192,7 @@ test("a cover, a case study and links from the admin reach the project page", as
   await page.goto("/admin/projects/pass-planner");
   await page.getByRole("button", { name: "Delete" }).click();
   await expect(page).toHaveURL("/admin/projects");
-  await page.goto("/admin/media");
-  page.once("dialog", (dialog) => dialog.accept());
-  await page
-    .getByRole("button", { name: /^Delete / })
-    .first()
-    .click();
+  await deleteMedia(page, coverId);
   expect((await page.goto("/en/projects/pass-planner"))?.status()).toBe(404);
 });
 
