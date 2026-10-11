@@ -1,4 +1,4 @@
-import { type ChildProcess, spawn } from "node:child_process";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -43,9 +43,12 @@ async function startServer(): Promise<ChildProcess> {
   if (!existsSync(".next/BUILD_ID")) {
     throw new Error("No production build: run `pnpm build` first.");
   }
-  const server = spawn("pnpm", ["exec", "next", "start", "--port", `${PORT}`], {
+  // Node runs Next's bin directly: on Windows `pnpm` is a .cmd shim that
+  // spawn cannot start without a shell.
+  const next = join("node_modules", "next", "dist", "bin", "next");
+  const server = spawn(process.execPath, [next, "start", "--port", `${PORT}`], {
     stdio: "ignore",
-    detached: true,
+    detached: process.platform !== "win32",
   });
   for (let attempt = 0; attempt < 120; attempt += 1) {
     try {
@@ -56,6 +59,18 @@ async function startServer(): Promise<ChildProcess> {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw new Error(`next start did not answer on port ${PORT}`);
+}
+
+/** Stops `next start` and its workers: a process group on POSIX, a tree on Windows. */
+function stopServer(server: ChildProcess) {
+  if (!server.pid) return;
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/pid", `${server.pid}`, "/t", "/f"], {
+      stdio: "ignore",
+    });
+  } else {
+    process.kill(-server.pid);
+  }
 }
 
 async function encode(
@@ -126,7 +141,7 @@ async function main() {
     }
   } finally {
     await browser.close();
-    if (server.pid) process.kill(-server.pid);
+    stopServer(server);
   }
 
   for (const file of readdirSync(OUT_DIR)) {
