@@ -41,10 +41,11 @@ gave `pnpm admin:create`).
 | `pnpm format` | Biome format, writes files |
 | `pnpm test` | Vitest unit tests (`tests/unit`) |
 | `pnpm test:e2e` | Playwright e2e (`tests/e2e`, incl. axe); builds and serves on port 3100 |
-| `pnpm lhci` | Lighthouse CI, desktop preset, on port 3200; asserts >= 0.95 in all 4 categories. Run `pnpm build` first |
+| `pnpm lhci` | Lighthouse CI, desktop preset, on port 3200, for `/en`, `/ro` and `/en/projects/ledger-lens`; asserts >= 0.95 in all 4 categories. Run `SITE_URL=http://localhost:3200 pnpm build` first |
+| `pnpm lhci:windows` | The same Lighthouse runs and budgets on Windows, where `lhci autorun` fails on Chrome's temp profile; performance >= 0.65 there (see "On Windows") |
 | `pnpm assets:posters` | Capture the hero and section posters from the 3D scene into `public/posters` + `src/experience/posters.json` (port 3400). Run `pnpm build` first |
 | `pnpm assets:textures` | Download the Poly Haven (CC0) detail maps once, convert them to WebP in `public/textures` + `src/experience/textures.json` |
-| `pnpm perf:local` | Long tasks, frame rate per section and memory while scrolling the whole page on the live stage, on this machine's GPU (port 3300). Run `pnpm build` first |
+| `pnpm perf:local` | Long tasks, frame rate per section and memory while scrolling the whole page on the live stage, and after three trips to a project page and back, on this machine's GPU (port 3300). Run `pnpm build` first |
 | `pnpm db:generate --name <name>` | Drizzle Kit: write a SQL migration in `drizzle/` from schema changes (no database needed) |
 | `pnpm db:migrate` | Apply pending migrations to `DATABASE_URL` |
 | `pnpm db:seed` | Load the fixture CV into an empty database; `--reset` replaces all CV content |
@@ -69,14 +70,32 @@ server-rendered text over a poster image; all text stays in the HTML.
 - **Tiers.** After the load event, `StageLoader` picks a tier from the WebGL
   renderer string: 0 = posters only (no WebGL 2 or a software renderer),
   1 = light scene (DPR 1, no glass transmission, no post-processing), 2 =
-  reference (Intel Iris Xe, DPR up to 1.5, bloom + FXAA), 3 = discrete GPUs
+  reference (Intel Iris Xe, DPR up to 1.5, 4x MSAA, bloom + FXAA), 3 = discrete GPUs
   (DPR up to 2, plus ambient occlusion and depth of field from a chunk of
-  their own). If frames stay slower than 40 fps while scrolling, the stage
+  their own, without MSAA: both on a multisampled buffer cost a third of the
+  frame rate on an Iris Xe). If frames stay slower than 40 fps while scrolling, the stage
   steps down a tier, and below tier 1 it gives up and shows the poster. A lost
   WebGL context also falls back to the poster.
 - **Motion switch.** The **Motion** button in the header turns all of it off
   (posters, native scrolling, no pinned hero) and remembers the choice.
   `prefers-reduced-motion` and Save-Data start with motion off.
+- **Framing.** Each shot is authored for a 16:9 (landscape) or 828x1792
+  (portrait) frame and cropped to the screen like `object-fit: cover`,
+  keeping the side where the stack is: the right edge in landscape (the copy
+  takes the left half), the bottom in portrait (the copy sits on top).
+  `tests/e2e/framing.spec.ts` checks, from 1280x720 to 1920x1080 and on
+  16:10 and 3:2 screens, that the stack stays on screen and 32 px clear of the copy
+  (the stage writes its box to `.stage-layer[data-box]`).
+- **Look.** An environment of softbox strips (no HDRI), AgX tone mapping and
+  a studio background that lands exactly on the page colour after it
+  (`src/experience/scenes/studio.ts`), so the stage meets the page without a
+  seam. The circuit board is copper that reflects on a solder mask that does
+  not, with FR4 edges; the glass has one soft highlight; the bevels are wide
+  enough to draw a clean line along every edge.
+- **Leaving for a project page.** Next keeps the home page in a hidden
+  `<Activity>` while a project page is open: `StageLoader` drops the stage
+  (and its WebGL context) then, and mounts a fresh one on the way back,
+  starting on the section on screen.
 - **Query flags** (any page): `?tier=0..3` forces a tier and keeps it (no
   runtime step-down); `?capture=<scene>&p=0..1` renders one frame of a scene
   (`hero`, `about`, `skills`, `experience`, `contact`) for poster capture.
@@ -112,10 +131,44 @@ server-rendered text over a poster image; all text stays in the HTML.
   or more than 400 MB of tab memory. The JS budgets (160 KB gz before 3D,
   350 KB gz for the 3D chunks, 100 KB gz more for tier 3) are e2e tests
   (`tests/e2e/budgets.spec.ts`), so CI enforces them.
+- **On Windows.** Measured on a Tiger Lake Iris Xe laptop (i5-1135G7, ANGLE
+  on Vulkan with Intel's driver). Linux and CI keep every budget above; on
+  Windows only, `perf:local` allows 70 ms long tasks, 150 ms mount tasks and
+  750 MB per tab (Windows counts the GPU driver's memory: the pre-M7 stage
+  already used 440 to 584 MB), with the same 55 fps; local e2e runs 2
+  workers; and `pnpm lhci:windows` stands in for `pnpm lhci`, whose Chrome
+  launcher fails on its temp profile there (EPERM), with a performance
+  budget of 0.65 (the stage's mount costs ~0.9 s of TBT under the desktop
+  preset on that laptop, before and after M7).
 - **Swapping in a modelled stack.** Shots find objects by the asset-contract
   names (`layer_interface` … `layer_craft`, `engrave_hero`,
   `engrave_contact`, `led_status`, `pcb_traces`); a `stack.glb` with the same
   names can replace `ProceduralStack` in `src/experience/scenes/StackModel.tsx`.
+
+## Project pages
+
+Every published project has a page, `/<locale>/projects/<slug>`: title,
+summary, role, outcome, stack, live and source links, the cover and the
+case study (markdown, written in the admin). The pages are prerendered like
+`/en` and `/ro` (a project published later renders on its first visit),
+cached under the same `cv` tag, listed in `sitemap.xml` with hreflang
+alternates, and describe themselves as a schema.org `CreativeWork`. There is
+no 3D on them; the header's section links lead back to the home page.
+
+- **Case studies** render with react-markdown: raw HTML is dropped, only
+  http(s), mailto and relative links survive, and images are left out (the
+  cover is the project's image). A `#` heading renders as `h2`.
+- **Covers** and the headshot come from the media library through the image
+  optimizer (resized, served as WebP): `OptimizedImage` renders next/image's
+  props as a plain `<img>` on the server, so the pages ship no image
+  JavaScript. `next.config.ts` allows `/api/media/**` only; Vercel Blob URLs
+  need a `remotePatterns` entry when production storage is set up (M9).
+- **View Transitions.** Opening a project from the grid slides the page
+  forward and morphs the card's cover into the page's; "All work", "Previous"
+  and the header's section links slide back (React `<ViewTransition>`, types
+  from `next/link`'s `transitionTypes`; `src/components/motion/`). Browsers
+  without View Transitions, reduced motion and **Motion** off swap the page
+  without animating; a browser back button never animates.
 
 ## Local database
 
@@ -143,6 +196,18 @@ migrations in `drizzle/`). `pnpm db:seed` loads the placeholder CV from
 (`'use cache'`, tag `cv`); every admin change calls `updateTag('cv')`, so
 the next request renders the new content. A blank Romanian field falls
 back to English (marked `lang="en"`).
+
+What the admin edits and where the site shows it:
+
+| Admin | Public site |
+| --- | --- |
+| Profile: name, headline, summary, location, years, availability, email, GitHub, LinkedIn | Hero, About, Contact, header, metadata |
+| Profile: avatar | About (next to the summary) |
+| Profile: CV PDF (EN, RO) | "Download CV" in the hero and in Contact (`/ro` offers the English PDF, marked `hreflang="en"`, until there is a Romanian one) |
+| Experience: role, company, company URL, dates, type, description, highlights | Experience (the company links to its URL) |
+| Skills | Skills, project stacks, JSON-LD |
+| Projects: title, summary, role, outcome, year, featured, skills, links, cover, case study | Projects grid and the project pages |
+| Media: alt text (EN, RO) | Covers and the avatar |
 
 ## Admin
 
