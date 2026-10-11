@@ -1,4 +1,5 @@
 import { useTranslations } from "next-intl";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { Section } from "@/components/ui/Section";
 import { fallbackLang } from "@/content/localize";
 import type { Cv } from "@/content/types";
@@ -20,6 +21,17 @@ export function About({ cv }: { cv: Cv }) {
   return (
     <Section id="about" title={t("title")} scene="about">
       <div className="flex flex-col gap-12 lg:w-7/12">
+        {profile.avatar ? (
+          <OptimizedImage
+            src={profile.avatar.url}
+            alt={profile.avatar.alt.value}
+            lang={fallbackLang(profile.avatar.alt, locale)}
+            width={112}
+            height={112}
+            sizes="56px"
+            className="size-14 rounded-full object-cover ring-1 ring-line"
+          />
+        ) : null}
         <p
           lang={fallbackLang(profile.summary, locale)}
           className="text-statement text-ink"

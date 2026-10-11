@@ -13,3 +13,14 @@ export function formatYearMonth(value: YearMonth, locale: Locale): string {
     timeZone: "UTC",
   }).format(new Date(Date.UTC(year, month - 1, 1)));
 }
+
+/** A file size as the visitor reads it: `89 kB`, `1.4 MB` (`1,4 MB` in RO). */
+export function formatFileSize(bytes: number, locale: Locale): string {
+  const mb = bytes >= 1024 * 1024;
+  return new Intl.NumberFormat(locale, {
+    style: "unit",
+    unit: mb ? "megabyte" : "kilobyte",
+    unitDisplay: "short",
+    maximumFractionDigits: mb ? 1 : 0,
+  }).format(bytes / (mb ? 1024 * 1024 : 1024));
+}

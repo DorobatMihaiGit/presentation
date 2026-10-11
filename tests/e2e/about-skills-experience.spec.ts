@@ -40,3 +40,16 @@ test("marks English fallback text with lang=en on /ro", async ({ page }) => {
     ),
   ).toHaveAttribute("lang", "en");
 });
+
+test("links a company to its site when it has one", async ({ page }) => {
+  await page.goto("/en");
+  const experience = page.getByRole("region", { name: "Experience" });
+
+  await expect(
+    experience.getByRole("link", { name: "Ardea Health" }),
+  ).toHaveAttribute("href", "https://example.com/ardea-health");
+  await expect(experience.getByText("Studio Meridian")).toBeVisible();
+  await expect(
+    experience.getByRole("link", { name: "Studio Meridian" }),
+  ).toHaveCount(0);
+});

@@ -1,6 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { signInAsOwner } from "./admin-login";
+import {
+  deleteMedia,
+  mediaId,
+  PDF_FILE,
+  pngFile,
+  uploadMedia,
+} from "./media-library";
 
 const SEEDED_RO_HEADLINE =
   "Dezvoltator fullstack care construiește produse web rapide și accesibile, de la baza de date la pixel.";
@@ -73,4 +80,68 @@ test("the profile page has no axe violations", async ({ page }) => {
   const { violations } = await new AxeBuilder({ page }).analyze();
 
   expect(violations.map((v) => v.id)).toEqual([]);
+});
+
+async function pick(page: Page, picks: Record<string, string>) {
+  await page.goto("/admin/profile");
+  for (const [picker, option] of Object.entries(picks)) {
+    await page
+      .getByLabel(picker, { exact: true })
+      .selectOption({ label: option });
+  }
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByRole("status")).toHaveText("Profile saved.");
+}
+
+test("the headshot and the CV PDF picked here show on the home page", async ({
+  page,
+  request,
+}) => {
+  await uploadMedia(page, await pngFile("headshot.png", 400, 400), {
+    en: "Owner headshot",
+  });
+  await uploadMedia(page, PDF_FILE, { en: "Owner resume (EN)" });
+  await page.goto("/admin/profile");
+  const ids = [
+    await mediaId(page, "Avatar", "Owner headshot"),
+    await mediaId(page, "CV PDF (EN)", "Owner resume (EN)"),
+  ];
+  await pick(page, {
+    Avatar: "Owner headshot",
+    "CV PDF (EN)": "Owner resume (EN)",
+  });
+
+  await page.goto("/en");
+  const download = page
+    .getByRole("region", { name: "Alex Marin" })
+    .getByRole("link", { name: /Download CV/ });
+  await expect(download).toHaveAttribute("href", /^\/api\/media\/.+\.pdf$/);
+  await expect(download).toHaveAttribute("type", "application/pdf");
+  const pdf = await request.get((await download.getAttribute("href")) ?? "");
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  await expect(
+    page
+      .getByRole("region", { name: "Let's build" })
+      .getByRole("link", { name: /Download CV/ }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "About" })
+      .getByRole("img", { name: "Owner headshot" }),
+  ).toBeVisible();
+
+  // No Romanian PDF yet: /ro offers the English one and says so.
+  await page.goto("/ro");
+  await expect(
+    page
+      .getByRole("region", { name: "Alex Marin" })
+      .getByRole("link", { name: /Descarcă CV-ul/ }),
+  ).toHaveAttribute("hreflang", "en");
+
+  await pick(page, { Avatar: "None", "CV PDF (EN)": "None" });
+  await page.goto("/en");
+  await expect(page.getByRole("link", { name: /Download CV/ })).toHaveCount(0);
+  for (const id of ids) {
+    await deleteMedia(page, id);
+  }
 });

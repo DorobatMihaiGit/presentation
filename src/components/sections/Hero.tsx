@@ -1,6 +1,7 @@
 import { useTranslations } from "next-intl";
 import { fallbackLang } from "@/content/localize";
 import type { Cv } from "@/content/types";
+import { CvDownload } from "./CvDownload";
 import { HeroPoster } from "./HeroPoster";
 
 /**
@@ -43,7 +44,7 @@ export function Hero({ cv }: { cv: Cv }) {
             >
               {profile.headline.value}
             </p>
-            <div className="mt-10 flex flex-wrap gap-3">
+            <div className="mt-10 flex flex-wrap items-center gap-3">
               <a
                 href="#contact"
                 className="rounded-full bg-signal px-6 py-3 font-medium text-signal-ink motion-safe:transition-transform motion-safe:duration-(--motion-press) motion-safe:active:scale-[0.98]"
@@ -56,6 +57,13 @@ export function Hero({ cv }: { cv: Cv }) {
               >
                 {t("secondaryCta")}
               </a>
+              {profile.cvPdf ? (
+                <CvDownload
+                  cvPdf={profile.cvPdf}
+                  locale={locale}
+                  className="ml-2 text-sm text-ink-muted hover:text-ink"
+                />
+              ) : null}
             </div>
           </div>
         </div>

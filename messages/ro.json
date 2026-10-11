@@ -110,6 +110,11 @@
       }
     }
   },
+  "Cv": {
+    "download": "Descarcă CV-ul",
+    "format": "PDF, {size}",
+    "title": "CV"
+  },
   "NotFound": {
     "title": "Pagina nu a fost găsită",
     "description": "Pagina pe care o cauți nu există."
