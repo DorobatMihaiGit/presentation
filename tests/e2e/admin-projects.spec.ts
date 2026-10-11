@@ -138,6 +138,52 @@ test("a cover, a case study and links from the admin reach the project page", as
     project.getByRole("link", { name: "Source code: Pass Planner" }),
   ).toHaveAttribute("href", "https://example.com/pass-planner/source");
 
+  // The card's cover and the page's cover are one shared element.
+  await page.addInitScript(() => {
+    const names: string[] = [];
+    (window as unknown as { __morphs: string[] }).__morphs = names;
+    const start = document.startViewTransition?.bind(document);
+    if (!start) return;
+    document.startViewTransition = ((update: never) => {
+      const transition = start(update);
+      transition.ready.then(() => {
+        for (const animation of document.getAnimations()) {
+          names.push(
+            (animation.effect as KeyframeEffect | null)?.pseudoElement ?? "",
+          );
+        }
+      });
+      return transition;
+    }) as typeof document.startViewTransition;
+  });
+  await page.goto("/en");
+  // Hydrated (MotionToggle sets it): a click before would load the page.
+  await expect(page.locator("html")).toHaveAttribute("data-motion", /on|off/);
+  const card = page.locator("#projects li").filter({ hasText: "Pass Planner" });
+  // Prefetched as it scrolls into view: the page then arrives in the same
+  // commit as the navigation, which the shared element needs.
+  const ready = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === "/en/projects/pass-planner" &&
+      (
+        response.request().headers()["next-router-segment-prefetch"] ?? ""
+      ).endsWith("__PAGE__"),
+  );
+  await card.scrollIntoViewIfNeeded();
+  await ready;
+  await expect(
+    card.getByRole("img", { name: "The pass planner at dawn" }),
+  ).toBeVisible();
+  await card.getByRole("link", { name: "Pass Planner", exact: true }).click();
+  await expect(page).toHaveURL("/en/projects/pass-planner");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as unknown as { __morphs: string[] }).__morphs,
+      ),
+    )
+    .toContain("::view-transition-group(project-cover-pass-planner)");
+
   await page.goto("/ro/projects/pass-planner");
   await expect(
     page.getByRole("img", { name: "Planificatorul de treceri în zori" }),

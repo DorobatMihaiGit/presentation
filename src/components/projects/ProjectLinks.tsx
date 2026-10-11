@@ -1,7 +1,10 @@
 import { useTranslations } from "next-intl";
 import type { Project } from "@/lib/project-pages";
 
-/** "Live site" and "Source code", named after the project for screen readers. */
+/**
+ * "Live site" and "Source code", named after the project for screen readers.
+ * Raised above a grid card's own link, so they stay clickable.
+ */
 export function ProjectLinks({ project }: { project: Project }) {
   const t = useTranslations("Projects");
   const title = project.title.value;
@@ -10,7 +13,7 @@ export function ProjectLinks({ project }: { project: Project }) {
     return null;
   }
   return (
-    <div className="flex flex-wrap gap-x-6 text-sm font-medium">
+    <div className="relative z-10 flex flex-wrap gap-x-6 text-sm font-medium">
       {project.liveUrl ? (
         <a
           href={project.liveUrl}
