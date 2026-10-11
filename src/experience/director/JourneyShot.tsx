@@ -11,7 +11,12 @@ import { edgeObjectName } from "../scenes/edges";
 import type { PulseUniforms } from "../scenes/materials";
 import { STACK_SHADOW } from "../scenes/StudioLights";
 import { STACK_OBJECTS, stackLayout } from "../scenes/stack-layout";
-import { coverViewOffset, orientationOf, REFERENCE_SIZE } from "./framing";
+import {
+  CROP_ANCHOR,
+  coverViewOffset,
+  orientationOf,
+  REFERENCE_SIZE,
+} from "./framing";
 import { type JourneyFrame, litJob } from "./journey";
 import type { Motion } from "./motion";
 import { anchorRows, findPageLinks, markLit, stackBox } from "./page-links";
@@ -65,7 +70,7 @@ export function JourneyShot({
       width,
       height,
       reference.width / reference.height,
-      orientation === "landscape" ? "end" : "center",
+      CROP_ANCHOR[orientation],
     );
     camera.fov = SHOT_FOV[orientation];
     camera.aspect = reference.width / reference.height;

@@ -7,7 +7,10 @@ export function SiteFooter({ cv }: { cv: Cv }) {
   return (
     <footer className="mx-auto flex w-full max-w-content flex-col gap-4 border-t px-gutter py-10 text-sm text-ink-muted sm:flex-row sm:items-center sm:justify-between">
       <p>© {cv.profile.fullName.value}</p>
-      <a href="#top" className="text-ink transition-colors hover:text-signal">
+      <a
+        href="#top"
+        className="text-ink transition-colors hover:text-signal pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center"
+      >
         {t("backToTop")}
       </a>
     </footer>

@@ -17,7 +17,7 @@ export function Hero({ cv }: { cv: Cv }) {
 
   return (
     <section aria-labelledby="hero-title" data-scene="hero" className="hero">
-      <div className="sticky top-0 flex min-h-lvh items-center overflow-hidden">
+      <div className="sticky top-0 flex min-h-lvh items-center overflow-hidden portrait:items-start">
         <HeroPoster />
         <div aria-hidden="true" className="hero-scrim absolute inset-0" />
         <div className="relative mx-auto w-full max-w-content px-gutter pt-28 pb-16">
@@ -53,7 +53,7 @@ export function Hero({ cv }: { cv: Cv }) {
               </a>
               <a
                 href="#projects"
-                className="rounded-full bg-canvas/60 px-6 py-3 font-medium text-ink ring-1 ring-line-strong transition-colors hover:bg-raised"
+                className="rounded-full bg-canvas/60 px-6 py-3 font-medium text-ink ring-1 ring-line-strong transition-[background-color,scale] duration-(--motion-press) hover:bg-raised motion-safe:active:scale-[0.98]"
               >
                 {t("secondaryCta")}
               </a>

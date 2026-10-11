@@ -23,7 +23,7 @@ export function LocaleSwitcher({
               locale={target}
               lang={target}
               aria-current={target === locale ? "page" : undefined}
-              className="block rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink aria-[current=page]:bg-raised aria-[current=page]:text-ink"
+              className="flex items-center rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors hover:text-ink aria-[current=page]:bg-raised aria-[current=page]:text-ink pointer-coarse:min-h-11"
             >
               {t(target)}
             </Link>

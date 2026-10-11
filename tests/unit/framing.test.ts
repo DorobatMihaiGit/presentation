@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CROP_ANCHOR,
   coverViewOffset,
   orientationOf,
   REFERENCE_SIZE,
@@ -39,11 +40,23 @@ describe("coverViewOffset", () => {
   it("can keep the right edge instead, like object-position: right", () => {
     // Landscape shots put the stack right of the copy: a 16:10 or 3:2
     // laptop loses the empty left of the frame, never the stack.
-    const view = coverViewOffset(1440, 1080, wide, "end");
+    const view = coverViewOffset(1440, 1080, wide, "right");
 
     expect(view.x).toBeCloseTo(480);
     expect(view.x + view.width).toBeCloseTo(view.fullWidth);
-    expect(coverViewOffset(2560, 1080, wide, "end").y).toBeCloseTo(180);
+    expect(coverViewOffset(2560, 1080, wide, "right").y).toBeCloseTo(180);
+  });
+
+  it("can keep the bottom edge, like object-position: bottom", () => {
+    // Portrait shots put the stack below the copy: a tablet (3:4) loses
+    // the top of the frame, behind the copy, never the stack.
+    const tall = REFERENCE_SIZE.portrait.width / REFERENCE_SIZE.portrait.height;
+    const view = coverViewOffset(768, 1024, tall, "bottom");
+
+    expect(view.y + view.height).toBeCloseTo(view.fullHeight);
+    expect(view.y).toBeGreaterThan(0);
+    expect(coverViewOffset(360, 800, tall, "bottom").y).toBe(0);
+    expect(CROP_ANCHOR).toEqual({ landscape: "right", portrait: "bottom" });
   });
 
   it("crops top and bottom of a wider viewport", () => {

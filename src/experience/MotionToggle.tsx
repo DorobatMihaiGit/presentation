@@ -27,7 +27,7 @@ export function MotionToggle({ labels }: { labels: MotionToggleLabels }) {
       type="button"
       aria-pressed={on}
       onClick={() => setMotionChoice(on ? "off" : "on")}
-      className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-2 text-sm text-ink-muted ring-1 ring-line transition-colors hover:text-ink"
+      className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-2 text-sm text-ink-muted ring-1 ring-line transition-[color,scale] duration-(--motion-press) hover:text-ink motion-safe:active:scale-[0.97] pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:justify-center"
     >
       <span
         aria-hidden="true"
