@@ -33,6 +33,19 @@ export type Localized<T> = { value: T; lang: Locale };
 
 export type SocialLink = { network: "github" | "linkedin"; url: string };
 
+/** An uploaded image (media library): MediaStore URL, intrinsic size, blur placeholder. */
+export type MediaImageRecord = {
+  url: string;
+  width: number;
+  height: number;
+  /** Tiny WebP data URL shown while the image loads. */
+  lqip: string | null;
+  i18n: I18n<{ alt: string }>;
+};
+
+/** An uploaded document (the CV PDF). */
+export type MediaFile = { url: string; bytes: number };
+
 export type ProfileRecord = {
   emailPublic: string;
   location: string;
@@ -40,12 +53,15 @@ export type ProfileRecord = {
   socials: SocialLink[];
   available: boolean;
   yearsExp: number;
+  avatar?: MediaImageRecord;
   i18n: I18n<{
     fullName: string;
     headline: string;
     summary: string;
     seoTitle: string;
     seoDescription: string;
+    /** One CV PDF per language; /ro falls back to the English one. */
+    cvPdf?: MediaFile;
   }>;
 };
 
@@ -84,7 +100,15 @@ export type ProjectRecord = {
   featured: boolean;
   published: boolean;
   skills: string[];
-  i18n: I18n<{ title: string; summary: string; role: string; outcome: string }>;
+  cover?: MediaImageRecord;
+  /** `body` is the case study (markdown); optional, like the cover. */
+  i18n: I18n<{
+    title: string;
+    summary: string;
+    role: string;
+    outcome: string;
+    body?: string;
+  }>;
 };
 
 export type CvRecords = {
@@ -93,6 +117,15 @@ export type CvRecords = {
   skillCategories: SkillCategoryRecord[];
   skills: SkillRecord[];
   projects: ProjectRecord[];
+};
+
+/** A resolved image: alt text in the page's language (or English). */
+export type MediaImage = {
+  url: string;
+  width: number;
+  height: number;
+  lqip: string | null;
+  alt: Localized<string>;
 };
 
 /** Resolved, locale-specific view model consumed by the section components. */
@@ -110,6 +143,8 @@ export type Cv = {
     socials: SocialLink[];
     available: boolean;
     yearsExp: number;
+    avatar: MediaImage | null;
+    cvPdf: Localized<MediaFile> | null;
   };
   experience: Array<{
     id: string;
@@ -138,5 +173,8 @@ export type Cv = {
     summary: Localized<string>;
     role: Localized<string>;
     outcome: Localized<string>;
+    cover: MediaImage | null;
+    /** Markdown; empty when the project has no case study. */
+    body: Localized<string>;
   }>;
 };

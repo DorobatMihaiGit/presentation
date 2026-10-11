@@ -1,11 +1,31 @@
 import type { Locale } from "@/i18n/routing";
 import { localize } from "./localize";
-import { type Cv, type CvRecords, STACK_LAYERS } from "./types";
+import {
+  type Cv,
+  type CvRecords,
+  type Localized,
+  type MediaFile,
+  type MediaImage,
+  type MediaImageRecord,
+  STACK_LAYERS,
+} from "./types";
+
+function mediaImage(
+  record: MediaImageRecord | undefined,
+  locale: Locale,
+): MediaImage | null {
+  if (!record) {
+    return null;
+  }
+  const { i18n, ...image } = record;
+  return { ...image, alt: localize(i18n, locale, "alt") };
+}
 
 /** Resolves raw records into the locale-specific view model the sections render. */
 export function resolveCv(records: CvRecords, locale: Locale): Cv {
   const { profile } = records;
   const skillName = new Map(records.skills.map((s) => [s.slug, s.name]));
+  const cvPdf = localize(profile.i18n, locale, "cvPdf");
 
   return {
     locale,
@@ -21,6 +41,8 @@ export function resolveCv(records: CvRecords, locale: Locale): Cv {
       socials: profile.socials,
       available: profile.available,
       yearsExp: profile.yearsExp,
+      avatar: mediaImage(profile.avatar, locale),
+      cvPdf: cvPdf.value ? (cvPdf as Localized<MediaFile>) : null,
     },
     experience: records.experience
       .filter((job) => job.isPublished)
@@ -52,17 +74,22 @@ export function resolveCv(records: CvRecords, locale: Locale): Cv {
       .toSorted(
         (a, b) => Number(b.featured) - Number(a.featured) || b.year - a.year,
       )
-      .map((project) => ({
-        slug: project.slug,
-        repoUrl: project.repoUrl,
-        liveUrl: project.liveUrl,
-        year: project.year,
-        featured: project.featured,
-        skills: project.skills.flatMap((slug) => skillName.get(slug) ?? []),
-        title: localize(project.i18n, locale, "title"),
-        summary: localize(project.i18n, locale, "summary"),
-        role: localize(project.i18n, locale, "role"),
-        outcome: localize(project.i18n, locale, "outcome"),
-      })),
+      .map((project) => {
+        const body = localize(project.i18n, locale, "body");
+        return {
+          slug: project.slug,
+          repoUrl: project.repoUrl,
+          liveUrl: project.liveUrl,
+          year: project.year,
+          featured: project.featured,
+          skills: project.skills.flatMap((slug) => skillName.get(slug) ?? []),
+          title: localize(project.i18n, locale, "title"),
+          summary: localize(project.i18n, locale, "summary"),
+          role: localize(project.i18n, locale, "role"),
+          outcome: localize(project.i18n, locale, "outcome"),
+          cover: mediaImage(project.cover, locale),
+          body: { value: body.value ?? "", lang: body.lang },
+        };
+      }),
   };
 }
