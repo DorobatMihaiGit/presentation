@@ -5,7 +5,10 @@ import { button } from "@/components/admin/styles";
 import { missingTranslation } from "@/content/localize";
 import { requireAdmin } from "@/server/auth";
 import { getDb } from "@/server/db";
-import { listProjectsForAdmin } from "@/server/queries/admin/projects";
+import {
+  listProjectsForAdmin,
+  PROJECT_TEXT_FIELDS,
+} from "@/server/queries/admin/projects";
 
 export const metadata: Metadata = { title: "Projects" };
 
@@ -41,12 +44,7 @@ export default async function ProjectsPage() {
                 Draft
               </span>
             )}
-            {missingTranslation(item.en, item.ro, [
-              "title",
-              "summary",
-              "role",
-              "outcome",
-            ]) ? (
+            {missingTranslation(item.en, item.ro, PROJECT_TEXT_FIELDS) ? (
               <MissingBadge />
             ) : null}
           </li>

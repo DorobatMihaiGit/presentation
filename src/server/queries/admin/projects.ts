@@ -4,6 +4,15 @@ import type { Db } from "@/server/db/types";
 import { byLocale } from "./by-locale";
 import { mediaOptions } from "./media";
 
+/** Translatable project text; a blank Romanian value gets the "RO missing" badge. */
+export const PROJECT_TEXT_FIELDS = [
+  "title",
+  "summary",
+  "role",
+  "outcome",
+  "bodyMd",
+] as const;
+
 export async function listProjectsForAdmin(db: Db) {
   const [projects, rows, skills] = await Promise.all([
     db.select().from(project).orderBy(desc(project.year), asc(project.slug)),

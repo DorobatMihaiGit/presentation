@@ -8,6 +8,7 @@ import {
   it,
   vi,
 } from "vitest";
+import { missingTranslation } from "@/content/localize";
 import { resolveCv } from "@/content/resolve-cv";
 import {
   createProject,
@@ -15,8 +16,12 @@ import {
   updateProject,
 } from "@/server/actions/projects";
 import { IDLE } from "@/server/admin/action-result";
-import { projectSkill } from "@/server/db/schema";
+import { media, projectSkill } from "@/server/db/schema";
 import { seedContent } from "@/server/db/seed";
+import {
+  listProjectsForAdmin,
+  PROJECT_TEXT_FIELDS,
+} from "@/server/queries/admin/projects";
 import { loadCvRecords } from "@/server/queries/cv";
 import { mocks, OWNER, setupActionDb } from "./action-mocks";
 import { form } from "./form";
@@ -128,5 +133,54 @@ describe("project actions", () => {
       status: "error",
       code: 404,
     });
+  });
+
+  it("publishes the cover and the case study and expires the public cache", async () => {
+    const [cover] = await mocks.db
+      .insert(media)
+      .values({
+        blobUrl: "/api/media/0b4c3f7e-2c1a-4f6e-9d55-5b7c6f1e2a90.webp",
+        pathname: "0b4c3f7e-2c1a-4f6e-9d55-5b7c6f1e2a90.webp",
+        kind: "image",
+        mime: "image/webp",
+        width: 1600,
+        height: 1000,
+        bytes: 48_000,
+        altEn: "Orbit's pass planner",
+      })
+      .returning({ id: media.id });
+
+    await expect(
+      createProject(IDLE, form({ ...PROJECT, coverMediaId: cover.id })),
+    ).rejects.toThrow("NEXT_REDIRECT /admin/projects/orbit");
+
+    const orbit = (await cv()).projects.find((p) => p.slug === "orbit");
+    expect(orbit?.cover).toMatchObject({
+      url: "/api/media/0b4c3f7e-2c1a-4f6e-9d55-5b7c6f1e2a90.webp",
+      alt: { value: "Orbit's pass planner", lang: "en" },
+    });
+    expect(orbit?.body.value).toBe("## Why\n\nBecause.");
+    expect(mocks.updateTag).toHaveBeenCalledWith("cv");
+  });
+
+  it("flags a case study that has no Romanian translation", async () => {
+    await expect(
+      createProject(
+        IDLE,
+        form({
+          ...PROJECT,
+          "ro.summary": "Panou pentru sateliți.",
+          "ro.role": "Coordonator",
+          "ro.outcome": "Lansat.",
+        }),
+      ),
+    ).rejects.toThrow("NEXT_REDIRECT");
+
+    const orbit = (await listProjectsForAdmin(mocks.db)).find(
+      (item) => item.slug === "orbit",
+    );
+    expect(missingTranslation(orbit?.en, orbit?.ro, PROJECT_TEXT_FIELDS)).toBe(
+      true,
+    );
   });
 });

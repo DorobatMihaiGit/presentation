@@ -1,9 +1,17 @@
 import { asc } from "drizzle-orm";
-import type { CvRecords, I18n, SkillRecord, YearMonth } from "@/content/types";
+import type {
+  CvRecords,
+  I18n,
+  MediaFile,
+  MediaImageRecord,
+  SkillRecord,
+  YearMonth,
+} from "@/content/types";
 import type { Locale } from "@/i18n/routing";
 import {
   experience,
   experienceI18n,
+  media,
   profile,
   profileI18n,
   project,
@@ -32,6 +40,7 @@ export async function loadCvRecords(db: Db): Promise<CvRecords> {
     projects,
     projectRows,
     projectSkills,
+    uploads,
   ] = await Promise.all([
     db.select().from(profile),
     db.select().from(profileI18n),
@@ -46,7 +55,29 @@ export async function loadCvRecords(db: Db): Promise<CvRecords> {
       .select()
       .from(projectSkill)
       .orderBy(asc(projectSkill.projectSlug), asc(projectSkill.position)),
+    db.select().from(media),
   ]);
+
+  const upload = new Map(uploads.map((row) => [row.id, row]));
+  const image = (id: string | null): MediaImageRecord | undefined => {
+    const row = id ? upload.get(id) : undefined;
+    if (row?.kind !== "image" || !row.width || !row.height) {
+      return undefined;
+    }
+    return {
+      url: row.blobUrl,
+      width: row.width,
+      height: row.height,
+      lqip: row.lqip,
+      i18n: { en: { alt: row.altEn }, ro: { alt: row.altRo } },
+    };
+  };
+  const file = (id: string | null): MediaFile | undefined => {
+    const row = id ? upload.get(id) : undefined;
+    return row?.kind === "document"
+      ? { url: row.blobUrl, bytes: row.bytes }
+      : undefined;
+  };
 
   const p = profiles[0];
   if (!p) {
@@ -63,12 +94,14 @@ export async function loadCvRecords(db: Db): Promise<CvRecords> {
       socials: p.socials,
       available: p.available,
       yearsExp: p.yearsExp,
+      avatar: image(p.avatarMediaId),
       i18n: toI18n("profile", profileRows, (row) => ({
         fullName: row.fullName,
         headline: row.headline,
         summary: row.summaryMd,
         seoTitle: row.seoTitle,
         seoDescription: row.seoDescription,
+        cvPdf: file(row.cvPdfMediaId),
       })),
     },
     experience: jobs.map((job) => ({
@@ -117,6 +150,7 @@ export async function loadCvRecords(db: Db): Promise<CvRecords> {
       skills: projectSkills
         .filter((row) => row.projectSlug === item.slug)
         .map((row) => row.skillSlug),
+      cover: image(item.coverMediaId),
       i18n: toI18n(
         `project ${item.slug}`,
         projectRows.filter((row) => row.projectSlug === item.slug),
@@ -125,6 +159,7 @@ export async function loadCvRecords(db: Db): Promise<CvRecords> {
           summary: row.summary,
           role: row.role,
           outcome: row.outcome,
+          body: row.bodyMd,
         }),
       ),
     })),
