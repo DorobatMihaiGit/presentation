@@ -34,7 +34,7 @@ export function Section({ id, title, intro, scene, children }: SectionProps) {
           {title}
         </h2>
         {intro ? (
-          <p className="mt-5 max-w-[60ch] text-lead text-ink-muted lg:w-7/12">
+          <p className="mt-5 max-w-[60ch] text-lead text-ink-muted lg:w-1/2">
             {intro}
           </p>
         ) : null}

@@ -20,7 +20,7 @@ export function About({ cv }: { cv: Cv }) {
 
   return (
     <Section id="about" title={t("title")} scene="about">
-      <div className="flex flex-col gap-12 lg:w-7/12">
+      <div className="flex flex-col gap-12 lg:w-1/2">
         {profile.avatar ? (
           <OptimizedImage
             src={profile.avatar.url}
@@ -38,7 +38,7 @@ export function About({ cv }: { cv: Cv }) {
         >
           {profile.summary.value}
         </p>
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-8">
           {facts.map((fact) => (
             <div key={fact.term}>
               <dt className="font-mono text-label uppercase text-ink-subtle">

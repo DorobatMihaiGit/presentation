@@ -1,5 +1,5 @@
 {
-  "sourceHash": "5795303ed5c4b069",
+  "sourceHash": "ec18a707c3a430bf",
   "shots": {
     "hero-start": {
       "landscape": {
@@ -58,29 +58,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/hero-end-landscape-640.ae6fb54f.avif"
+            "src": "/posters/hero-end-landscape-640.028c2639.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-end-landscape-1280.33f408f9.avif"
+            "src": "/posters/hero-end-landscape-1280.a3d68987.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-end-landscape-1920.968fd82a.avif"
+            "src": "/posters/hero-end-landscape-1920.ac29bb91.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/hero-end-landscape-640.6db3a66c.webp"
+            "src": "/posters/hero-end-landscape-640.b2ec130f.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-end-landscape-1280.6e2d2d1b.webp"
+            "src": "/posters/hero-end-landscape-1280.61c19e50.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-end-landscape-1920.d71e5f71.webp"
+            "src": "/posters/hero-end-landscape-1920.099c20dd.webp"
           }
         ]
       },
@@ -108,29 +108,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/about-landscape-640.00570975.avif"
+            "src": "/posters/about-landscape-640.17df30c5.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/about-landscape-1280.9780da25.avif"
+            "src": "/posters/about-landscape-1280.5719e165.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/about-landscape-1920.1a11fade.avif"
+            "src": "/posters/about-landscape-1920.d431ceab.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/about-landscape-640.7fb6d11a.webp"
+            "src": "/posters/about-landscape-640.2302dd98.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/about-landscape-1280.0ed96927.webp"
+            "src": "/posters/about-landscape-1280.5bb445fc.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/about-landscape-1920.a52b01b1.webp"
+            "src": "/posters/about-landscape-1920.d706c4f8.webp"
           }
         ]
       },
@@ -140,13 +140,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/about-portrait-828.c303af04.avif"
+            "src": "/posters/about-portrait-828.5fcdbbe1.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/about-portrait-828.bd547800.webp"
+            "src": "/posters/about-portrait-828.f79fd540.webp"
           }
         ]
       }
@@ -158,29 +158,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/skills-landscape-640.23fe1a87.avif"
+            "src": "/posters/skills-landscape-640.22b11c92.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/skills-landscape-1280.d8a96471.avif"
+            "src": "/posters/skills-landscape-1280.3bada437.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/skills-landscape-1920.0a76a420.avif"
+            "src": "/posters/skills-landscape-1920.fbcdd234.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/skills-landscape-640.779f024e.webp"
+            "src": "/posters/skills-landscape-640.b9e0fea5.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/skills-landscape-1280.798aa2ff.webp"
+            "src": "/posters/skills-landscape-1280.c954a719.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/skills-landscape-1920.b3e12f0d.webp"
+            "src": "/posters/skills-landscape-1920.81fa0a0e.webp"
           }
         ]
       },
@@ -258,29 +258,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/contact-landscape-640.f956a03a.avif"
+            "src": "/posters/contact-landscape-640.4bbcc5cb.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/contact-landscape-1280.ea1d39ea.avif"
+            "src": "/posters/contact-landscape-1280.7f269ad2.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/contact-landscape-1920.e6119f6e.avif"
+            "src": "/posters/contact-landscape-1920.4c68e92f.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/contact-landscape-640.6d45c988.webp"
+            "src": "/posters/contact-landscape-640.123eaa30.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/contact-landscape-1280.856c303e.webp"
+            "src": "/posters/contact-landscape-1280.38984b23.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/contact-landscape-1920.9ff1d7db.webp"
+            "src": "/posters/contact-landscape-1920.02981d64.webp"
           }
         ]
       },

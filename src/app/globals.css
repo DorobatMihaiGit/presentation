@@ -104,6 +104,11 @@
     overflow-wrap: break-word;
     text-wrap: balance;
   }
+
+  /* No one-word last lines in running text. */
+  :is(p, li, dd) {
+    text-wrap: pretty;
+  }
 }
 
 @layer components {
@@ -208,6 +213,16 @@ html:is([data-canvas="loading"], [data-canvas="live"]) .hero {
 
 html[data-canvas="live"] .hero-poster {
   opacity: 0;
+}
+
+/*
+ * Posters are cropped like the live camera (framing.ts): landscape keeps the
+ * right edge of the frame, where the stack is; portrait stays centred.
+ */
+@media (orientation: landscape) {
+  :is(.hero-poster, .section-poster) img {
+    object-position: right center;
+  }
 }
 
 /* Keeps the copy readable over any frame: from the left in landscape, from the top in portrait. */
@@ -524,7 +539,14 @@ body > footer {
     max-width: 18rem;
   }
 
+  /* "The stack" on one line in its 18rem column (M6 wrapped it at 1366px). */
+  html[data-canvas="live"] #skills > .section-body > h2 {
+    font-size: clamp(2.25rem, 1.25rem + 2.2vw, 3.5rem);
+  }
+
   html[data-canvas="live"] .skills-layers {
+    /* A row anchored off screen must never make the page scroll further. */
+    overflow: clip;
     /* Where the rows may begin: the section's left padding, 18rem, a gap. */
     --rows-start: calc(
       max(

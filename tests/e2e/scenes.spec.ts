@@ -52,9 +52,26 @@ test("Skills pins the exploded stack and puts each row next to its layer", async
 for (const [width, height] of [
   [1280, 720],
   [1366, 768],
+  [1920, 1080],
 ] as const) {
   test.describe(`on a ${width}x${height} screen`, () => {
     test.use({ viewport: { width, height } });
+
+    test("the Skills title stays on one line", async ({ page }) => {
+      await goLive(page);
+      await scrollPast(page, "#skills", 0.8);
+      const title = page.locator("#skills h2");
+      await expect(title).toBeInViewport();
+
+      const lines = await title.evaluate((heading) => {
+        const range = document.createRange();
+        range.selectNodeContents(heading);
+        return new Set(
+          [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+        ).size;
+      });
+      expect(lines).toBe(1);
+    });
 
     test("the Skills rows never cover the title, the intro or each other", async ({
       page,

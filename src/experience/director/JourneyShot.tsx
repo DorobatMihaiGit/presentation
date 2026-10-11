@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { type RefObject, useMemo } from "react";
 import type {
   Material,
@@ -14,7 +14,7 @@ import { STACK_OBJECTS, stackLayout } from "../scenes/stack-layout";
 import { coverViewOffset, orientationOf, REFERENCE_SIZE } from "./framing";
 import { type JourneyFrame, litJob } from "./journey";
 import type { Motion } from "./motion";
-import { anchorRows, findPageLinks, markLit } from "./page-links";
+import { anchorRows, findPageLinks, markLit, stackBox } from "./page-links";
 import { SHOT_FOV } from "./shots";
 
 /** Pointer parallax: camera orbit (rad) and rim-light swing at full tilt. */
@@ -47,6 +47,12 @@ export function JourneyShot({
   frame: RefObject<JourneyFrame>;
 }) {
   const links = useMemo(findPageLinks, []);
+  const canvas = useThree((state) => state.gl.domElement);
+  // The fixed layer around the canvas: data-box (tests, debugging).
+  const layer = useMemo(
+    () => canvas.closest<HTMLElement>(".stage-layer"),
+    [canvas],
+  );
 
   useFrame((state) => {
     const current = frame.current;
@@ -59,6 +65,7 @@ export function JourneyShot({
       width,
       height,
       reference.width / reference.height,
+      orientation === "landscape" ? "end" : "center",
     );
     camera.fov = SHOT_FOV[orientation];
     camera.aspect = reference.width / reference.height;
@@ -142,6 +149,13 @@ export function JourneyShot({
       anchorRows(links, scene, camera, width, height, current.skillRows);
     }
     markLit(links, motion.lit, litJob(current, links.jobs.length));
+
+    const box = stackBox(scene, camera, width, height)
+      ?.map(Math.round)
+      .join(" ");
+    if (layer && layer.dataset.box !== (box ?? "")) {
+      layer.dataset.box = box ?? "";
+    }
   });
 
   return null;

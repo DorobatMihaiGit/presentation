@@ -31,13 +31,17 @@ export type ViewOffset = {
 
 /**
  * Arguments for `PerspectiveCamera.setViewOffset` (camera.aspect must be the
- * reference aspect): the viewport becomes a centred window into a virtual
- * reference-aspect frame that covers it.
+ * reference aspect): the viewport becomes a window into a virtual
+ * reference-aspect frame that covers it, centred, or with `align: "end"`
+ * against the frame's right edge when the sides are cropped (landscape
+ * shots, which keep the stack right of the copy; posters use
+ * `object-position: right` to match).
  */
 export function coverViewOffset(
   width: number,
   height: number,
   referenceAspect: number,
+  align: "center" | "end" = "center",
 ): ViewOffset {
   if (width / height > referenceAspect) {
     const fullHeight = width / referenceAspect;
@@ -54,7 +58,7 @@ export function coverViewOffset(
   return {
     fullWidth,
     fullHeight: height,
-    x: (fullWidth - width) / 2,
+    x: align === "end" ? fullWidth - width : (fullWidth - width) / 2,
     y: 0,
     width,
     height,
