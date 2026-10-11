@@ -11,14 +11,16 @@ const TIER3_BUDGET_KB = 100;
 const gzKb = (body: Buffer) => gzipSync(body, { level: 9 }).length / 1024;
 
 async function initialScripts(page: Page, path: string): Promise<string[]> {
-  const html = await (await page.request.get(path)).text();
+  const response = await page.request.get(path);
+  expect(response.status(), path).toBe(200);
+  const html = await response.text();
   return [...html.matchAll(/<script[^>]*>/g)]
     .map((match) => match[0])
     .filter((tag) => !tag.includes("noModule"))
     .flatMap((tag) => /\ssrc="([^"]+)"/.exec(tag)?.[1] ?? []);
 }
 
-for (const path of ["/en", "/ro"]) {
+for (const path of ["/en", "/ro", "/en/projects/ledger-lens"]) {
   test(`${path} loads at most ${INITIAL_BUDGET_KB} KB gz of JS before 3D`, async ({
     page,
   }) => {

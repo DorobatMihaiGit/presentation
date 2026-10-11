@@ -68,6 +68,18 @@
     "liveLabel": "Site live: {title}",
     "sourceLabel": "Cod sursă: {title}"
   },
+  "Project": {
+    "back": "Toate proiectele",
+    "role": "Rol",
+    "outcome": "Rezultat",
+    "stack": "Tehnologii",
+    "links": "Linkuri",
+    "caseStudy": "Studiu de caz",
+    "more": "Alte proiecte",
+    "previous": "Anteriorul",
+    "next": "Următorul",
+    "title": "{title} · {name}"
+  },
   "Contact": {
     "title": "Hai să construim",
     "intro": "Spune-mi despre produsul la care lucrezi. Răspund în două zile lucrătoare.",

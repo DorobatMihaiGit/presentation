@@ -7,6 +7,8 @@ import {
   languageAlternates,
   localeUrl,
   personJsonLd,
+  projectJsonLd,
+  projectPath,
   resolveSiteUrl,
   serializeJsonLd,
 } from "@/lib/seo";
@@ -67,6 +69,24 @@ describe("sitemap and robots", () => {
     }
   });
 
+  it("adds every project page in both languages with its own alternates", () => {
+    const sitemap = buildSitemap(SITE, ["ledger-lens", "tramline"]);
+
+    expect(sitemap.map((entry) => entry.url)).toEqual([
+      "https://cv.example.dev/en",
+      "https://cv.example.dev/ro",
+      "https://cv.example.dev/en/projects/ledger-lens",
+      "https://cv.example.dev/ro/projects/ledger-lens",
+      "https://cv.example.dev/en/projects/tramline",
+      "https://cv.example.dev/ro/projects/tramline",
+    ]);
+    expect(sitemap[2].alternates?.languages).toEqual({
+      en: "https://cv.example.dev/en/projects/ledger-lens",
+      ro: "https://cv.example.dev/ro/projects/ledger-lens",
+      "x-default": "https://cv.example.dev/projects/ledger-lens",
+    });
+  });
+
   it("allows crawling and points at the sitemap", () => {
     expect(buildRobots(SITE)).toEqual({
       rules: { userAgent: "*", allow: "/" },
@@ -107,6 +127,55 @@ describe("personJsonLd", () => {
 
     expect(data).not.toHaveProperty("jobTitle");
     expect(data).not.toHaveProperty("worksFor");
+  });
+});
+
+describe("projectJsonLd", () => {
+  it("describes a project page as a creative work by the person", () => {
+    const cv = resolveCv(fixtures, "ro");
+    const ledger = cv.projects[0];
+
+    expect(projectPath(ledger.slug)).toBe("/projects/ledger-lens");
+    expect(projectJsonLd(cv, ledger, SITE)).toEqual({
+      "@context": "https://schema.org",
+      "@type": "CreativeWork",
+      "@id": "https://cv.example.dev/ro/projects/ledger-lens#work",
+      name: "Ledger Lens",
+      description:
+        "Panou de reconciliere care potrivește extrasele bancare cu facturile pentru firme mici de contabilitate.",
+      url: "https://cv.example.dev/ro/projects/ledger-lens",
+      inLanguage: "ro",
+      dateCreated: "2025",
+      author: {
+        "@type": "Person",
+        "@id": "https://cv.example.dev/#person",
+        name: "Alex Marin",
+      },
+      keywords: "Next.js, PostgreSQL, Drizzle ORM, Vitest and Playwright",
+      sameAs: [
+        "https://example.com/ledger-lens",
+        "https://example.com/ledger-lens/source",
+      ],
+    });
+  });
+
+  it("points at the cover with an absolute URL", () => {
+    const cv = resolveCv(fixtures, "en");
+    const cover = {
+      url: "/api/media/0b4c3f7e-2c1a-4f6e-9d55-5b7c6f1e2a90.webp",
+      width: 1600,
+      height: 1000,
+      lqip: null,
+      alt: { value: "Board", lang: "en" as const },
+    };
+
+    expect(projectJsonLd(cv, { ...cv.projects[1], cover }, SITE)).toMatchObject(
+      {
+        image:
+          "https://cv.example.dev/api/media/0b4c3f7e-2c1a-4f6e-9d55-5b7c6f1e2a90.webp",
+        sameAs: ["https://example.com/tramline"],
+      },
+    );
   });
 });
 
