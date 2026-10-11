@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { SiteHeader } from "@/components/site/SiteHeader";
 import { getCv } from "@/content/get-cv";
 import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/site";
@@ -49,10 +48,8 @@ export default async function LocaleLayout({
           {t("skipToContent")}
         </a>
         <NextIntlClientProvider>
-          <SiteHeader cv={cv} />
-          <main id="main" tabIndex={-1} className="focus:outline-none">
-            {children}
-          </main>
+          {/* Each page renders its own header and <main> (PageShell). */}
+          {children}
           <SiteFooter cv={cv} />
         </NextIntlClientProvider>
       </body>

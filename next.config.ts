@@ -20,6 +20,11 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  images: {
+    // Covers and portraits from the media library (local store). Vercel Blob
+    // URLs join as remotePatterns when production storage is set up (M9).
+    localPatterns: [{ pathname: "/api/media/**", search: "" }],
+  },
   experimental: {
     serverActions: {
       // Admin uploads are capped at 4 MB (src/server/media/inspect.ts) plus

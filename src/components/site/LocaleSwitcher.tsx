@@ -2,7 +2,15 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 
-export function LocaleSwitcher({ locale }: { locale: Locale }) {
+/** Links to the same page in every locale (a project stays the same project). */
+export function LocaleSwitcher({
+  locale,
+  path,
+}: {
+  locale: Locale;
+  /** The page below the locale, e.g. "/" or "/projects/tramline". */
+  path: string;
+}) {
   const t = useTranslations("LocaleSwitcher");
 
   return (
@@ -11,7 +19,7 @@ export function LocaleSwitcher({ locale }: { locale: Locale }) {
         {routing.locales.map((target) => (
           <li key={target}>
             <Link
-              href="/"
+              href={path}
               locale={target}
               lang={target}
               aria-current={target === locale ? "page" : undefined}

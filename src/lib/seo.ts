@@ -43,13 +43,31 @@ export function languageAlternates(
   };
 }
 
-export function buildSitemap(siteUrl: string): MetadataRoute.Sitemap {
-  return routing.locales.map((locale) => ({
-    url: localeUrl(siteUrl, locale),
-    changeFrequency: "monthly",
-    priority: 1,
-    alternates: { languages: languageAlternates(siteUrl) },
-  }));
+/** Path of a project's case study page, below the locale. */
+export function projectPath(slug: string): string {
+  return `/projects/${slug}`;
+}
+
+/** Both locale homes, then every published project in both locales. */
+export function buildSitemap(
+  siteUrl: string,
+  projectSlugs: readonly string[] = [],
+): MetadataRoute.Sitemap {
+  const pages = [
+    { pathname: "/", priority: 1 },
+    ...projectSlugs.map((slug) => ({
+      pathname: projectPath(slug),
+      priority: 0.7,
+    })),
+  ];
+  return pages.flatMap(({ pathname, priority }) =>
+    routing.locales.map((locale) => ({
+      url: localeUrl(siteUrl, locale, pathname),
+      changeFrequency: "monthly" as const,
+      priority,
+      alternates: { languages: languageAlternates(siteUrl, pathname) },
+    })),
+  );
 }
 
 export function buildRobots(siteUrl: string): MetadataRoute.Robots {
@@ -88,6 +106,39 @@ export function personJsonLd(cv: Cv, siteUrl: string) {
           worksFor: { "@type": "Organization", name: current.company },
         }
       : {}),
+  };
+}
+
+/** schema.org `CreativeWork` for a project page, authored by the home page's Person. */
+export function projectJsonLd(
+  cv: Cv,
+  project: Cv["projects"][number],
+  siteUrl: string,
+) {
+  const url = localeUrl(siteUrl, cv.locale, projectPath(project.slug));
+  const links = [project.liveUrl, project.repoUrl].filter(
+    (link): link is string => Boolean(link),
+  );
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "@id": `${url}#work`,
+    name: project.title.value,
+    description: project.summary.value,
+    url,
+    inLanguage: cv.locale,
+    dateCreated: String(project.year),
+    author: {
+      "@type": "Person",
+      "@id": `${siteUrl}/#person`,
+      name: cv.profile.fullName.value,
+    },
+    keywords: project.skills.join(", "),
+    ...(project.cover
+      ? { image: new URL(project.cover.url, siteUrl).href }
+      : {}),
+    ...(links.length > 0 ? { sameAs: links } : {}),
   };
 }
 

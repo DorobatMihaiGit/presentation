@@ -6,6 +6,7 @@ import { Experience } from "@/components/sections/Experience";
 import { Hero } from "@/components/sections/Hero";
 import { Projects } from "@/components/sections/Projects";
 import { Skills } from "@/components/sections/Skills";
+import { PageShell } from "@/components/site/PageShell";
 import { getCv } from "@/content/get-cv";
 import { StageLoader } from "@/experience/StageLoader";
 import {
@@ -38,7 +39,7 @@ export default async function HomePage() {
   const cv = await getCv(await getLocale());
 
   return (
-    <>
+    <PageShell cv={cv} path="/">
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: serializeJsonLd escapes "<", so content cannot close the tag.
@@ -53,6 +54,6 @@ export default async function HomePage() {
       <Experience cv={cv} />
       <Projects cv={cv} />
       <Contact cv={cv} />
-    </>
+    </PageShell>
   );
 }

@@ -261,6 +261,109 @@ html[data-canvas="poster"] .section-poster {
   }
 }
 
+/*
+ * Project pages (M7). A quiet studio light behind the header instead of the
+ * 3D stage, and the case study's markdown.
+ */
+.project-backdrop {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 40rem;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 70% at 72% 0%,
+    color-mix(in oklab, var(--color-signal) 9%, transparent),
+    transparent 70%
+  );
+}
+
+.case-study {
+  max-width: 68ch;
+  color: var(--color-ink-muted);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.case-study > * + * {
+  margin-top: 1.25em;
+}
+
+.case-study :is(h2, h3, h4) {
+  margin-top: 2.25em;
+  color: var(--color-ink);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.case-study h2 {
+  font-size: var(--text-heading);
+}
+
+.case-study :is(h3, h4) {
+  font-size: 1.125rem;
+}
+
+.case-study > :first-child {
+  margin-top: 0;
+}
+
+.case-study :is(strong, b) {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.case-study a {
+  color: var(--color-signal);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.case-study ul {
+  list-style: disc;
+  padding-left: 1.25em;
+}
+
+.case-study ol {
+  list-style: decimal;
+  padding-left: 1.25em;
+}
+
+.case-study li + li {
+  margin-top: 0.5em;
+}
+
+.case-study li::marker {
+  color: var(--color-ink-subtle);
+}
+
+.case-study blockquote {
+  border-left: 2px solid var(--color-line-strong);
+  padding-left: 1em;
+  color: var(--color-ink);
+}
+
+.case-study code {
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+.case-study pre {
+  overflow-x: auto;
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  padding: 1rem;
+}
+
+.case-study pre code {
+  background: none;
+  padding: 0;
+}
+
 /* Poster capture (scripts/posters.ts): only the canvas is visible. */
 html[data-capture] body {
   visibility: hidden;

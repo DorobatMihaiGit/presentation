@@ -68,6 +68,18 @@
     "liveLabel": "Live site: {title}",
     "sourceLabel": "Source code: {title}"
   },
+  "Project": {
+    "back": "All work",
+    "role": "Role",
+    "outcome": "Outcome",
+    "stack": "Stack",
+    "links": "Links",
+    "caseStudy": "Case study",
+    "more": "More work",
+    "previous": "Previous",
+    "next": "Next",
+    "title": "{title} · {name}"
+  },
   "Contact": {
     "title": "Let's build",
     "intro": "Tell me about the product you are building. I reply within two working days.",

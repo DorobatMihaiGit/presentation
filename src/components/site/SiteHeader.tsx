@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { Cv } from "@/content/types";
 import { MotionToggle } from "@/experience/MotionToggle";
@@ -11,9 +12,18 @@ const SECTIONS = [
   "contact",
 ] as const;
 
-export function SiteHeader({ cv }: { cv: Cv }) {
+/**
+ * Rendered by each page (PageShell), so it knows where it is: `path` is the
+ * page below the locale ("/" = the home page), or null for a page that exists
+ * in no other language (404). Section links jump within the home page and
+ * lead back to it from anywhere else.
+ */
+export function SiteHeader({ cv, path }: { cv: Cv; path: string | null }) {
   const t = useTranslations("Nav");
   const motion = useTranslations("Motion");
+  const home = path === "/";
+  const link =
+    "block rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-raised hover:text-ink";
 
   return (
     <header
@@ -30,12 +40,15 @@ export function SiteHeader({ cv }: { cv: Cv }) {
         <ul className="flex gap-1 rounded-full bg-surface p-1 ring-1 ring-line">
           {SECTIONS.map((id) => (
             <li key={id}>
-              <a
-                href={`#${id}`}
-                className="block rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-raised hover:text-ink"
-              >
-                {t(id)}
-              </a>
+              {home ? (
+                <a href={`#${id}`} className={link}>
+                  {t(id)}
+                </a>
+              ) : (
+                <Link href={`/${cv.locale}#${id}`} className={link}>
+                  {t(id)}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -48,7 +61,7 @@ export function SiteHeader({ cv }: { cv: Cv }) {
             off: motion("off"),
           }}
         />
-        <LocaleSwitcher locale={cv.locale} />
+        <LocaleSwitcher locale={cv.locale} path={path ?? "/"} />
       </div>
     </header>
   );
