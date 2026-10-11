@@ -1,5 +1,5 @@
 {
-  "sourceHash": "ec18a707c3a430bf",
+  "sourceHash": "08868306217afe05",
   "shots": {
     "hero-start": {
       "landscape": {
@@ -8,29 +8,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/hero-start-landscape-640.640498a6.avif"
+            "src": "/posters/hero-start-landscape-640.dba0a852.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-start-landscape-1280.f84d402b.avif"
+            "src": "/posters/hero-start-landscape-1280.9fdc8839.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-start-landscape-1920.2a4fbc47.avif"
+            "src": "/posters/hero-start-landscape-1920.1226239e.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/hero-start-landscape-640.913da59e.webp"
+            "src": "/posters/hero-start-landscape-640.6b7e5d41.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-start-landscape-1280.545839ef.webp"
+            "src": "/posters/hero-start-landscape-1280.adb02205.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-start-landscape-1920.9518f946.webp"
+            "src": "/posters/hero-start-landscape-1920.9d335196.webp"
           }
         ]
       },
@@ -40,13 +40,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/hero-start-portrait-828.d4286294.avif"
+            "src": "/posters/hero-start-portrait-828.490359da.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/hero-start-portrait-828.4c7c0c82.webp"
+            "src": "/posters/hero-start-portrait-828.4d9fea41.webp"
           }
         ]
       }
@@ -58,29 +58,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/hero-end-landscape-640.028c2639.avif"
+            "src": "/posters/hero-end-landscape-640.7800dd88.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-end-landscape-1280.a3d68987.avif"
+            "src": "/posters/hero-end-landscape-1280.30fd2273.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-end-landscape-1920.ac29bb91.avif"
+            "src": "/posters/hero-end-landscape-1920.fd8f943b.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/hero-end-landscape-640.b2ec130f.webp"
+            "src": "/posters/hero-end-landscape-640.21db611b.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/hero-end-landscape-1280.61c19e50.webp"
+            "src": "/posters/hero-end-landscape-1280.a90ba215.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/hero-end-landscape-1920.099c20dd.webp"
+            "src": "/posters/hero-end-landscape-1920.61fed425.webp"
           }
         ]
       },
@@ -90,13 +90,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.fc7a8abc.avif"
+            "src": "/posters/hero-end-portrait-828.88b6b5de.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/hero-end-portrait-828.f952dfc1.webp"
+            "src": "/posters/hero-end-portrait-828.96c978ea.webp"
           }
         ]
       }
@@ -108,29 +108,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/about-landscape-640.17df30c5.avif"
+            "src": "/posters/about-landscape-640.137462d8.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/about-landscape-1280.5719e165.avif"
+            "src": "/posters/about-landscape-1280.08bfbc12.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/about-landscape-1920.d431ceab.avif"
+            "src": "/posters/about-landscape-1920.aba49de3.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/about-landscape-640.2302dd98.webp"
+            "src": "/posters/about-landscape-640.1f1f8526.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/about-landscape-1280.5bb445fc.webp"
+            "src": "/posters/about-landscape-1280.c7c58ace.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/about-landscape-1920.d706c4f8.webp"
+            "src": "/posters/about-landscape-1920.eb0c0b9e.webp"
           }
         ]
       },
@@ -140,13 +140,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/about-portrait-828.5fcdbbe1.avif"
+            "src": "/posters/about-portrait-828.b385d31d.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/about-portrait-828.f79fd540.webp"
+            "src": "/posters/about-portrait-828.4304054b.webp"
           }
         ]
       }
@@ -158,29 +158,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/skills-landscape-640.22b11c92.avif"
+            "src": "/posters/skills-landscape-640.0e679465.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/skills-landscape-1280.3bada437.avif"
+            "src": "/posters/skills-landscape-1280.f57fd72a.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/skills-landscape-1920.fbcdd234.avif"
+            "src": "/posters/skills-landscape-1920.9fc6e924.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/skills-landscape-640.b9e0fea5.webp"
+            "src": "/posters/skills-landscape-640.5130f582.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/skills-landscape-1280.c954a719.webp"
+            "src": "/posters/skills-landscape-1280.e9e80a6b.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/skills-landscape-1920.81fa0a0e.webp"
+            "src": "/posters/skills-landscape-1920.17eb6de5.webp"
           }
         ]
       },
@@ -190,13 +190,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/skills-portrait-828.372ad88d.avif"
+            "src": "/posters/skills-portrait-828.160a3d6b.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/skills-portrait-828.64e06037.webp"
+            "src": "/posters/skills-portrait-828.31d1cba3.webp"
           }
         ]
       }
@@ -208,29 +208,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/experience-landscape-640.a77379e0.avif"
+            "src": "/posters/experience-landscape-640.bf5aa681.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/experience-landscape-1280.728125f9.avif"
+            "src": "/posters/experience-landscape-1280.03b2cdca.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/experience-landscape-1920.0f23fae3.avif"
+            "src": "/posters/experience-landscape-1920.39e15ce9.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/experience-landscape-640.88ea8e71.webp"
+            "src": "/posters/experience-landscape-640.5a9479cc.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/experience-landscape-1280.5fbc0ecb.webp"
+            "src": "/posters/experience-landscape-1280.e0f9850d.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/experience-landscape-1920.772d504a.webp"
+            "src": "/posters/experience-landscape-1920.396b4e30.webp"
           }
         ]
       },
@@ -240,13 +240,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/experience-portrait-828.79a94c18.avif"
+            "src": "/posters/experience-portrait-828.4efc5fbc.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/experience-portrait-828.4a5ceb97.webp"
+            "src": "/posters/experience-portrait-828.92f3bfef.webp"
           }
         ]
       }
@@ -258,29 +258,29 @@
         "avif": [
           {
             "width": 640,
-            "src": "/posters/contact-landscape-640.4bbcc5cb.avif"
+            "src": "/posters/contact-landscape-640.2fb3f96d.avif"
           },
           {
             "width": 1280,
-            "src": "/posters/contact-landscape-1280.7f269ad2.avif"
+            "src": "/posters/contact-landscape-1280.3006e76c.avif"
           },
           {
             "width": 1920,
-            "src": "/posters/contact-landscape-1920.4c68e92f.avif"
+            "src": "/posters/contact-landscape-1920.032a4de4.avif"
           }
         ],
         "webp": [
           {
             "width": 640,
-            "src": "/posters/contact-landscape-640.123eaa30.webp"
+            "src": "/posters/contact-landscape-640.e6115585.webp"
           },
           {
             "width": 1280,
-            "src": "/posters/contact-landscape-1280.38984b23.webp"
+            "src": "/posters/contact-landscape-1280.37b085fd.webp"
           },
           {
             "width": 1920,
-            "src": "/posters/contact-landscape-1920.02981d64.webp"
+            "src": "/posters/contact-landscape-1920.34e443eb.webp"
           }
         ]
       },
@@ -290,13 +290,13 @@
         "avif": [
           {
             "width": 828,
-            "src": "/posters/contact-portrait-828.33543315.avif"
+            "src": "/posters/contact-portrait-828.350ece79.avif"
           }
         ],
         "webp": [
           {
             "width": 828,
-            "src": "/posters/contact-portrait-828.bdbcb932.webp"
+            "src": "/posters/contact-portrait-828.5b5e4e06.webp"
           }
         ]
       }

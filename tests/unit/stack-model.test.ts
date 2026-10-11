@@ -5,6 +5,7 @@ import { edgeFrameGeometry, edgeObjectName } from "@/experience/scenes/edges";
 import {
   createStackMaterials,
   injectPulse,
+  layerMaterials,
 } from "@/experience/scenes/materials";
 import {
   jobChipU,
@@ -98,6 +99,8 @@ describe("traceRibbon (pcb_traces)", () => {
 describe("createStackMaterials", () => {
   const textures = {
     pcb: new Texture(),
+    pcbSurface: new Texture(),
+    pcbEdge: new Texture(),
     etchHero: new Texture(),
     etchContact: new Texture(),
   };
@@ -115,6 +118,34 @@ describe("createStackMaterials", () => {
     // refracting into a hard dark band (M5 look issue).
     expect(glass.roughnessMap).toBe(maps["smudge-roughness"]);
     expect(glass.roughness).toBeGreaterThan(0.1);
+  });
+
+  it("keeps a single, soft highlight on the glass (no clearcoat lobe)", () => {
+    // A 0.04-rough clearcoat drew razor-thin highlights that broke into
+    // dots along the far edges.
+    const glass = createStackMaterials(2, textures, maps).layers.interface;
+    expect(glass.clearcoat).toBe(0);
+    expect(glass.iridescence).toBeLessThanOrEqual(0.3);
+  });
+
+  it("makes the board's copper metal and its solder mask not", () => {
+    const { layers } = createStackMaterials(2, textures, maps);
+    expect(layers.infra.map).toBe(textures.pcb);
+    expect(layers.infra.metalnessMap).toBe(textures.pcbSurface);
+    expect(layers.infra.roughnessMap).toBe(textures.pcbSurface);
+  });
+
+  it("prints the board on its top face only, FR4 on the edges", () => {
+    const materials = createStackMaterials(2, textures, maps);
+    const faces = layerMaterials(materials, "infra");
+    // BoxGeometry groups: +x, -x, +y (top), -y, +z, -z.
+    expect(Array.isArray(faces) && faces.length).toBe(6);
+    expect((faces as unknown[])[2]).toBe(materials.layers.infra);
+    expect(
+      (faces as unknown[]).filter((face) => face === materials.pcbEdge),
+    ).toHaveLength(5);
+    expect(materials.pcbEdge.map).toBe(textures.pcbEdge);
+    expect(layerMaterials(materials, "api")).toBe(materials.layers.api);
   });
 
   it("fakes the glass at tier 1 (no transmission pass)", () => {

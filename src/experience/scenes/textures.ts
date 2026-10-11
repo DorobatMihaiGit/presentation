@@ -51,11 +51,40 @@ export function etchingTexture(lines: readonly string[]): CanvasTexture {
   return texture;
 }
 
+type PcbPalette = {
+  mask: string;
+  copper: string;
+  inner: string;
+  pad: string;
+  print: string;
+};
+
+/** What the board looks like (the colour map). */
+const PCB_COLOURS: PcbPalette = {
+  mask: "#0e2419",
+  copper: "#b8733f",
+  inner: "#1f5a3c",
+  pad: "#d4a373",
+  print: "#cfd8d3",
+};
+
+/**
+ * What it is made of, in three's channels: green = roughness, blue =
+ * metalness. Exposed copper is smooth metal; mask and print are not.
+ */
+const PCB_SURFACE: PcbPalette = {
+  mask: "rgb(0,150,0)",
+  copper: "rgb(0,80,255)",
+  inner: "rgb(0,140,0)",
+  pad: "rgb(0,70,255)",
+  print: "rgb(0,170,0)",
+};
+
 /** Solder mask, copper pours, pads and silkscreen for `layer_infra`. */
-export function pcbTexture(): CanvasTexture {
+function drawPcb(palette: PcbPalette): HTMLCanvasElement {
   const size = 1024;
   const { element, context } = canvas(size, size);
-  context.fillStyle = "#0e2419";
+  context.fillStyle = palette.mask;
   context.fillRect(0, 0, size, size);
 
   // Deterministic pseudo-random layout (same poster every capture).
@@ -70,7 +99,7 @@ export function pcbTexture(): CanvasTexture {
   for (let i = 0; i < 90; i += 1) {
     let x = Math.round(random() * 32) * 32;
     let y = Math.round(random() * 32) * 32;
-    context.strokeStyle = random() > 0.2 ? "#b8733f" : "#1f5a3c";
+    context.strokeStyle = random() > 0.2 ? palette.copper : palette.inner;
     context.lineWidth = random() > 0.7 ? 10 : 5;
     context.beginPath();
     context.moveTo(x, y);
@@ -87,17 +116,45 @@ export function pcbTexture(): CanvasTexture {
       context.lineTo(x, y);
     }
     context.stroke();
-    context.fillStyle = "#d4a373";
+    context.fillStyle = palette.pad;
     context.beginPath();
     context.arc(x, y, 9, 0, Math.PI * 2);
     context.fill();
   }
-  context.fillStyle = "#cfd8d3";
+  context.fillStyle = palette.print;
   context.font = "600 34px monospace";
   context.fillText("INFRA-04  REV C", 40, size - 40);
+  return element;
+}
 
-  const texture = new CanvasTexture(element);
+/** The board's top face (colour). */
+export function pcbTexture(): CanvasTexture {
+  const texture = new CanvasTexture(drawPcb(PCB_COLOURS));
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 8;
+  return texture;
+}
+
+/** Roughness (green) and metalness (blue) of the same layout, pixel for pixel. */
+export function pcbSurfaceTexture(): CanvasTexture {
+  const texture = new CanvasTexture(drawPcb(PCB_SURFACE));
+  texture.anisotropy = 8;
+  return texture;
+}
+
+/**
+ * The board's cut edges: dark FR4 with the thin copper of its inner layers.
+ * M6 wrapped the top face's traces round the sides, as streaks.
+ */
+export function pcbEdgeTexture(): CanvasTexture {
+  const { element, context } = canvas(64, 64);
+  context.fillStyle = "#0c1712";
+  context.fillRect(0, 0, 64, 64);
+  context.fillStyle = "#6b4a2e";
+  for (const y of [15, 31, 47]) {
+    context.fillRect(0, y, 64, 1.5);
+  }
+  const texture = new CanvasTexture(element);
+  texture.colorSpace = SRGBColorSpace;
   return texture;
 }

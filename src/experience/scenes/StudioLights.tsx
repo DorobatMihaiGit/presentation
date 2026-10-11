@@ -1,15 +1,19 @@
 import { useThree } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import {
-  CanvasTexture,
   Color,
+  DataTexture,
   DoubleSide,
+  LinearFilter,
+  LinearMipmapLinearFilter,
   Mesh,
   MeshBasicMaterial,
   PlaneGeometry,
   PMREMGenerator,
   Scene,
 } from "three";
+import type { Tier } from "../gpu-tier";
+import { contactShadow, SHADOW_PLANE, studioBackground } from "./studio";
 
 type Softbox = {
   position: [number, number, number];
@@ -29,21 +33,21 @@ const SOFTBOXES: Softbox[] = [
     position: [0, 3, 0.6],
     rotation: [Math.PI / 2, 0, 0],
     scale: [3.2, 1.6],
-    intensity: 2.2,
+    intensity: 2.6,
   },
   // Key strip, front left: the one the sweep drags across
   {
     position: [-2.4, 1.1, 2.2],
     rotation: [0, Math.PI / 4, 0],
     scale: [0.7, 3.6],
-    intensity: 5,
+    intensity: 6,
   },
-  // Cool rim, back right
+  // Cool rim, back right: the bright line along the far edges
   {
     position: [2.6, 0.8, -1.6],
     rotation: [0, -Math.PI / 1.6, 0],
     scale: [0.5, 3],
-    intensity: 2.4,
+    intensity: 3.5,
     color: "#cfe6ff",
   },
   // Floor bounce
@@ -93,19 +97,35 @@ function studioScene(): Scene {
 /** Name of the contact shadow; shots turn it with the stack. */
 export const STACK_SHADOW = "stack_shadow";
 
-/** Soft square falloff, baked once: the monolith's contact shadow. */
-function shadowTexture(): CanvasTexture {
+/** The contact shadow as an alpha map (three reads its green channel). */
+function shadowTexture(): DataTexture {
   const size = 256;
-  const element = document.createElement("canvas");
-  element.width = size;
-  element.height = size;
-  const context = element.getContext("2d");
-  if (context) {
-    context.filter = "blur(18px)";
-    context.fillStyle = "#fff";
-    context.fillRect(size * 0.22, size * 0.22, size * 0.56, size * 0.56);
+  const data = new Uint8Array(size * size * 4);
+  for (let row = 0; row < size; row += 1) {
+    for (let column = 0; column < size; column += 1) {
+      const value = Math.round(
+        255 *
+          contactShadow(
+            ((column + 0.5) / size - 0.5) * SHADOW_PLANE,
+            ((row + 0.5) / size - 0.5) * SHADOW_PLANE,
+          ),
+      );
+      data.fill(
+        value,
+        (row * size + column) * 4,
+        (row * size + column) * 4 + 3,
+      );
+      data[(row * size + column) * 4 + 3] = 255;
+    }
   }
-  return new CanvasTexture(element);
+  const texture = new DataTexture(data, size, size);
+  texture.generateMipmaps = true;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.magFilter = LinearFilter;
+  // The hero's macro shot looks along the floor.
+  texture.anisotropy = 8;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 /**
@@ -113,10 +133,11 @@ function shadowTexture(): CanvasTexture {
  * PMREM environment map (like three's RoomEnvironment). Shots rotate it
  * (`scene.environmentRotation`) to sweep the reflections.
  */
-export function StudioLights() {
+export function StudioLights({ tier }: { tier: Tier }) {
   const gl = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
   const shadow = useMemo(shadowTexture, []);
+  const background = useMemo(() => studioBackground(tier), [tier]);
 
   useEffect(() => () => shadow.dispose(), [shadow]);
 
@@ -140,20 +161,21 @@ export function StudioLights() {
 
   return (
     <>
-      <color attach="background" args={["#0b0c0f"]} />
+      <color attach="background" args={[background]} />
       <mesh
         name={STACK_SHADOW}
         rotation-x={-Math.PI / 2}
         position-y={0.0002}
         renderOrder={-1}
       >
-        <planeGeometry args={[0.62, 0.62]} />
+        <planeGeometry args={[SHADOW_PLANE, SHADOW_PLANE]} />
         <meshBasicMaterial
           color="#000000"
           alphaMap={shadow}
           transparent
           opacity={0.85}
           depthWrite={false}
+          dithering
         />
       </mesh>
     </>

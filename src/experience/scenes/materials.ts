@@ -19,6 +19,8 @@ export type PulseUniforms = {
 
 export type StackMaterials = {
   layers: Record<StackLayer, MeshPhysicalMaterial>;
+  /** The circuit board's four cut edges and its underside (FR4). */
+  pcbEdge: MeshPhysicalMaterial;
   copper: MeshPhysicalMaterial;
   pulse: PulseUniforms;
   etchHero: MeshStandardMaterial;
@@ -84,6 +86,8 @@ export function createStackMaterials(
   tier: Tier,
   textures: {
     pcb: Texture;
+    pcbSurface: Texture;
+    pcbEdge: Texture;
     etchHero: Texture;
     etchContact: Texture;
   },
@@ -120,12 +124,12 @@ export function createStackMaterials(
         attenuationDistance: 1.2,
         transparent: !transmissive,
         opacity: transmissive ? 1 : 0.55,
-        iridescence: 0.7,
+        // A hint of thin-film colour; no clearcoat: its second, 0.04-rough
+        // highlight broke into dots along the far edges.
+        iridescence: 0.3,
         iridescenceIOR: 1.3,
         iridescenceThicknessRange: [140, 420],
         specularIntensity: 1,
-        clearcoat: 1,
-        clearcoatRoughness: 0.04,
       }),
       api: new MeshPhysicalMaterial({
         color: "#d3d8e0",
@@ -143,10 +147,14 @@ export function createStackMaterials(
         clearcoatRoughness: 0.35,
         clearcoatRoughnessMap: smudge,
       }),
+      // Copper that reflects like metal, a solder mask that does not
+      // (the surface map sets both, per pixel).
       infra: new MeshPhysicalMaterial({
         map: textures.pcb,
-        metalness: 0.15,
-        roughness: 0.55,
+        metalnessMap: textures.pcbSurface,
+        roughnessMap: textures.pcbSurface,
+        metalness: 1,
+        roughness: 1,
         clearcoat: 0.4,
         clearcoatRoughness: 0.3,
       }),
@@ -161,6 +169,13 @@ export function createStackMaterials(
         clearcoatRoughness: 0.2,
       }),
     },
+    pcbEdge: new MeshPhysicalMaterial({
+      map: textures.pcbEdge,
+      metalness: 0,
+      roughness: 0.6,
+      clearcoat: 0.25,
+      clearcoatRoughness: 0.45,
+    }),
     copper,
     pulse,
     etchHero: etching(textures.etchHero),
@@ -174,8 +189,25 @@ export function createStackMaterials(
   };
 }
 
+/**
+ * A layer's material(s): the circuit board prints its texture on the top
+ * face only (RoundedBoxGeometry keeps BoxGeometry's face groups: +x, -x, +y,
+ * -y, +z, -z); every other slab is one material all round.
+ */
+export function layerMaterials(
+  materials: StackMaterials,
+  layer: StackLayer,
+): Material | Material[] {
+  if (layer !== "infra") {
+    return materials.layers[layer];
+  }
+  const edge = materials.pcbEdge;
+  return [edge, edge, materials.layers.infra, edge, edge, edge];
+}
+
 export function disposeMaterials(materials: StackMaterials): void {
   const all: Material[] = [
+    materials.pcbEdge,
     ...Object.values(materials.layers),
     materials.copper,
     materials.etchHero,
