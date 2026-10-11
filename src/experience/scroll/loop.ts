@@ -8,13 +8,15 @@ import type { StageStore } from "../director/store";
  * The page's only requestAnimationFrame loop: GSAP's ticker drives Lenis,
  * Lenis scroll events drive ScrollTrigger, and `onTick` (the director) decides
  * whether R3F renders a frame. `smooth: false` (poster capture) skips Lenis.
+ * Lenis also glides to in-page anchors (the header's section links); without
+ * the live stage they jump, like every other scroll the browser restores.
  */
 export function startLoop(
   onTick: (seconds: number) => void,
   { smooth }: { smooth: boolean },
 ): () => void {
   gsap.registerPlugin(ScrollTrigger);
-  const lenis = smooth ? new Lenis({ autoRaf: false }) : null;
+  const lenis = smooth ? new Lenis({ autoRaf: false, anchors: true }) : null;
   lenis?.on("scroll", ScrollTrigger.update);
   const tick = (seconds: number) => {
     lenis?.raf(seconds * 1000);

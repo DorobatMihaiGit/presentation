@@ -8,7 +8,7 @@ import { orientationOf } from "./framing";
 import { wireInputs } from "./inputs";
 import { JourneyShot } from "./JourneyShot";
 import { type JourneyFrame, journeyFrame, stopTime } from "./journey";
-import { createMotion, stepGlow, stepMotion } from "./motion";
+import { createMotion, settleMotion, stepGlow, stepMotion } from "./motion";
 import type { StageStore } from "./store";
 
 type DirectorProps = {
@@ -49,6 +49,7 @@ export function Director({
     let frames = 0;
     let shown = -1;
     let last: number | null = null;
+    let fresh = true;
     let size = three().size;
     let dpr = three().viewport.dpr;
     if (capture) {
@@ -71,6 +72,11 @@ export function Director({
           size = nextSize;
           dpr = viewport.dpr;
           state.invalidate();
+        }
+        if (fresh) {
+          // The first frame shows the section on screen (settleMotion).
+          settleMotion(motion, state);
+          fresh = false;
         }
         const snap = capture !== null;
         let moving = stepMotion(motion, state, dt, performance.now(), snap);

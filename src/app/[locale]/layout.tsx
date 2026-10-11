@@ -35,11 +35,7 @@ export default async function LocaleLayout({
   const t = await getTranslations("Layout");
 
   return (
-    <html
-      lang={locale}
-      data-scroll-behavior="smooth"
-      className={`${sans.variable} ${mono.variable}`}
-    >
+    <html lang={locale} className={`${sans.variable} ${mono.variable}`}>
       <body className="min-h-dvh bg-canvas font-sans text-ink">
         <a
           href="#main"

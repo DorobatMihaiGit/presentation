@@ -86,6 +86,21 @@ export type MotionInputs = {
 };
 
 /**
+ * Puts the journey and the pointer straight on their inputs: a stage that
+ * mounts mid-page (a reload, or back from a project page) starts on the
+ * section on screen instead of flying there from the hero.
+ */
+export function settleMotion(motion: Motion, inputs: MotionInputs): void {
+  const settle = (spring: Spring, value: number) => {
+    spring.value = value;
+    spring.velocity = 0;
+  };
+  settle(motion.journey, inputs.journey);
+  settle(motion.pointerX, inputs.pointer.x);
+  settle(motion.pointerY, inputs.pointer.y);
+}
+
+/**
  * Advances every spring by `dt` seconds towards the store's inputs; `snap`
  * jumps straight there (poster capture). Returns whether anything is still
  * moving, i.e. whether another frame must be drawn.

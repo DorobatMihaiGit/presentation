@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createMotion,
   LED_PULSE_MS,
+  settleMotion,
   stepMotion,
 } from "@/experience/director/motion";
 
@@ -59,6 +60,29 @@ describe("stepMotion", () => {
     expect(moving).toBe(true);
     stepMotion(motion, { ...still, journey: 2.5 }, 1 / 60, 0, true);
     expect(motion.journey.value).toBe(2.5);
+  });
+
+  it("starts a new stage where the page is, not at the hero", () => {
+    // A reload mid-page, or back from a project page: the first frame
+    // shows the section on screen instead of flying there.
+    const motion = createMotion(0);
+    settleMotion(motion, {
+      ...still,
+      journey: 4.3,
+      pointer: { x: 0.5, y: -0.2 },
+    });
+
+    expect(motion.journey).toEqual({ value: 4.3, velocity: 0 });
+    expect(motion.pointerX.value).toBe(0.5);
+    expect(motion.pointerY.value).toBe(-0.2);
+    expect(
+      stepMotion(
+        motion,
+        { ...still, journey: 4.3, pointer: { x: 0.5, y: -0.2 } },
+        1 / 60,
+        0,
+      ),
+    ).toBe(false);
   });
 
   it("turns the turntable only while idle, then settles on a full turn", () => {

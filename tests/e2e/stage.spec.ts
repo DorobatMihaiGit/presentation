@@ -151,3 +151,121 @@ test.describe("with reduced motion", () => {
     expect(loaded.filter((url) => !initial.has(url))).toEqual([]);
   });
 });
+
+test("with the live stage, section links glide there (Lenis)", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto("/en?tier=1");
+  await expect(page.locator("html")).toHaveAttribute("data-canvas", "live", {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    const seen: number[] = [];
+    (window as unknown as { __scrolls: number[] }).__scrolls = seen;
+    addEventListener("scroll", () => seen.push(Math.round(window.scrollY)));
+  });
+
+  await page
+    .getByRole("navigation", { name: "Sections" })
+    .getByRole("link", { name: "Experience" })
+    .click();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.getElementById("experience")?.getBoundingClientRect().top,
+      ),
+    )
+    .toBeLessThan(2);
+  const { scrolls, end } = await page.evaluate(() => ({
+    scrolls: (window as unknown as { __scrolls: number[] }).__scrolls,
+    end: Math.round(window.scrollY),
+  }));
+  // A jump lands in one step; a glide passes through the page on its way
+  // (SwiftShader draws few frames, so only "some" positions in between).
+  expect(scrolls.filter((y) => y > 50 && y < end - 50).length).toBeGreaterThan(
+    0,
+  );
+});
+
+test.describe("after a project page", () => {
+  // Next keeps a page it leaves in a hidden <Activity>: its effects are
+  // cleaned up (R3F loses the WebGL context) and come back when it is shown.
+  test.setTimeout(120_000);
+
+  test("the stage lets go of the GPU and comes back live", async ({ page }) => {
+    // Every journey time the stage shows, from any stage instance.
+    await page.addInitScript(() => {
+      const shown: number[] = [];
+      (window as unknown as { __journeys: number[] }).__journeys = shown;
+      new MutationObserver((records) => {
+        for (const record of records) {
+          shown.push(Number((record.target as HTMLElement).dataset.journey));
+        }
+        // Init scripts run before <html> exists: watch the document.
+      }).observe(document, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-journey"],
+      });
+    });
+    await page.goto("/en?tier=1");
+    const html = page.locator("html");
+    await expect(html).toHaveAttribute("data-canvas", "live", {
+      timeout: 60_000,
+    });
+
+    await page.locator("#projects").scrollIntoViewIfNeeded();
+    await page
+      .locator("#projects")
+      .getByRole("link", { name: "Tramline", exact: true })
+      .click();
+    await expect(page).toHaveURL("/en/projects/tramline");
+    // Nothing 3D while reading a project, not even hidden.
+    await expect(page.locator(".stage-layer")).toHaveCount(0);
+    await expect(html).not.toHaveAttribute("data-canvas", "live");
+
+    await page.evaluate(() => {
+      (window as unknown as { __journeys: number[] }).__journeys.length = 0;
+    });
+    await page.goBack();
+    await expect(page).toHaveURL("/en?tier=1");
+    // The stage steps back behind Projects, so its first frame is drawn
+    // (and data-canvas turns "live") once Contact brings it back.
+    await expect(page.locator(".stage-layer canvas")).toHaveCount(1, {
+      timeout: 60_000,
+    });
+    await page.locator("#contact").scrollIntoViewIfNeeded();
+    await expect(html).toHaveAttribute("data-canvas", "live", {
+      timeout: 60_000,
+    });
+    const canvases = page.locator(".stage-layer canvas");
+    await expect(canvases).toHaveCount(1);
+    expect(
+      await canvases.evaluate(
+        (canvas: HTMLCanvasElement) =>
+          canvas.getContext("webgl2")?.isContextLost() ?? true,
+      ),
+    ).toBe(false);
+    // The new stage starts at the Projects stop (T 4..5) and goes on to
+    // Contact; it never flies there from the hero behind the grid.
+    const shown = await page.evaluate(
+      () => (window as unknown as { __journeys: number[] }).__journeys,
+    );
+    expect(shown.length).toBeGreaterThan(0);
+    expect(Math.min(...shown)).toBeGreaterThanOrEqual(4);
+  });
+
+  test("the canvas fades in when it goes live", async ({ page }) => {
+    await page.goto("/en?tier=1");
+    const canvas = page.locator(".stage-layer canvas");
+    await expect(page.locator("html")).toHaveAttribute("data-canvas", "live", {
+      timeout: 60_000,
+    });
+
+    await expect(canvas).toHaveCSS("opacity", "1");
+    await expect(canvas).toHaveCSS("transition-property", "opacity");
+    await expect(canvas).toHaveCSS("transition-duration", "0.6s");
+  });
+});
