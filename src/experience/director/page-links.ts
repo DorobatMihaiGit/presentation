@@ -53,9 +53,38 @@ const CORNERS = [
 ] as const;
 
 /**
+ * Projects points of a layer's slab (x, z in -1..1 of the half footprint;
+ * y in metres above its bottom face) to viewport pixels. Null when one of
+ * them is behind the camera: its projection would land mirrored across the
+ * screen (M6 anchored a row 158,339 px up that way).
+ */
+function project(
+  object: Object3D,
+  points: readonly (readonly [number, number, number])[],
+  camera: Camera,
+  width: number,
+  height: number,
+): [number, number][] | null {
+  const half = STACK_FOOTPRINT / 2;
+  const screen: [number, number][] = [];
+  for (const [x, y, z] of points) {
+    corner
+      .set(x * half, y, z * half)
+      .applyMatrix4(object.matrixWorld)
+      .project(camera);
+    if (Math.abs(corner.z) > 1) {
+      return null;
+    }
+    screen.push([((corner.x + 1) / 2) * width, ((1 - corner.y) / 2) * height]);
+  }
+  return screen;
+}
+
+/**
  * Anchors each Skills row to its layer: `--ax` is the layer's left-most
  * point on screen minus a gap, `--ay` its vertical middle (px, viewport).
- * globals.css places the rows with them on wide landscape screens.
+ * globals.css places the rows with them on wide landscape screens. A row
+ * whose layer is partly behind the camera keeps its last anchor.
  */
 export function anchorRows(
   links: PageLinks,
@@ -69,25 +98,72 @@ export function anchorRows(
   if (links.list && links.list.style.getPropertyValue("--rows") !== rows) {
     links.list.style.setProperty("--rows", rows);
   }
-  const half = STACK_FOOTPRINT / 2;
   for (const [layer, row] of links.rows) {
     const object = scene.getObjectByName(layerObjectName(layer));
     if (!object) {
       continue;
     }
     object.updateMatrixWorld();
-    let left = Number.POSITIVE_INFINITY;
-    let middle = 0;
-    for (const [x, z] of CORNERS) {
-      corner
-        .set(x * half, LAYER_HEIGHT[layer] / 2, z * half)
-        .applyMatrix4(object.matrixWorld)
-        .project(camera);
-      left = Math.min(left, ((corner.x + 1) / 2) * width);
-      middle += ((1 - corner.y) / 2) * height;
+    const middle = LAYER_HEIGHT[layer] / 2;
+    const points = project(
+      object,
+      CORNERS.map(([x, z]) => [x, middle, z] as const),
+      camera,
+      width,
+      height,
+    );
+    if (!points) {
+      continue;
     }
-    setAnchor(row, left - GAP, middle / CORNERS.length);
+    const left = Math.min(...points.map(([x]) => x));
+    const y = points.reduce((sum, [, py]) => sum + py, 0) / points.length;
+    setAnchor(row, left - GAP, y);
   }
+}
+
+/**
+ * The whole stack's box on screen, `[x, y, width, height]` in viewport
+ * pixels (every corner of every slab), or null while part of it is behind
+ * the camera. The stage writes it to the layer as `data-box` for tests.
+ */
+export function stackBox(
+  scene: Object3D,
+  camera: Camera,
+  width: number,
+  height: number,
+): [number, number, number, number] | null {
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const layer of STACK_LAYERS) {
+    const object = scene.getObjectByName(layerObjectName(layer));
+    if (!object) {
+      continue;
+    }
+    object.updateMatrixWorld();
+    const points = project(
+      object,
+      CORNERS.flatMap(([x, z]) => [
+        [x, 0, z] as const,
+        [x, LAYER_HEIGHT[layer], z] as const,
+      ]),
+      camera,
+      width,
+      height,
+    );
+    if (!points) {
+      return null;
+    }
+    for (const [x, y] of points) {
+      xs.push(x);
+      ys.push(y);
+    }
+  }
+  if (xs.length === 0) {
+    return null;
+  }
+  const left = Math.min(...xs);
+  const top = Math.min(...ys);
+  return [left, top, Math.max(...xs) - left, Math.max(...ys) - top];
 }
 
 function mark(element: HTMLElement, lit: boolean) {

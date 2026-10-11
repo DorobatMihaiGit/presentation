@@ -89,7 +89,7 @@ export const HERO_KEYS: Record<Orientation, readonly CameraKey[]> = {
     { at: 0, position: [0.34, 0.03, 0.34], target: [0.06, 0.022, 0.19] },
     { at: 0.28, position: [0.02, 0.12, 0.42], target: [-0.02, 0.1, 0.19] },
     { at: 0.55, position: [-0.05, 0.52, 0.3], target: [-0.07, 0.25, 0.02] },
-    { at: 1, position: [0.6, 0.5, 1.1], target: [-0.34, 0.12, 0] },
+    { at: 1, position: [0.675, 0.585, 1.464], target: [-0.477, 0.12, 0.117] },
   ],
   portrait: [
     { at: 0, position: [0.3, 0.035, 0.42], target: [0.04, 0.03, 0.19] },

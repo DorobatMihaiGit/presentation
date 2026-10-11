@@ -89,17 +89,23 @@ export function sampleTrack(keys: readonly TrackKey[], t: number): number {
  * Skills pulls back from the exploded stack, Experience dives between the
  * layers and follows the PCB trace (see `trackPcb`), Projects retreats while
  * the stage fades out, Contact comes back to the closed stack's front face.
- * Landscape keeps the stack right of the copy; portrait keeps it centred.
+ * Landscape keeps the stack in the right half, clear of the copy (which takes
+ * the left half) on 16:9 to 3:2 screens (tests/e2e/framing.spec.ts); portrait
+ * keeps it centred.
  */
 export const JOURNEY_KEYS: Record<Orientation, readonly CameraKey[]> = {
   landscape: [
     ...HERO_KEYS.landscape,
-    { at: 1.55, position: [0.8, 0.74, 1.38], target: [-0.44, 0.19, 0] },
-    { at: 2.2, position: [1, 1.02, 1.95], target: [-0.62, 0.36, 0] },
-    { at: 2.8, position: [0.74, 1.1, 2.15], target: [-0.66, 0.36, 0] },
+    { at: 1.55, position: [0.726, 0.74, 1.447], target: [-0.514, 0.19, 0.067] },
+    { at: 2.2, position: [1.01, 0.962, 1.962], target: [-0.61, 0.302, 0.012] },
+    {
+      at: 2.8,
+      position: [0.749, 1.042, 2.164],
+      target: [-0.651, 0.302, 0.014],
+    },
     { at: 4.4, position: [2.1, 1.3, 3.4], target: [-0.3, 0.2, 0] },
     { at: 5.25, position: [0.95, 0.4, 1.65], target: [-0.52, 0.1, 0] },
-    { at: 6, position: [0.68, 0.28, 1.25], target: [-0.4, 0.08, 0] },
+    { at: 6, position: [0.763, 0.315, 1.56], target: [-0.506, 0.08, 0.092] },
   ],
   portrait: [
     ...HERO_KEYS.portrait,
@@ -112,11 +118,15 @@ export const JOURNEY_KEYS: Record<Orientation, readonly CameraKey[]> = {
   ],
 };
 
-/** Stack yaw (radians): About turns it 30°, Skills and Contact show the front. */
+/**
+ * Stack yaw (radians): About turns it 30° away from the camera (a clear
+ * three-quarter view; turning it towards the camera read as barely turned),
+ * Skills and Contact show the front.
+ */
 const YAW: readonly TrackKey[] = [
   [1, 0],
-  [1.5, Math.PI / 6],
-  [1.8, Math.PI / 6],
+  [1.5, -Math.PI / 6],
+  [1.8, -Math.PI / 6],
   [2.2, -0.35],
   [2.85, -0.2],
   [3.2, 0],

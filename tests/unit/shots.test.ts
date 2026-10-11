@@ -90,7 +90,7 @@ describe("heroFrame", () => {
 
 describe("the hero's end frame", () => {
   for (const orientation of ["landscape", "portrait"] as const) {
-    it(`shows the whole monolith (${orientation})`, () => {
+    it(`shows the whole monolith where the layout wants it (${orientation})`, () => {
       const { width, height } = REFERENCE_SIZE[orientation];
       const camera = new PerspectiveCamera(
         SHOT_FOV[orientation],
@@ -103,11 +103,17 @@ describe("the hero's end frame", () => {
       camera.lookAt(...end.target);
       camera.updateMatrixWorld();
       const half = STACK_FOOTPRINT / 2;
+      // Landscape keeps it in the right half, clear of the copy and the
+      // edge (tests/e2e/framing.spec.ts checks real screens); portrait
+      // keeps it inside the frame.
+      const [left, right] =
+        orientation === "landscape" ? [0.1, 0.96] : [-0.9, 0.9];
       for (const x of [-half, half]) {
         for (const y of [0, STACK_HEIGHT]) {
           for (const z of [-half, half]) {
             const corner = new Vector3(x, y, z).project(camera);
-            expect(Math.abs(corner.x), `x of ${x},${y},${z}`).toBeLessThan(0.9);
+            expect(corner.x, `x of ${x},${y},${z}`).toBeGreaterThan(left);
+            expect(corner.x, `x of ${x},${y},${z}`).toBeLessThan(right);
             expect(Math.abs(corner.y), `y of ${x},${y},${z}`).toBeLessThan(0.9);
           }
         }

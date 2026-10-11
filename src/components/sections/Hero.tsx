@@ -21,7 +21,7 @@ export function Hero({ cv }: { cv: Cv }) {
         <HeroPoster />
         <div aria-hidden="true" className="hero-scrim absolute inset-0" />
         <div className="relative mx-auto w-full max-w-content px-gutter pt-28 pb-16">
-          <div className="md:w-7/12">
+          <div className="md:w-1/2">
             {profile.available ? (
               <p className="inline-flex items-center gap-2 rounded-full bg-canvas/60 px-3 py-1.5 font-mono text-label uppercase text-ink-muted ring-1 ring-line">
                 <span

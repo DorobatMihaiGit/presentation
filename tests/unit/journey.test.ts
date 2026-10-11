@@ -117,9 +117,11 @@ describe("journeyFrame", () => {
     });
   }
 
-  it("About yaws the stack 30 degrees and lifts the glass", () => {
+  it("About yaws the stack 30 degrees away and lifts the glass", () => {
     const about = journeyFrame(1.6, "landscape");
-    expect(about.yaw).toBeCloseTo(Math.PI / 6);
+    // Away from the camera: a three-quarter view (M6 turned it towards the
+    // camera, which read as barely turned).
+    expect(about.yaw).toBeCloseTo(-Math.PI / 6);
     expect(about.lift).toBeGreaterThan(0.05);
     expect(about.explode).toBe(0);
     // Focus racks to the lifted glass.

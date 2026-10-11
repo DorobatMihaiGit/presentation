@@ -36,6 +36,16 @@ describe("coverViewOffset", () => {
     expect(view.y).toBe(0);
   });
 
+  it("can keep the right edge instead, like object-position: right", () => {
+    // Landscape shots put the stack right of the copy: a 16:10 or 3:2
+    // laptop loses the empty left of the frame, never the stack.
+    const view = coverViewOffset(1440, 1080, wide, "end");
+
+    expect(view.x).toBeCloseTo(480);
+    expect(view.x + view.width).toBeCloseTo(view.fullWidth);
+    expect(coverViewOffset(2560, 1080, wide, "end").y).toBeCloseTo(180);
+  });
+
   it("crops top and bottom of a wider viewport", () => {
     const view = coverViewOffset(2560, 1080, wide);
 
