@@ -32,7 +32,11 @@ test("tier 2 puts one hidden canvas behind a pinned hero", async ({ page }) => {
   const layer = page.locator(".stage-layer");
   await expect(layer).toHaveAttribute("aria-hidden", "true");
   await expect(layer.locator("canvas")).toHaveCount(1);
-  await expect(page.locator('[data-stage="hero"]')).toHaveCSS("opacity", "0");
+  // The poster fades out over the first live frames: SwiftShader can take a
+  // while to draw them under load, so wait for the state, not 5 s.
+  await expect(page.locator('[data-stage="hero"]')).toHaveCSS("opacity", "0", {
+    timeout: 30_000,
+  });
 
   const { hero, viewport } = await page.evaluate(() => ({
     hero: document.querySelector(".hero")?.getBoundingClientRect().height ?? 0,
@@ -90,9 +94,18 @@ test("a lost WebGL context falls back to the poster", async ({ page }) => {
     gl?.getExtension("WEBGL_lose_context")?.loseContext();
   });
 
-  await expect(page.locator("html")).toHaveAttribute("data-canvas", "poster");
-  await expect(page.locator(".stage-layer")).toHaveCount(0);
-  await expect(page.locator('[data-stage="hero"]')).toHaveCSS("opacity", "1");
+  const settle = { timeout: 30_000 };
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-canvas",
+    "poster",
+    settle,
+  );
+  await expect(page.locator(".stage-layer")).toHaveCount(0, settle);
+  await expect(page.locator('[data-stage="hero"]')).toHaveCSS(
+    "opacity",
+    "1",
+    settle,
+  );
 });
 
 test("a context lost by an old canvas leaves the new stage alone", async ({

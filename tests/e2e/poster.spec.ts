@@ -2,23 +2,52 @@ import { expect, type Page, test } from "@playwright/test";
 
 type Lcp = { tag?: string; url: string; startTime: number };
 
-function largestContentfulPaint(page: Page): Promise<Lcp> {
+/**
+ * Every LCP candidate so far, once the hero poster has loaded and painted.
+ * Reading the entries any sooner can catch an early candidate (the heading)
+ * before the poster's entry exists, which made these tests flaky under load.
+ */
+async function lcpCandidates(page: Page): Promise<Lcp[]> {
+  await page
+    .locator('[data-stage="hero"] img')
+    .evaluate((img: HTMLImageElement) => img.decode().catch(() => {}));
   return page.evaluate(
     () =>
-      new Promise<Lcp>((resolve) => {
-        new PerformanceObserver((list) => {
-          const entry = list.getEntries().at(-1) as PerformanceEntry & {
-            element?: Element;
-            url: string;
-          };
-          resolve({
-            tag: entry.element?.tagName,
-            url: new URL(entry.url || location.href).pathname,
-            startTime: entry.startTime,
-          });
-        }).observe({ type: "largest-contentful-paint", buffered: true });
+      new Promise<Lcp[]>((resolve) => {
+        // Two frames: the poster's paint (and its LCP entry) has happened.
+        // LCP entries are only delivered to a buffered observer.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const observer = new PerformanceObserver((list) => {
+              observer.disconnect();
+              resolve(
+                list.getEntries().map((entry) => {
+                  const lcp = entry as PerformanceEntry & {
+                    element?: Element;
+                    url: string;
+                  };
+                  return {
+                    tag: lcp.element?.tagName,
+                    url: new URL(lcp.url || location.href).pathname,
+                    startTime: lcp.startTime,
+                  };
+                }),
+              );
+            });
+            observer.observe({
+              type: "largest-contentful-paint",
+              buffered: true,
+            });
+          }),
+        );
       }),
   );
+}
+
+/** The largest contentful paint: the last candidate. */
+async function largestContentfulPaint(page: Page): Promise<Lcp> {
+  const candidates = await lcpCandidates(page);
+  return candidates.at(-1) ?? { url: "", startTime: 0 };
 }
 
 test("the hero poster is the LCP element (desktop)", async ({ page }) => {
@@ -119,7 +148,11 @@ test("the 3D chunk is requested only after the LCP", async ({ page }) => {
     timeout: 60_000,
   });
 
-  const lcp = await largestContentfulPaint(page);
+  // The poster's own LCP entry: later candidates (if any) do not move it.
+  const lcp = (await lcpCandidates(page)).find((entry) =>
+    entry.url.startsWith("/posters/hero-"),
+  );
+  expect(lcp, "the poster was an LCP candidate").toBeDefined();
   const html = await (await page.request.get("/en")).text();
   const initial = [...html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)].map(
     (match) => match[1],
@@ -139,6 +172,6 @@ test("the 3D chunk is requested only after the LCP", async ({ page }) => {
 
   expect(lazy.length).toBeGreaterThan(0);
   for (const start of lazy) {
-    expect(start).toBeGreaterThan(lcp.startTime);
+    expect(start).toBeGreaterThan(lcp?.startTime ?? Number.POSITIVE_INFINITY);
   }
 });

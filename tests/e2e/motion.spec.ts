@@ -51,6 +51,8 @@ test.describe("with reduced motion", () => {
 
   test("the visitor can still turn motion on", async ({ page }) => {
     await page.goto("/en?tier=1");
+    // A click before hydration does nothing: wait for the toggle's state.
+    await expect(page.locator("html")).toHaveAttribute("data-motion", "off");
     const motion = page
       .getByRole("banner")
       .getByRole("button", { name: "Motion" });
