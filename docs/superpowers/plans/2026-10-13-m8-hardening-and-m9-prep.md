@@ -249,21 +249,21 @@ upgrade-insecure-requests   (production only)
 
 ## Task 6: Accessibility audit (a11y 100)
 
-- [ ] Widen `tests/e2e/a11y.spec.ts`. Run axe (WCAG 2.2 AA tags) on:
+- [x] Widen `tests/e2e/a11y.spec.ts`. Run axe (WCAG 2.2 AA tags) on:
   - `/en` and `/ro`, top and after scrolling to each section;
   - a project page in both locales;
   - the 404 page;
   - the error boundary (Task 3's e2e trigger);
   - `/admin/login` and every `/admin` page (logged in, as the admin specs do);
   - at 1280×720 and 390×844, with `reducedMotion: 'reduce'` and without it.
-- [ ] Add a keyboard-only journey:
+- [x] Add a keyboard-only journey:
   - Tab from the top: the skip link comes first and works;
   - every interactive control is reachable in visual order, shows a visible focus ring (assert a non-`none` outline or box-shadow), and is operable (Motion toggle, language switch, project cards, the View Transition link, the contact form submit, the CV link);
   - no focus trap;
   - after a project page and back, focus lands on something sensible.
-- [ ] Contrast over the poster and the live canvas: sample the text colour against the scrim at each section (capture mode). Assert ≥ 4.5:1 for body text (spec §3). Use a pure helper with a unit test.
-- [ ] Fix what fails. Then LHCI accessibility must be 100 on the three URLs (desktop and the mobile config from Task 9).
-- [ ] Commit `test(a11y): audit every page and the keyboard path`, plus `fix(a11y): …` commits for the fixes.
+- [x] Contrast over the poster and the live canvas: sample the text colour against the scrim at each section (capture mode). Assert ≥ 4.5:1 for body text (spec §3). Use a pure helper with a unit test.
+- [x] Fix what fails. Then LHCI accessibility must be 100 on the three URLs (desktop and the mobile config from Task 9).
+- [x] Commit `test(a11y): audit every page and the keyboard path`, plus `fix(a11y): …` commits for the fixes.
 
 ## Task 7: Tablet portrait framing
 
@@ -560,6 +560,14 @@ Before leaving it:
 - `@vercel/analytics` 2.0.1 and `@vercel/speed-insights` 2.0.0 are still the latest 2.x; their peers accept Next ≥ 13 and React 19.
 - `VercelInsights` (in the `[locale]` layout only, not `/admin`) renders both when the build has `VERCEL=1`, otherwise nothing.
 - Measured: `/en` and `/ro` 153.5 KB gz before 3D, project page 150.1, **with and without** `VERCEL=1`. The +1.9 KB is the two packages' client modules, bundled even when not rendered. With `VERCEL=1` their scripts load after the page and are counted with the lazy chunks (5 instead of 3, 316.6 KB gz). Under 160 KB, so no idle-callback loading was needed.
+
+### Task 6: accessibility audit
+
+- `tests/e2e/a11y.spec.ts` runs axe with the WCAG 2.0/2.1/2.2 A+AA tags on `/en` and `/ro` (top and each section), the project page in both locales, the 404 page and `/admin/login`, each at 1280×720 and 390×844 with and without reduced motion (28 tests), plus the poster fallback after a stage error. `tests/e2e/admin-a11y.spec.ts` covers the 11 admin pages at both sizes. **No violation was found, so no `fix(a11y)` commit.**
+- There is no production route that renders the page error boundary, and the plan forbids adding one, so axe checks the poster fallback (Task 3's trigger) instead.
+- Keyboard: the skip link comes first, no positive `tabindex`, every stop shows a ring (on the element or its `::before`/`::after`: project cards outline the whole card from the link's `::after`), focus leaves the page after the footer (no trap), and the motion toggle (Enter/Space), a project, "All work" and the language switch all work.
+- Contrast: `src/lib/contrast.ts` (WCAG luminance, unit tested) rates the pixels behind the hidden text of the hero, About, Experience and Contact body copy (95th percentile of the hardest pixels) at tier 0 (poster) and tier 2 (live canvas, SwiftShader): all ≥ 4.5:1.
+- `lighthouserc.json`: accessibility now asserts 1 (was 0.95); `lhci:windows` reads the same file.
 
 ## Open questions
 
