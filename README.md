@@ -41,8 +41,11 @@ gave `pnpm admin:create`).
 | `pnpm format` | Biome format, writes files |
 | `pnpm test` | Vitest unit tests (`tests/unit`) |
 | `pnpm test:e2e` | Playwright e2e (`tests/e2e`, incl. axe); builds and serves on port 3100 |
-| `pnpm lhci` | Lighthouse CI, desktop preset, on port 3200, for `/en`, `/ro` and `/en/projects/ledger-lens`; asserts >= 0.95 in all 4 categories. Run `SITE_URL=http://localhost:3200 pnpm build` first |
-| `pnpm lhci:windows` | The same Lighthouse runs and budgets on Windows, where `lhci autorun` fails on Chrome's temp profile; performance >= 0.65 there (see "On Windows") |
+| `pnpm lhci` | Lighthouse CI, desktop preset, on port 3200, for `/en`, `/ro` and `/en/projects/ledger-lens`; asserts accessibility 1 and >= 0.95 in the other 3 categories. Run `SITE_URL=http://localhost:3200 pnpm build` first |
+| `pnpm lhci:mobile` | The same URLs with Lighthouse's default mobile emulation (Moto G class, 4x CPU, slow 4G); see "Lighthouse on mobile" |
+| `pnpm lhci:windows` | The same Lighthouse runs and budgets on Windows, where `lhci autorun` fails on Chrome's temp profile; performance >= 0.65 there (see "On Windows"). `--mobile` uses the mobile config and only reports performance |
+| `pnpm smoke` | Read-only smoke suite against a deployed site: `SMOKE_URL=https://… pnpm smoke` (also the manual "Smoke" workflow in GitHub Actions) |
+| `pnpm deploy:check [file] [--online]` | Preflight for a deploy: validates `.env.production.local` (or `file`) with the app schema plus production rules, prints names and pass/fail only; `--online` counts the applied migrations |
 | `pnpm assets:posters` | Capture the hero and section posters from the 3D scene into `public/posters` + `src/experience/posters.json` (port 3400). Run `pnpm build` first |
 | `pnpm assets:textures` | Download the Poly Haven (CC0) detail maps once, convert them to WebP in `public/textures` + `src/experience/textures.json` |
 | `pnpm perf:local` | Long tasks, frame rate per section and memory while scrolling the whole page on the live stage, and after three trips to a project page and back, on this machine's GPU (port 3300). Run `pnpm build` first |
@@ -226,6 +229,11 @@ Admin uploads (JPEG, PNG, WebP, AVIF, PDF; 4 MB max) go to Vercel Blob when
 `BLOB_READ_WRITE_TOKEN` is set. Without it they are stored in `.data/media/`
 and served by `/api/media/<key>` (local development, tests, CI).
 
+The Blob store's public host (`<store>.public.blob.vercel-storage.com`) is
+allowed for `next/image` and in the CSP `img-src`. It comes from
+`BLOB_PUBLIC_HOST`, or is derived from the token
+(`vercel_blob_rw_<store>_<secret>`).
+
 ## Contact form and mail
 
 The contact form on `/en` and `/ro` posts to a Server Action. Each message is
@@ -265,3 +273,38 @@ real send fails, and the message is still stored with **Email failed**.
 (new and read), Archived and Spam. A message can be marked read or unread,
 archived, flagged as spam, moved back, or deleted for good. Every change is
 written to `audit_log` (a delete keeps only the message id).
+
+## Hardening (M8)
+
+- **Security headers** on every route (`src/lib/security-headers.ts`): CSP,
+  HSTS (two years, preload), `nosniff`, `Referrer-Policy`,
+  `X-Frame-Options: DENY`, `Permissions-Policy`, COOP. The CSP has no nonce,
+  because nonces would make the prerendered pages dynamic. Scripts keep
+  `unsafe-inline` for Next's inline bootstrap, and SRI (`experimental.sri`)
+  pins the external chunks with `integrity` attributes. The e2e and perf
+  suites fail on any CSP violation.
+- **Error boundaries**: `[locale]/error.tsx` (EN/RO), `admin/error.tsx`,
+  `global-error.tsx`, and `StageErrorBoundary`, which sends a failing 3D
+  stage back to the posters.
+- **Open Graph images**: one 1200x630 card per locale and per project
+  (`opengraph-image.tsx`, also used for X), prerendered and revalidated with
+  the `cv` tag.
+- **Analytics**: Vercel Web Analytics and Speed Insights render only in builds
+  on Vercel (`VERCEL=1`), never on `/admin`. Both are cookie-less, so there
+  is no consent banner and no Do Not Track handling.
+- **Accessibility**: axe (WCAG 2.2 AA) on every public and admin page at
+  laptop and phone sizes, a keyboard-only journey, and a contrast check of
+  the copy over the poster and the live canvas (`tests/e2e/a11y.spec.ts`).
+- **Lighthouse on mobile**: the CI job "Lighthouse (mobile)" runs
+  `lighthouserc.mobile.json`. GitHub runners have no GPU: headless Chrome
+  renders with SwiftShader, which the tier classifier sends to the posters
+  (tier 0), so CI's mobile score measures the poster path, not the live
+  stage.
+- **Browser back during the page slide** lands at the bottom of the home
+  page. This is accepted as is (M8 decision, no scroll-restoration takeover).
+
+## Deploying
+
+See [docs/deploy.md](docs/deploy.md): accounts, the env var matrix, DNS,
+the order of the steps and a script for the setup session. Run
+`pnpm deploy:check` before the first deploy and `pnpm smoke` after each one.
