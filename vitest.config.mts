@@ -13,6 +13,6 @@ export default defineConfig({
     // laptop 44 workers each booting PGlite ran past the 10 s hook timeout.
     // CI runs on Ubuntu and keeps the default (as playwright.config.ts).
     maxWorkers: process.platform === "win32" ? 4 : undefined,
-    include: ["tests/unit/**/*.test.ts", "tests/db/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.{ts,tsx}", "tests/db/**/*.test.ts"],
   },
 });

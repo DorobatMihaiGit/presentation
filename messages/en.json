@@ -118,5 +118,11 @@
   "NotFound": {
     "title": "Page not found",
     "description": "The page you are looking for does not exist."
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "This part of the page did not load. Trying again usually helps.",
+    "retry": "Try again",
+    "home": "Back to the home page"
   }
 }
