@@ -93,6 +93,29 @@ From the handover's open questions:
 8. **`.gitattributes`:** done (PR #2).
 9. **New, commit attribution:** the M7 plan said "no AI attribution of any kind", but every commit since the M7 handover carries a `Co-Authored-By` line. This plan follows the session's system reminder. The owner decides; `git rebase` can strip the lines before the merge if wanted.
 
+## Problems become GitHub issues, implementation goes on (owner decision 2026-10-13)
+
+The owner chose finishing the implementation over fixing every problem in the same night. Problems found during the run go to **GitHub issues** for a later bug-fixing session. The run does not loop on them.
+
+- **When to open an issue instead of fixing.** Open one when any of these holds:
+  - a problem is not solved after **2 focused attempts** (or ~30 minutes);
+  - it lies outside the task being worked on;
+  - it is a medium or low finding;
+  - it is a flaky test;
+  - a target is missed (mobile LHCI);
+  - a Stop rule fires.
+
+  Simple, contained fixes are still made on the spot.
+- **How to open one.** Run `"/c/Program Files/GitHub CLI/gh.exe" issue create -R DorobatMihaiGit/presentation --label m8-followup --title "<type>: <what>" --body-file <file>`. The body holds: what fails, exact command and output (trimmed), file:line, what was tried, a suggested next step, and the commit it was seen on. Add `--label blocker-m9` when it must be fixed before going to production.
+
+  At Task 0, create the labels once (`gh label create m8-followup --color FBCA04`, `gh label create blocker-m9 --color B60205`; ignore "already exists").
+
+  Before creating an issue, search for a duplicate (`gh issue list --label m8-followup --search "<words>"`) and add a comment there instead.
+- **Keep CI green so the work stays reviewable.** A test this plan adds that cannot pass yet becomes `test.fixme("…", …)` with a comment `// see #<issue>`. Never use `.skip` without an issue. An existing test that turns flaky is never weakened or disabled: open an issue and leave it as is (CI retries twice). A budget or threshold is not lowered except where a Stop rule says so, and then the issue records the real number.
+- **Exception 1: security.** The repo is **public**. Security findings (Task 10) and anything that describes how to attack the site never go into a GitHub issue, a commit message or the PR body. Write them to the git-ignored file `.data/security-findings.md` (it lives only on this laptop). In the PR body, say only "N security findings recorded locally for the owner". A **high** finding is still fixed in the run if at all possible. When fixed, the commit message names the area, not the exploit (`fix(security): tighten media route checks`).
+- **Exception 2: no task is skipped silently.** If a whole task cannot be done, its issue says so. The PR body lists every issue opened (`gh issue list --label m8-followup`). The Findings section of this file links them.
+- **Pushing is allowed** to `feat/m8-hardening` at any time (push after every task, so nothing is lost if the laptop stops). Pushing to `dev` or `main`, merging, and changing repository settings are not allowed.
+
 ## Task 0: Workspace and baseline
 
 - [ ] Docker up (see Machine). `docker compose up -d --wait` prints `Healthy`.
@@ -307,8 +330,8 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
   - `pnpm audit` from Task 1.
 
   Severity per finding (high/medium/low) with file:line and a concrete exploit scenario. Then verify each high or medium finding yourself before acting.
-- [ ] Fix every **high** finding, test first: each one gets a unit or e2e test that fails before the fix. Fix mediums that are cheap and contained; record the rest as open questions.
-- [ ] Commit `fix(security): <finding>` per fix, and add the review's summary (findings and their status) to the Findings section.
+- [ ] Fix every **high** finding, test first: each one gets a unit or e2e test that fails before the fix. Fix mediums that are cheap and contained. Record the rest in `.data/security-findings.md` only (see "Problems become GitHub issues", Exception 1); a high that cannot be fixed tonight is recorded there and marked **unfixed, blocks M9**.
+- [ ] Commit `fix(security): <finding>` per fix, and add a summary without exploit detail (counts by severity, fixed/unfixed) to the Findings section.
 
 ## Task 11: M9 prep, Blob images
 
@@ -366,7 +389,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
   - a smoke run against a `next start --port 3500` of the gate build.
 
   The gate ends with `echo "gate=0"`. Write it to the scratchpad and log to a file. It runs ~45 min: use `run_in_background` and wait on the notification. Don't poll in a loop that burns turns.
-- [ ] Fix and repeat until `gate=0`. A test that fails once and passes on rerun gets recorded under Findings (name, error); Task 8 should have removed those.
+- [ ] If the gate fails, fix what is quick and run it again, **at most 3 gate runs** in total. Whatever still fails after that gets an issue (labels `m8-followup` and `blocker-m9`), and the PR body says the gate did not reach `gate=0` and links the issue. A test that fails once and passes on rerun gets an issue, as a flaky test, and is recorded under Findings.
 - [ ] Delete the gate clone.
 - [ ] Push. Mark the PR ready (`gh pr ready`) and update its body. The body covers:
   - what changed per task;
@@ -376,8 +399,8 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
   - the open questions.
 
   End the body with the session's PR attribution line.
-- [ ] Wait for CI (all jobs, including `Lighthouse (mobile)`). Use `gh pr checks <n> --watch` in a background command, or a poll every 60 s. If a job fails, read its log (`gh run view --log-failed`), fix, push, repeat.
-- [ ] **Done when:** the PR is open (not draft) against `dev`, all CI checks pass, `git status` is clean, and this file's checkboxes are ticked, with Findings and Open questions filled in.
+- [ ] Wait for CI (all jobs, including `Lighthouse (mobile)`). Use `gh pr checks <n> --watch` in a background command, or a poll every 60 s. If a job fails, read its log (`gh run view --log-failed`), fix and push, **at most 3 rounds**. A job still failing after that gets an issue, which the PR body links.
+- [ ] **Done when:** every task has been worked through, and is either done or has its issue. The PR is open (not draft) against `dev`, and its body lists every `m8-followup` issue. CI is green, or each red job has an issue. `git status` is clean, everything is pushed, and this file's checkboxes are ticked or explained under Findings.
 - [ ] Write the handover `docs/superpowers/handover/<date>-m8.md` (same shape as M7's) and commit it to the branch. Push.
 
 **Never merge.** The owner merges.
@@ -395,7 +418,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 Start the session in the repo with `claude --permission-mode auto`. Then:
 
 ```
-/goal Execute docs/superpowers/plans/2026-10-13-m8-hardening-and-m9-prep.md on branch feat/m8-hardening, task by task in order (Task 0 to Task 14), following its Machine notes, Global constraints and Stop rules. Done when: the M8 pull request into dev is open and not a draft; `gh pr checks` shows every check passing (paste its output); the fresh-clone gate log ends with gate=0 (paste the tail); `git status` is clean; every checkbox in the plan file is ticked or explained under Findings; and the M8 handover file is committed and pushed. Never merge a PR, never push to dev or main, never change GitHub settings. If something needs the owner (accounts, money, content, merging), record it under Open questions and continue with the next task. If blocked on the same problem for 3 attempts, record it and move on. Stop after 150 turns.
+/goal Execute docs/superpowers/plans/2026-10-13-m8-hardening-and-m9-prep.md on branch feat/m8-hardening, task by task in order (Task 0 to Task 14), following its Machine notes, Global constraints, Stop rules and the section "Problems become GitHub issues". Prefer finishing the implementation over perfecting it: after 2 failed attempts at a problem, open an m8-followup issue (security findings go only to the local .data/security-findings.md, never to GitHub, the repo is public) and continue. Push the branch after every task. Done when: every task is done or has an issue; the M8 pull request into dev is open, not a draft, and lists all m8-followup issues; `gh pr checks` output is pasted and every red job has an issue; the gate log tail is pasted; `git status` is clean and everything is pushed; the M8 handover file is committed. Never merge a PR, never push to dev or main, never change GitHub settings. Stop after 200 turns.
 ```
 
 Before leaving it:
