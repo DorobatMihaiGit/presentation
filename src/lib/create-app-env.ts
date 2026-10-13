@@ -1,5 +1,11 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+
+export type StandardIssue = {
+  message: string;
+  path?: readonly (PropertyKey | { key: PropertyKey })[];
+};
+
 import { isHostname } from "./blob-host";
 
 export type RuntimeEnv = {
@@ -19,7 +25,11 @@ const email = z.email().transform((value) => value.toLowerCase());
 
 export function createAppEnv(
   runtimeEnv: RuntimeEnv,
-  options: { isServer?: boolean } = {},
+  options: {
+    isServer?: boolean;
+    /** Replaces the default (log and throw), e.g. for scripts/deploy-check.ts. */
+    onValidationError?: (issues: readonly StandardIssue[]) => never;
+  } = {},
 ) {
   return createEnv({
     server: {
@@ -70,5 +80,8 @@ export function createAppEnv(
       }),
     emptyStringAsUndefined: true,
     isServer: options.isServer,
+    ...(options.onValidationError
+      ? { onValidationError: options.onValidationError }
+      : {}),
   });
 }
