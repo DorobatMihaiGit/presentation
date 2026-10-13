@@ -205,19 +205,19 @@ upgrade-insecure-requests   (production only)
 
 ## Task 3: Error boundaries
 
-- [ ] Read Next's `error.js` / `global-error.js` docs in `node_modules/next/dist/docs/`.
-- [ ] Add:
+- [x] Read Next's `error.js` / `global-error.js` docs in `node_modules/next/dist/docs/`.
+- [x] Add:
   - `src/app/[locale]/error.tsx`: client component, localized via the existing messages (add keys to `messages/en.json` and `ro.json`). It shows a calm message, a "Try again" button (`reset`) and a link home, and uses the design system's styles.
   - `src/app/global-error.tsx`: its own `<html>`/`<body>`, inline minimal styles, EN/RO picked from the URL path. No next-intl provider is available there.
   - `src/app/admin/error.tsx`: English, with a link back to `/admin`.
-- [ ] **The 3D stage gets its own error boundary.** A throw inside the R3F tree (shader compile, a lost context during mount) must fall back to the posters (tier 0 path) without taking down the page. Look at how `StageLoader` and the context-loss handling already fall back (`tests/unit/context-loss.test.ts`) and reuse that path.
-- [ ] Tests (unit, jsdom + Testing Library, as the repo already does):
+- [x] **The 3D stage gets its own error boundary.** A throw inside the R3F tree (shader compile, a lost context during mount) must fall back to the posters (tier 0 path) without taking down the page. Look at how `StageLoader` and the context-loss handling already fall back (`tests/unit/context-loss.test.ts`) and reuse that path.
+- [x] Tests (unit, jsdom + Testing Library, as the repo already does):
   - each boundary renders its message and calls `reset`;
   - the stage boundary renders the poster fallback when a child throws.
-- [ ] e2e: inject a throw into the stage (for example via an existing capture/test hook or `page.addInitScript` that makes `getContext('webgl2')` throw after the tier is chosen) and assert the posters show, the page scrolls, and nothing else breaks.
+- [x] e2e: inject a throw into the stage (for example via an existing capture/test hook or `page.addInitScript` that makes `getContext('webgl2')` throw after the tier is chosen) and assert the posters show, the page scrolls, and nothing else breaks.
 
   Do **not** add a route that throws on purpose to the production build.
-- [ ] Commit `feat(errors): boundaries for pages, admin and stage`.
+- [x] Commit `feat(errors): boundaries for pages, admin and stage`.
 
 ## Task 4: OG images
 
@@ -539,6 +539,13 @@ Before leaving it:
 - Deviation: the profile editor has no markdown preview. The admin CSP test uses the project editor's preview instead (`tests/e2e/admin-csp.spec.ts`).
 - The spec was written together with the implementation instead of being run red first (the headers did not exist, so every header assertion would have failed).
 - e2e: 152 passed (12.0 min). Unit: 45 files / 334 tests.
+
+### Task 3: error boundaries
+
+- This Next version passes `retry` (re-fetch and re-render) to `error.js`; `reset` still exists but the docs prefer `retry`, so the boundaries use `retry`.
+- The repo had no jsdom or Testing Library (the plan assumed it did). Added as exact dev pins: `jsdom` 30.1.2, `@testing-library/react` 16.3.3, `@testing-library/dom` 10.4.2. Component tests are `tests/unit/*.test.tsx` with `// @vitest-environment jsdom`.
+- `global-error.tsx` ships with every page, so it carries only its EN/RO strings (`src/lib/global-error-copy.ts`), not the message files; a unit test keeps them equal to `messages/*.json` `Error`.
+- Stage: `StageErrorBoundary` wraps `<Stage>` in `StageLoader` and calls the same fallback as a lost context. `tests/e2e/stage-error.spec.ts` makes `getContext("webgl*")` throw at `?tier=1`: it fails without the boundary (`data-canvas` stuck at `loading`) and passes with it.
 
 ## Open questions
 

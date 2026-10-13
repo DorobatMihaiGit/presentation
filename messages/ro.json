@@ -118,5 +118,11 @@
   "NotFound": {
     "title": "Pagina nu a fost găsită",
     "description": "Pagina pe care o cauți nu există."
+  },
+  "Error": {
+    "title": "Ceva nu a mers",
+    "description": "Această parte a paginii nu s-a încărcat. De obicei ajută să încerci din nou.",
+    "retry": "Încearcă din nou",
+    "home": "Înapoi la pagina principală"
   }
 }

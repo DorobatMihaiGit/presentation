@@ -9,6 +9,7 @@ import {
   readGpuSignals,
   tierOverride,
 } from "./gpu-tier";
+import { StageErrorBoundary } from "./StageErrorBoundary";
 import { useMotion } from "./use-motion";
 
 // three.js, R3F, GSAP and Lenis live in this chunk only.
@@ -85,16 +86,19 @@ export function StageLoader() {
   if (!live) {
     return null;
   }
+  const fallback = () => {
+    document.documentElement.dataset.canvas = "poster";
+    setLive(null);
+  };
   return (
-    <Stage
-      tier={live.tier}
-      capture={live.capture}
-      pinned={live.pinned}
-      onFallback={() => {
-        document.documentElement.dataset.canvas = "poster";
-        setLive(null);
-      }}
-    />
+    <StageErrorBoundary onError={fallback}>
+      <Stage
+        tier={live.tier}
+        capture={live.capture}
+        pinned={live.pinned}
+        onFallback={fallback}
+      />
+    </StageErrorBoundary>
   );
 }
 
