@@ -296,23 +296,23 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
 ## Task 9: Lighthouse on mobile (perf ≥ 90, a11y 100, SEO 100, BP ≥ 95)
 
-- [ ] Add `lighthouserc.mobile.json`. It uses the same URLs and server as `lighthouserc.json`, with the default (mobile) preset: Moto G-class emulation, simulated 4× CPU slowdown, slow 4G. Assertions: performance ≥ 0.90, accessibility = 1, seo = 1, best-practices ≥ 0.95.
+- [x] Add `lighthouserc.mobile.json`. It uses the same URLs and server as `lighthouserc.json`, with the default (mobile) preset: Moto G-class emulation, simulated 4× CPU slowdown, slow 4G. Assertions: performance ≥ 0.90, accessibility = 1, seo = 1, best-practices ≥ 0.95.
 
   Add these scripts:
   - `"lhci:mobile": "lhci autorun --config=lighthouserc.mobile.json"`;
   - Windows: `scripts/lhci-windows.ts` takes a `--mobile` flag, or a sibling script.
-- [ ] Add a CI job `Lighthouse (mobile)` in `.github/workflows/ci.yml`, a copy of the desktop job using the mobile config.
-- [ ] Measure first: push, and read the CI job's report (the `lighthouse-reports` artifact: `gh run download`). Also run locally on Windows for the diagnosis, but **CI decides**.
+- [x] Add a CI job `Lighthouse (mobile)` in `.github/workflows/ci.yml`, a copy of the desktop job using the mobile config.
+- [x] Measure first: push, and read the CI job's report (the `lighthouse-reports` artifact: `gh run download`). Also run locally on Windows for the diagnosis, but **CI decides**.
 
   Note: headless Chrome in CI runs on SwiftShader, which the tier classifier puts on tier 0 (posters only). So CI's mobile score measures the poster path. Write that in the README next to the numbers.
-- [ ] If it's below target, work through the Lighthouse diagnostics in this order, measuring after each change:
+- [x] (Not needed: on target at the first measurement.) If it's below target, work through the Lighthouse diagnostics in this order, measuring after each change:
   1. LCP element and its resource priority on mobile (the 828 portrait poster, `fetchpriority`, preload);
   2. render-blocking CSS and fonts (Mona Sans preload on mobile);
   3. main-thread work before LCP (hydration cost; next-intl client messages; GSAP/Lenis imports that could wait until after load on tier 0);
   4. unused JS on the first load.
 
   Every change keeps all e2e and the desktop LHCI green.
-- [ ] Commit `perf(mobile): lighthouse mobile in ci`, plus `perf(…)` commits for the fixes.
+- [x] Commit `perf(mobile): lighthouse mobile in ci`, plus `perf(…)` commits for the fixes.
 
 **Stop rule:** after **six** measured improvement attempts, if performance is still < 0.90, stop optimizing. Set the mobile performance assertion to the best score reached, rounded down to 0.05 (other categories keep their targets), so CI stays green. Record the score, the top three Lighthouse opportunities and what was tried as an **open question (M8 target missed)**. Never lower the desktop assertions.
 
@@ -369,7 +369,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
 The owner sets up the accounts **the next day, in an attended session** (owner + Claude, with Claude in Chrome driving dashboards while the owner is logged in). Tonight's job is to make that session mechanical: every piece of the puzzle named, in order, with where each value comes from and where it goes. **The run does not create any account or cloud resource.**
 
-- [ ] Before writing, read what the code needs from production:
+- [x] Before writing, read what the code needs from production:
   - `src/env.ts` and `src/lib/create-app-env.ts`: every variable, required or optional, and its validation;
   - `.env.example`;
   - `src/server/db` (pooling, `attachDatabasePool`);
@@ -382,7 +382,7 @@ The owner sets up the accounts **the next day, in an attended session** (owner +
   - the README.
 
   Also read the current docs for the Vercel–Neon integration, Vercel Blob, Resend domains and Vercel domains (web search). Note the date read, because dashboards change. Every claim in the guide is either checked in the code or marked "check in the dashboard".
-- [ ] Write **`docs/deploy.md`** in this shape:
+- [x] Write **`docs/deploy.md`** in this shape:
   1. **Overview and order.** Draw it as a small diagram (Mermaid or ASCII). Each step says why it must come before the next:
      1. GitHub repo (exists);
      2. Vercel account (sign up with GitHub) and project import;
@@ -446,7 +446,7 @@ The owner sets up the accounts **the next day, in an attended session** (owner +
      - images returning 400 from `/_next/image` (Blob host);
      - mails in `email_status=failed` (Resend not verified yet).
   7. **A session script for tomorrow.** A short numbered list the owner can paste to Claude ("we are at step N; open X in Chrome; …"), so the attended session can resume at any step.
-- [ ] Add **`pnpm deploy:check`** (`scripts/deploy-check.ts`), a read-only preflight with a unit test for its pure parts.
+- [x] Add **`pnpm deploy:check`** (`scripts/deploy-check.ts`), a read-only preflight with a unit test for its pure parts.
   - It loads a given env file (default `.env.production.local`, which must be git-ignored; check `.gitignore` and add it if missing).
   - It validates every variable with the same schema as `src/env.ts`, plus the production-only rules:
     - `SITE_URL` is https;
@@ -455,8 +455,8 @@ The owner sets up the accounts **the next day, in an attended session** (owner +
     - Blob uploads have an image host (explicit `BLOB_PUBLIC_HOST` or a derivable token).
   - With `--online`, it connects to `DATABASE_URL` and reports how many migrations are applied.
   - It prints only variable **names** and pass/fail, never values.
-- [ ] Link `docs/deploy.md` from the README. Update the README sections touched by M8: security headers, analytics, OG, mobile LHCI, the smoke suite, `deploy:check`, and the settled questions.
-- [ ] Commit `docs: account setup guide and deploy runbook`, and separately `feat(scripts): deploy preflight check`.
+- [x] Link `docs/deploy.md` from the README. Update the README sections touched by M8: security headers, analytics, OG, mobile LHCI, the smoke suite, `deploy:check`, and the settled questions.
+- [x] Commit `docs: account setup guide and deploy runbook`, and separately `feat(scripts): deploy preflight check`.
 
 ## Task 14: Gate on a fresh clone, then the PR
 
@@ -589,6 +589,13 @@ Before leaving it:
 | stage › tier 2 puts one hidden canvas | the poster's fade-out was checked with the default 5 s | wait for the opacity state up to 30 s | 10/10 |
 | stage › a lost WebGL context | same, for the fade back in | same | 10/10 |
 
+### Task 9: Lighthouse on mobile
+
+- CI run 38485580241 (`Lighthouse (mobile)`, first measurement, no optimisation needed): **pass**. Per-URL runs (perf/a11y/BP/SEO): `/en` 61 (cold first run), 92, 94; `/ro` 93, 93, 93; project page 96, 96, 99; a11y, BP and SEO 100 on every run. CI renders with SwiftShader, so this is the poster path (tier 0), as the README says.
+- Mobile LCP is 2.8–3.2 s on `/en` and `/ro`, above the spec's 2.5 s mobile LCP budget even though the score passes: issue #9.
+- Windows: `pnpm lhci:windows --mobile` reports performance only (CI decides). It was not run locally tonight to save time; CI measured.
+- Desktop LHCI in CI on the same run: pass, with accessibility now asserted at 1.
+
 ### Task 10: security review
 
 - A review subagent covered authz, uploads, markdown, contact abuse, cookies, Better Auth, client bundles, redirects, CSRF, headers, the OG image fetch and `pnpm audit`. Result: **0 high, 1 medium, 7 low**. Recorded only in the git-ignored `.data/security-findings.md` (the repo is public).
@@ -604,6 +611,13 @@ Before leaving it:
 - `pnpm smoke` (`playwright.smoke.config.ts`, `tests/smoke/site.smoke.ts`) needs `SMOKE_URL`, starts no server, never signs in and never sends mail. Local proof: `SITE_URL=http://localhost:3500 pnpm build`, `next start --port 3500`, `SMOKE_URL=http://localhost:3500 pnpm smoke` → **13 passed, 2 skipped** (the full HSTS/`upgrade-insecure-requests` header check, skipped on `http://` with a reason; the CSP and framing headers are still checked).
 - The "server action without a session gets 401" check uses Better Auth's `GET /api/auth/list-sessions` (401 without a session): calling a server action over HTTP needs its build-specific action id, and the e2e suite has no such check to copy.
 - `.github/workflows/smoke.yml`: `workflow_dispatch` with a `url` input.
+
+### Task 13: account guide and deploy runbook
+
+- `docs/deploy.md` was written by a subagent from the code and current vendor docs (read 2026-10-14). Unverified dashboard details are marked "check in the dashboard".
+- Deviation found while writing it: the Vercel build command must be `pnpm db:migrate && pnpm db:seed && pnpm build`. `next build` prerenders from Postgres and fails on an empty database ("CV profile row is missing"); `db:seed` skips a database that already has content.
+- Other notes from the guide: a Preview needs its own `SITE_URL` (`VERCEL_PROJECT_PRODUCTION_URL` points at production); the scripts load only `.env.local`, so remote values are exported in the shell; `admin:create`'s password prompt fails in Git Bash's default terminal, so the guide uses `read -s`.
+- `pnpm deploy:check`: unit tested; against `.env.example` it flags SITE_URL and the example secret, and `--online` on the local database prints "3 of 3 migrations applied".
 
 ## Open questions
 
