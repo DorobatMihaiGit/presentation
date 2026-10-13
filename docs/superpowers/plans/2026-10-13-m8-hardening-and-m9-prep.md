@@ -351,7 +351,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
 ## Task 12: M9 prep, production smoke suite
 
-- [ ] Add `playwright.smoke.config.ts` and `tests/smoke/*.smoke.ts`, run with `pnpm smoke` (script `"smoke": "playwright test -c playwright.smoke.config.ts"`). The suite runs against `SMOKE_URL` (required; no web server of its own), is read-only, and never logs in or sends mail. It checks:
+- [x] Add `playwright.smoke.config.ts` and `tests/smoke/*.smoke.ts`, run with `pnpm smoke` (script `"smoke": "playwright test -c playwright.smoke.config.ts"`). The suite runs against `SMOKE_URL` (required; no web server of its own), is read-only, and never logs in or sends mail. It checks:
   - `/`, `/en`, `/ro`, the first project page from `/sitemap.xml`: 200, correct `lang`, title, canonical, hreflang, JSON-LD Person, OG image reachable;
   - `/robots.txt` and `/sitemap.xml` are valid and point at `SMOKE_URL`'s origin;
   - the Task 2 security headers on a page and on `/admin/login`;
@@ -361,9 +361,9 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
   - an unknown project slug returns 404;
   - the contact form renders, but is **not** submitted;
   - no console errors and no CSP violations on `/en` and a project page.
-- [ ] Prove it locally: `pnpm build` (with `SITE_URL=http://localhost:3500`), `pnpm start --port 3500` in the background, `SMOKE_URL=http://localhost:3500 pnpm smoke` → all pass. HSTS and `upgrade-insecure-requests` checks are skipped on `http://` origins, with an explicit `test.skip` reason.
-- [ ] Add a manual-dispatch workflow `.github/workflows/smoke.yml` (`workflow_dispatch` with a `url` input) that runs the suite against a given URL. The owner runs it after deploying.
-- [ ] Commit `test(smoke): production smoke suite`.
+- [x] Prove it locally: `pnpm build` (with `SITE_URL=http://localhost:3500`), `pnpm start --port 3500` in the background, `SMOKE_URL=http://localhost:3500 pnpm smoke` → all pass. HSTS and `upgrade-insecure-requests` checks are skipped on `http://` origins, with an explicit `test.skip` reason.
+- [x] Add a manual-dispatch workflow `.github/workflows/smoke.yml` (`workflow_dispatch` with a `url` input) that runs the suite against a given URL. The owner runs it after deploying.
+- [x] Commit `test(smoke): production smoke suite`.
 
 ## Task 13: M9 prep, account setup guide (the "puzzle") and deploy runbook
 
@@ -593,6 +593,12 @@ Before leaving it:
 
 - `@vercel/blob` 2.8.0 reads the store id as the 4th `_` part of the token (`parseStoreIdFromReadWriteToken`) and builds public URLs as `https://<storeId>.public.blob.vercel-storage.com/<path>`; `src/lib/blob-host.ts` does the same (lowercased).
 - `BLOB_PUBLIC_HOST` (optional, hostname-validated) wins; otherwise the host comes from the token; otherwise there's none. With a token `vercel_blob_rw_Abc123_…` the config gives `remotePatterns` `[{https, abc123.public.blob.vercel-storage.com, /**}]` and `img-src 'self' data: blob: https://abc123.public.blob.vercel-storage.com`.
+
+### Task 12: production smoke suite
+
+- `pnpm smoke` (`playwright.smoke.config.ts`, `tests/smoke/site.smoke.ts`) needs `SMOKE_URL`, starts no server, never signs in and never sends mail. Local proof: `SITE_URL=http://localhost:3500 pnpm build`, `next start --port 3500`, `SMOKE_URL=http://localhost:3500 pnpm smoke` → **13 passed, 2 skipped** (the full HSTS/`upgrade-insecure-requests` header check, skipped on `http://` with a reason; the CSP and framing headers are still checked).
+- The "server action without a session gets 401" check uses Better Auth's `GET /api/auth/list-sessions` (401 without a session): calling a server action over HTTP needs its build-specific action id, and the e2e suite has no such check to copy.
+- `.github/workflows/smoke.yml`: `workflow_dispatch` with a `url` input.
 
 ## Open questions
 
