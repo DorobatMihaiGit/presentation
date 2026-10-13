@@ -1,11 +1,11 @@
 "use client";
 
-import { globalErrorCopy } from "@/lib/global-error-copy";
+import { errorCopy } from "@/lib/error-copy";
 
 // Replaces the root layouts when they fail, so no stylesheet, font or
 // next-intl provider is available: inline styles, copy picked from the URL.
 export default function GlobalError({ retry }: { retry: () => void }) {
-  const { lang, copy } = globalErrorCopy(
+  const { lang, copy } = errorCopy(
     typeof location === "undefined" ? "/" : location.pathname,
   );
 
