@@ -88,37 +88,86 @@ async function copyAt(page: Page, time: number, selector: string) {
   );
 }
 
-for (const [width, height] of VIEWPORTS) {
-  test(`at ${width}x${height} the stack stays on screen and off the copy`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height });
-    for (const stop of STOPS) {
-      await page.goto(`/en?capture=${stop.scene}&p=${stop.p}`);
-      await expect(page.locator("html")).toHaveAttribute(
-        "data-canvas",
-        "captured",
-        { timeout: 90_000 },
-      );
-      const stack = await stackOnScreen(page);
-      const where = `${stop.scene} ${JSON.stringify(stack)}`;
-      expect(stack.left, where).toBeGreaterThanOrEqual(MARGIN);
-      expect(stack.top, where).toBeGreaterThanOrEqual(MARGIN);
-      expect(stack.right, where).toBeLessThanOrEqual(width - MARGIN);
-      expect(stack.bottom, where).toBeLessThanOrEqual(height - MARGIN);
-      if (stop.copy) {
-        const covered = (await copyAt(page, stop.time, stop.copy)).filter(
-          (copy) =>
-            copy.left < stack.right + GAP &&
-            copy.right > stack.left - GAP &&
-            copy.top < stack.bottom + GAP &&
-            copy.bottom > stack.top - GAP,
+// Tablets in portrait (M8): iPad, iPad Air, iPad Pro 12.9".
+const TABLETS = [
+  [768, 1024],
+  [820, 1180],
+  [1024, 1366],
+] as const;
+
+for (const [width, height] of [...VIEWPORTS, ...TABLETS]) {
+  // Portrait tablets still frame the stack over the hero copy: see #8.
+  const run = (TABLETS as readonly (readonly number[])[]).some(
+    ([w, h]) => w === width && h === height,
+  )
+    ? test.fixme
+    : test;
+  run(
+    `at ${width}x${height} the stack stays on screen and off the copy`,
+    async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      for (const stop of STOPS) {
+        await page.goto(`/en?capture=${stop.scene}&p=${stop.p}`);
+        await expect(page.locator("html")).toHaveAttribute(
+          "data-canvas",
+          "captured",
+          { timeout: 90_000 },
         );
-        expect(
-          covered.map((copy) => copy.what),
-          where,
-        ).toEqual([]);
+        const stack = await stackOnScreen(page);
+        const where = `${stop.scene} ${JSON.stringify(stack)}`;
+        expect(stack.left, where).toBeGreaterThanOrEqual(MARGIN);
+        expect(stack.top, where).toBeGreaterThanOrEqual(MARGIN);
+        expect(stack.right, where).toBeLessThanOrEqual(width - MARGIN);
+        expect(stack.bottom, where).toBeLessThanOrEqual(height - MARGIN);
+        if (stop.copy) {
+          const covered = (await copyAt(page, stop.time, stop.copy)).filter(
+            (copy) =>
+              copy.left < stack.right + GAP &&
+              copy.right > stack.left - GAP &&
+              copy.top < stack.bottom + GAP &&
+              copy.bottom > stack.top - GAP,
+          );
+          expect(
+            covered.map((copy) => copy.what),
+            where,
+          ).toEqual([]);
+        }
       }
-    }
+    },
+  );
+}
+
+for (const [width, height] of TABLETS) {
+  test.describe(`on a ${width}x${height} tablet`, () => {
+    test.use({
+      viewport: { width, height },
+      isMobile: true,
+      hasTouch: true,
+    });
+
+    test("no page scrolls sideways and every control fits a finger", async ({
+      page,
+    }) => {
+      for (const path of ["/en", "/ro/projects/tramline"]) {
+        await page.goto(path);
+        const { overflow, small } = await page.evaluate(() => ({
+          overflow: document.documentElement.scrollWidth - window.innerWidth,
+          small: [
+            ...document.querySelectorAll<HTMLElement>(
+              'header a, header button, [data-scene="hero"] a, #projects article, footer a',
+            ),
+          ]
+            .filter((element) => element.checkVisibility())
+            .map((element) => ({
+              what: `${element.tagName} ${element.textContent?.trim().slice(0, 20)}`,
+              box: element.getBoundingClientRect(),
+            }))
+            .filter(({ box }) => box.width < 44 || box.height < 44)
+            .map(({ what }) => what),
+        }));
+        expect(overflow, path).toBeLessThanOrEqual(0);
+        expect(small, path).toEqual([]);
+      }
+    });
   });
 }
