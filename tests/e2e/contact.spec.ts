@@ -115,10 +115,20 @@ test.describe("a form sent too quickly", () => {
 });
 
 test.describe("the rate limit", () => {
-  postFrom("192.0.2.13");
-
-  test("refuses the sixth message in ten minutes", async ({ page }) => {
+  test("refuses the sixth message in ten minutes", async ({
+    page,
+  }, testInfo) => {
+    // Its own bucket on every run, repeat and retry (RFC 5737 TEST-NET-2), so
+    // --repeat-each and retries never start from an already full bucket.
+    const run = testInfo.repeatEachIndex * 3 + testInfo.retry;
+    await page.setExtraHTTPHeaders({
+      "x-forwarded-for": `198.51.100.${(run % 250) + 1}`,
+    });
     await page.goto("/en");
+    // The 3 s minimum fill time counts from hydration (the form's mount),
+    // not from navigation: on a busy machine the gap was enough to make the
+    // first message "too quick". Every page hydrates the motion toggle.
+    await expect(page.locator("html")).toHaveAttribute("data-motion", /on|off/);
     await page.waitForTimeout(3_100);
     const form = page.getByRole("form", { name: "Send a message" });
 
@@ -129,7 +139,10 @@ test.describe("the rate limit", () => {
         message: `Message ${i}`,
       });
       await form.getByRole("button", { name: "Send message" }).click();
-      // A sent form is cleared, so an empty name means this one went through.
+      // Each message is counted by its server answer, not by how long it took.
+      await expect(form.getByRole("status")).toHaveText(/^Thanks!/, {
+        timeout: 15_000,
+      });
       await expect(form.getByRole("textbox", { name: "Name" })).toHaveValue("");
     }
     await fillContactForm(page, {

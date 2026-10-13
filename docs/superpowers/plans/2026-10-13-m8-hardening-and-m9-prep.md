@@ -287,12 +287,12 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 - `stage.spec.ts › tier 2 puts one hidden canvas…`;
 - `› a lost WebGL context…`.
 
-- [ ] For each, find the race:
+- [x] For each, find the race:
   - the LCP ones should compare the chunk request with the **first** LCP candidate, or wait for the chunk explicitly (M7 plan, fact 18);
   - the rate limit one should not depend on wall-clock speed (count server responses, not timings);
   - the stage ones should wait on the `data-canvas` state rather than on time.
-- [ ] Prove it: `pnpm test:e2e --repeat-each=10 -g "<test title>"` for each one, **0 failures**, under the Windows 2-worker setting. Record the counts.
-- [ ] Commit `test(e2e): wait on events, not on time`.
+- [x] Prove it: `pnpm test:e2e --repeat-each=10 -g "<test title>"` for each one, **0 failures**, under the Windows 2-worker setting. Record the counts.
+- [x] Commit `test(e2e): wait on events, not on time`.
 
 ## Task 9: Lighthouse on mobile (perf ≥ 90, a11y 100, SEO 100, BP ≥ 95)
 
@@ -575,6 +575,19 @@ Before leaving it:
 - Fixed: the nav links get `pointer-coarse:min-h-11` (44 px). The tablet "no sideways scroll, 44 px targets" tests pass.
 - **Not fixed: the stack framing on portrait tablets → #8.** A fix changes `framing.ts`/`shots.ts`, which needs a GPU poster recapture and probably a tablet poster variant to keep the handoff seamless: a design task, not a contained overnight fix. The three tablet framing tests are `test.fixme` (`// see #8`). No scene code changed, so posters and `perf:local` are untouched.
 - Docker Desktop crashed during this task ("Docker Desktop is unable to start"; `next build` hung on the database). `wsl --shutdown` and a restart brought it back in 10 s.
+
+### Task 8: timing-sensitive e2e tests
+
+`pnpm test:e2e --no-deps --repeat-each=10` with 2 workers, after the fixes: **0 failures**.
+
+| Test | Race | Fix | Repeats |
+| --- | --- | --- | --- |
+| poster › the hero poster is the LCP element | the observer resolved with the first candidate delivered, sometimes the heading before the poster painted | read every candidate (buffered observer) after the poster has decoded and two frames have passed | 10/10 (whole spec 70/70) |
+| poster › the 3D chunk is requested only after the LCP | compared the chunk with the *last* candidate, read at an arbitrary time | compare with the poster's own LCP entry | 10/10 |
+| motion › the visitor can still turn motion on | clicked the toggle before hydration | wait for `html[data-motion]` first | 10/10 |
+| contact › the rate limit | the 3 s minimum fill time counts from the form's mount, but the test waited from `goto`; the bucket's IP was also fixed, so repeats/retries started full | wait for hydration, then 3.1 s; count each message by its "Thanks!" answer; one TEST-NET-2 address per run/repeat/retry | 10/10 |
+| stage › tier 2 puts one hidden canvas | the poster's fade-out was checked with the default 5 s | wait for the opacity state up to 30 s | 10/10 |
+| stage › a lost WebGL context | same, for the fade back in | same | 10/10 |
 
 ## Open questions
 
