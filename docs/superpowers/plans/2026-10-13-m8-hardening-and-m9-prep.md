@@ -120,16 +120,16 @@ The owner chose finishing the implementation over fixing every problem in the sa
 
 ## Task 0: Workspace and baseline
 
-- [ ] Docker up (see Machine). `docker compose up -d --wait` prints `Healthy`.
-- [ ] `git fetch -p origin`, `git switch dev`, `git pull --ff-only`. This plan is committed on `dev`. Then `git switch -c feat/m8-hardening`. If that branch already exists locally or on origin without M8 work, delete it first. If it exists **with** M8 commits (a resumed run), switch to it and `git rebase origin/dev` instead.
-- [ ] `pnpm install --frozen-lockfile`, `pnpm db:migrate`, `pnpm db:seed`.
-- [ ] Baseline, recorded under Findings:
+- [x] Docker up (see Machine). `docker compose up -d --wait` prints `Healthy`.
+- [x] `git fetch -p origin`, `git switch dev`, `git pull --ff-only`. This plan is committed on `dev`. Then `git switch -c feat/m8-hardening`. If that branch already exists locally or on origin without M8 work, delete it first. If it exists **with** M8 commits (a resumed run), switch to it and `git rebase origin/dev` instead.
+- [x] `pnpm install --frozen-lockfile`, `pnpm db:migrate`, `pnpm db:seed`.
+- [x] Baseline, recorded under Findings:
   - `pnpm typecheck`;
   - `pnpm lint`;
   - `pnpm test` (expected 44 files / 328 tests);
   - `pnpm build` (note the route table: every public route `○`);
   - `pnpm test:e2e` (expected 140 passed and the JS budget lines above).
-- [ ] `git push -u origin feat/m8-hardening` (pushing a feature branch is allowed). Open a **draft** PR into `dev` now, so CI runs on every push: `gh pr create --draft --base dev --title "M8: hardening and M9 prep" --body "Work in progress; see docs/superpowers/plans/2026-10-13-m8-hardening-and-m9-prep.md"`.
+- [x] `git push -u origin feat/m8-hardening` (pushing a feature branch is allowed). Open a **draft** PR into `dev` now, so CI runs on every push: `gh pr create --draft --base dev --title "M8: hardening and M9 prep" --body "Work in progress; see docs/superpowers/plans/2026-10-13-m8-hardening-and-m9-prep.md"`.
 
 ## Task 1: Dependency audit (0 high)
 
@@ -142,17 +142,17 @@ The owner chose finishing the implementation over fixing every problem in the sa
 
 Steps:
 
-- [ ] Bump `next` to `16.3.8` (stay on 16.3; 16.4 is a minor with its own docs, so not in M8). Also bump `eslint-config-next` or `@next/*`, if present, to the same version, and `sharp` to `0.35.5`.
-- [ ] For the transitive ones, run `pnpm why source-map-js` and `pnpm why esbuild`. Prefer bumping the direct parent. Otherwise add a `pnpm.overrides` entry in `pnpm-workspace.yaml` (pnpm 11 reads overrides there; check the existing file's format), pinned to the patched version.
-- [ ] `pnpm install`, then the full local check:
+- [x] Bump `next` to `16.3.8` (stay on 16.3; 16.4 is a minor with its own docs, so not in M8). Also bump `eslint-config-next` or `@next/*`, if present, to the same version, and `sharp` to `0.35.5`.
+- [x] For the transitive ones, run `pnpm why source-map-js` and `pnpm why esbuild`. Prefer bumping the direct parent. Otherwise add a `pnpm.overrides` entry in `pnpm-workspace.yaml` (pnpm 11 reads overrides there; check the existing file's format), pinned to the patched version.
+- [x] `pnpm install`, then the full local check:
   - typecheck, lint, unit, build, e2e;
   - `pnpm perf:local`;
   - `pnpm build && pnpm assets:posters` **only if** the poster-hash unit test fails.
 
   sharp encodes the posters, so if sharp's output bytes changed, recapture and commit the posters in this task.
-- [ ] `pnpm audit --prod` shows **0 high and 0 critical**. Record the moderate/low ones that remain, with the reason each is acceptable (for example, dev server only).
-- [ ] Add `renovate.json` (spec §8: "Renovate weekly grouped"): weekly schedule, exact pins kept (`rangeStrategy: "pin"`), group minor/patch, leave majors ungrouped, keep `react` < 19.4 (R3F peer). It does nothing until the owner installs the Renovate app (Part C).
-- [ ] Commit `chore(deps): patch next, sharp and audit findings`.
+- [x] `pnpm audit --prod` shows **0 high and 0 critical**. Record the moderate/low ones that remain, with the reason each is acceptable (for example, dev server only).
+- [x] Add `renovate.json` (spec §8: "Renovate weekly grouped"): weekly schedule, exact pins kept (`rangeStrategy: "pin"`), group minor/patch, leave majors ungrouped, keep `react` < 19.4 (R3F peer). It does nothing until the owner installs the Renovate app (Part C).
+- [x] Commit `chore(deps): patch next, sharp and audit findings`.
 
 **Stop rule:** if 16.3.8 breaks a test, investigate up to the point of a clear cause. If it cannot be fixed within the task, revert to 16.3.6, record the advisory as an open question (high), and continue.
 
@@ -514,6 +514,21 @@ Before leaving it:
 ## Findings
 
 (Filled in during the run: baseline numbers, deviations from the expectations above, flaky tests seen, audit before/after, security review summary.)
+
+### Task 0: baseline (2026-10-14)
+
+- A parallel session merged PR #4 into `dev` and deleted the first `feat/m8-hardening` (closing draft PR #5) while Task 0 ran. The branch was recreated from the new `dev`, which holds this plan with the account guide.
+- typecheck, lint: pass. Unit: 44 files / 328 tests. Build: `/en`, `/ro`, `/en/projects/ledger-lens`, `/robots.txt`, `/sitemap.xml` are `○`; the other project paths and `/[locale]/[...rest]` are `◐` (partial prerender), as at M7.
+- e2e: 140 passed (10.6 min, 2 workers). `/en` and `/ro` 149.6 KB gz, project page 146.3, lazy 3D 316.5, tier 3 +81.7.
+
+### Task 1: dependency audit
+
+- `pnpm audit --prod` before: 9 (1 low, 5 moderate, 3 high). After: **1 moderate, 0 high**. The moderate is `esbuild` 0.18.20 under `drizzle-kit` > `@esbuild-kit/core-utils`: a dev-server advisory in a dev tool, reached from prod only through better-auth's optional peer and never bundled.
+- `next` 16.3.8 and `sharp` 0.35.5. Next 16.3.8 still resolved its own sharp to 0.35.4, and `source-map-js` 1.2.1 came from postcss and tailwind: both are pinned by `overrides` in `pnpm-workspace.yaml`.
+- The full `pnpm audit` (dev included) still lists highs in the `@lhci/cli` tree (`tmp`, `extract-zip`, `basic-ftp`): dev/CI tooling only, see the m8-followup issue.
+- Posters: the source-hash test stayed green, so no recapture.
+- JS after the bump: `/en` 149.7 KB gz, project page 146.4. e2e: the rate-limit test failed once (known flaky, Task 8), which skipped the dependent admin projects; the rerun passed 140. `perf:local`: 4 passed.
+- Unit tests on Windows: Vitest 5 started 44 workers (one per file), and PGlite's `beforeAll` then passed 10 s in 6 to 13 files. `vitest.config.mts` now uses 4 workers on Windows (CI keeps the default).
 
 ## Open questions
 
