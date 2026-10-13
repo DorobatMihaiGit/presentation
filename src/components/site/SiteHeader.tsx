@@ -23,7 +23,7 @@ export function SiteHeader({ cv, path }: { cv: Cv; path: string | null }) {
   const motion = useTranslations("Motion");
   const home = path === "/";
   const link =
-    "block rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-raised hover:text-ink";
+    "flex items-center rounded-full px-3 py-1.5 text-sm text-ink-muted transition-colors hover:bg-raised hover:text-ink pointer-coarse:min-h-11";
 
   return (
     <header

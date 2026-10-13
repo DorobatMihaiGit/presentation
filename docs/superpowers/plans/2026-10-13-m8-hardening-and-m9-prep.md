@@ -269,11 +269,11 @@ upgrade-insecure-requests   (production only)
 
 Open question 3: 768×1024 and 820×1180 were neither framed nor tested.
 
-- [ ] Extend `tests/e2e/framing.spec.ts` with 768×1024 and 820×1180 (and 1024×1366 landscape-ish iPad Pro portrait). Use the same assertions as the laptop sizes: the stack is fully on screen at each stop and ≥ 32 px from the copy (`.stage-layer[data-box]`). Extend the mobile assertions where portrait applies: no horizontal scroll, 44 px targets on a coarse pointer.
+- [x] Extend `tests/e2e/framing.spec.ts` with 768×1024 and 820×1180 (and 1024×1366 landscape-ish iPad Pro portrait). Use the same assertions as the laptop sizes: the stack is fully on screen at each stop and ≥ 32 px from the copy (`.stage-layer[data-box]`). Extend the mobile assertions where portrait applies: no horizontal scroll, 44 px targets on a coarse pointer.
 - [ ] Run red, then fix the framing in `src/experience/director/shots.ts` / framing helpers. That is the portrait camera path, with the threshold where portrait cameras take over. Write unit tests for any new pure framing math first (`tests/unit/framing.test.ts`).
 - [ ] If the shots changed, the posters' source hash changes: run `pnpm build && pnpm assets:posters` on the GPU (Iris Xe through ANGLE; M7's probe in the README shows how to check), and commit the new posters and `posters.json`. Check the posters budget (≤ 400 KB per visitor) in e2e.
 - [ ] Run `perf:local` again.
-- [ ] Commit `fix(framing): tablets in portrait`.
+- [x] Commit `fix(framing): tablets in portrait`.
 
 **Stop rule:** if the GPU capture is unavailable (probe fails), do **not** commit scene changes without posters. Revert the scene part, keep the failing tests as `test.fixme` with a comment, and record an open question.
 
@@ -569,6 +569,13 @@ Before leaving it:
 - Contrast: `src/lib/contrast.ts` (WCAG luminance, unit tested) rates the pixels behind the hidden text of the hero, About, Experience and Contact body copy (95th percentile of the hardest pixels) at tier 0 (poster) and tier 2 (live canvas, SwiftShader): all ≥ 4.5:1.
 - `lighthouserc.json`: accessibility now asserts 1 (was 0.95); `lhci:windows` reads the same file.
 
+### Task 7: tablet portrait framing (partly done, see #8)
+
+- The new tests went red as planned. 768×1024, 820×1180 and 1024×1366 portrait: the hero's finished stack overlaps the copy (the portrait camera is authored for a 828×1792 phone, and a 3:4 tablet sees its bottom-anchored cover crop). The header nav links were 30 px tall on a coarse pointer.
+- Fixed: the nav links get `pointer-coarse:min-h-11` (44 px). The tablet "no sideways scroll, 44 px targets" tests pass.
+- **Not fixed: the stack framing on portrait tablets → #8.** A fix changes `framing.ts`/`shots.ts`, which needs a GPU poster recapture and probably a tablet poster variant to keep the handoff seamless: a design task, not a contained overnight fix. The three tablet framing tests are `test.fixme` (`// see #8`). No scene code changed, so posters and `perf:local` are untouched.
+- Docker Desktop crashed during this task ("Docker Desktop is unable to start"; `next build` hung on the database). `wsl --shutdown` and a restart brought it back in 10 s.
+
 ## Open questions
 
-(Filled in during the run.)
+1. **Tablet portrait framing (#8):** how should the stack sit on a 3:4 portrait screen (smaller and lower, or a tablet camera with its own poster)? Needs a GPU poster recapture.
