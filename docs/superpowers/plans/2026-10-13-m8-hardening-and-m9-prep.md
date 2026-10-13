@@ -318,7 +318,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
 ## Task 10: Security review (0 high)
 
-- [ ] Launch a review subagent (general-purpose) with this brief. Review the whole app for:
+- [x] Launch a review subagent (general-purpose) with this brief. Review the whole app for:
   - authz on every server action and route handler (`requireAdmin` before any read or write; `src/server/actions/**`, `src/app/api/**`, admin pages);
   - upload validation (type sniffing, size, SVG refused, filename and path traversal in `/api/media/[key]`);
   - markdown XSS (react-markdown settings, `skipHtml`, URL transform) in public and admin preview;
@@ -332,8 +332,8 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
   - `pnpm audit` from Task 1.
 
   Severity per finding (high/medium/low) with file:line and a concrete exploit scenario. Then verify each high or medium finding yourself before acting.
-- [ ] Fix every **high** finding, test first: each one gets a unit or e2e test that fails before the fix. Fix mediums that are cheap and contained. Record the rest in `.data/security-findings.md` only (see "Problems become GitHub issues", Exception 1); a high that cannot be fixed tonight is recorded there and marked **unfixed, blocks M9**.
-- [ ] Commit `fix(security): <finding>` per fix, and add a summary without exploit detail (counts by severity, fixed/unfixed) to the Findings section.
+- [x] Fix every **high** finding, test first: each one gets a unit or e2e test that fails before the fix. Fix mediums that are cheap and contained. Record the rest in `.data/security-findings.md` only (see "Problems become GitHub issues", Exception 1); a high that cannot be fixed tonight is recorded there and marked **unfixed, blocks M9**.
+- [x] Commit `fix(security): <finding>` per fix, and add a summary without exploit detail (counts by severity, fixed/unfixed) to the Findings section.
 
 ## Task 11: M9 prep, Blob images
 
@@ -588,6 +588,11 @@ Before leaving it:
 | contact › the rate limit | the 3 s minimum fill time counts from the form's mount, but the test waited from `goto`; the bucket's IP was also fixed, so repeats/retries started full | wait for hydration, then 3.1 s; count each message by its "Thanks!" answer; one TEST-NET-2 address per run/repeat/retry | 10/10 |
 | stage › tier 2 puts one hidden canvas | the poster's fade-out was checked with the default 5 s | wait for the opacity state up to 30 s | 10/10 |
 | stage › a lost WebGL context | same, for the fade back in | same | 10/10 |
+
+### Task 10: security review
+
+- A review subagent covered authz, uploads, markdown, contact abuse, cookies, Better Auth, client bundles, redirects, CSRF, headers, the OG image fetch and `pnpm audit`. Result: **0 high, 1 medium, 7 low**. Recorded only in the git-ignored `.data/security-findings.md` (the repo is public).
+- Fixed in the run: 1 low (it was already covered by Task 11). Unfixed: the medium (it needs a schema change; recommended before M9) and 6 lows. No high, so nothing blocks M9 by the plan's rule, but the medium should be fixed before production.
 
 ### Task 11: Blob image host
 
