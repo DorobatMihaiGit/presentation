@@ -365,19 +365,98 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 - [ ] Add a manual-dispatch workflow `.github/workflows/smoke.yml` (`workflow_dispatch` with a `url` input) that runs the suite against a given URL. The owner runs it after deploying.
 - [ ] Commit `test(smoke): production smoke suite`.
 
-## Task 13: M9 prep, deploy runbook
+## Task 13: M9 prep, account setup guide (the "puzzle") and deploy runbook
 
-- [ ] Write `docs/deploy.md`. It is for the owner and is concrete enough to follow click by click. Name the exact env var, where it is set (Production/Preview), and how to check each step:
-  1. **Vercel project.** Import the GitHub repo. Framework Next.js, Node 24, install `pnpm install --frozen-lockfile`. Build command: `pnpm db:migrate && pnpm build` (public pages prerender from the DB). Production branch `main`; `dev` gets previews.
-  2. **Neon.** Use the Vercel integration. Create a production branch and a preview branch. `DATABASE_URL` is pooled (confirm `attachDatabasePool` in `src/server/db`). After the first deploy, run `pnpm admin:create` against production from a local shell with the production `DATABASE_URL` in a one-off env, never committed.
-  3. **Secrets.** `BETTER_AUTH_SECRET` (new, `openssl rand -base64 32`, different per environment), `ADMIN_EMAIL`, `SITE_URL` (the real domain).
-  4. **Blob.** Create a store, connect it to the project (`BLOB_READ_WRITE_TOKEN`). Task 11 handles the image host automatically.
-  5. **Resend.** Add the domain, then the DNS records Resend shows: SPF `TXT`, DKIM `CNAME`/`TXT`, and the bounce `MX` if Resend asks. Add DMARC `TXT _dmarc` starting at `p=none; rua=mailto:<owner>`, then tighten. Set `RESEND_API_KEY`, `CONTACT_FROM_EMAIL` (on the verified domain) and `CONTACT_TO_EMAIL`. Point to the README section "Mail settings to fill in once Resend exists".
-  6. **Domain.** Add it in Vercel and set the DNS (apex `A`/`ALIAS` and `www` `CNAME`, as Vercel shows); HTTPS is automatic. Then check: HSTS preload only after everything works.
-  7. **After deploy.** Run the smoke workflow (Task 12) with the production URL. Send a real contact message and check that it arrives, and that the auto-reply arrives with a passing SPF/DKIM/DMARC (Gmail "Show original"). Enter the content in `/admin`.
-  8. **Hobby vs Pro.** Spec §8: the Hobby plan is non-commercial. Pro is needed if the site advertises paid services.
-- [ ] Link it from the README. Update the README sections touched by M8: security headers, analytics, OG, mobile LHCI, the smoke suite, and the settled questions.
-- [ ] Commit `docs: deploy runbook and m8 readme`.
+The owner sets up the accounts **the next day, in an attended session** (owner + Claude, with Claude in Chrome driving dashboards while the owner is logged in). Tonight's job is to make that session mechanical: every piece of the puzzle named, in order, with where each value comes from and where it goes. **The run does not create any account or cloud resource.**
+
+- [ ] Before writing, read what the code needs from production:
+  - `src/env.ts` and `src/lib/create-app-env.ts`: every variable, required or optional, and its validation;
+  - `.env.example`;
+  - `src/server/db` (pooling, `attachDatabasePool`);
+  - `src/server/auth` (Better Auth base URL, trusted origins, passkey rpID/origin: where do they come from?);
+  - `src/server/email` and `src/server/contact` (Resend);
+  - `src/server/media` (Blob);
+  - Task 11's `BLOB_PUBLIC_HOST`;
+  - `scripts/admin-create.ts`, `scripts/db-migrate.ts`, `drizzle.config.ts`;
+  - `next.config.ts`;
+  - the README.
+
+  Also read the current docs for the Vercel–Neon integration, Vercel Blob, Resend domains and Vercel domains (web search). Note the date read, because dashboards change. Every claim in the guide is either checked in the code or marked "check in the dashboard".
+- [ ] Write **`docs/deploy.md`** in this shape:
+  1. **Overview and order.** Draw it as a small diagram (Mermaid or ASCII). Each step says why it must come before the next:
+     1. GitHub repo (exists);
+     2. Vercel account (sign up with GitHub) and project import;
+     3. Neon through the Vercel integration (it creates `DATABASE_URL` for Production and Preview);
+     4. Blob store (creates `BLOB_READ_WRITE_TOKEN`);
+     5. secrets and the remaining env vars;
+     6. first deploy of `dev` as a Preview (migrations run in the build);
+     7. `admin:create` against the preview database;
+     8. smoke suite on the preview URL;
+     9. domain (buy, add in Vercel, DNS at the registrar);
+     10. Resend (account, domain, DNS records, API key);
+     11. `SITE_URL` set to the domain;
+     12. merge `dev` into `main`, which is the production deploy;
+     13. `admin:create` against production;
+     14. smoke on production;
+     15. a real contact mail test;
+     16. content in `/admin`.
+
+     Give a time estimate per step. Mark what can wait: Resend and the domain can come after a working `.vercel.app` production.
+  2. **Decisions to make first**, each with a recommendation and why:
+     - the Vercel and Neon regions, close to each other and to Romanian visitors (for example Vercel `fra1` + Neon AWS `eu-central-1` Frankfurt; check the integration's region list);
+     - the project name;
+     - the domain (`.ro` vs `.com`, registrar options; the owner pays);
+     - Hobby vs Pro (spec §8: Hobby is non-commercial);
+     - the mailbox that receives contact mails (`CONTACT_TO_EMAIL`);
+     - the sender address on the domain (`CONTACT_FROM_EMAIL`);
+     - production branch `main`, previews from `dev`.
+  3. **Accounts to have**, with what each is for and its free-tier limits:
+     - GitHub (exists);
+     - Vercel;
+     - Neon (through Vercel);
+     - Resend;
+     - a domain registrar;
+     - optionally Renovate (GitHub app).
+  4. **The env var matrix.** A table with one row per variable from `src/env.ts`, and these columns:
+     - required?;
+     - Production value / source;
+     - Preview value / source;
+     - Development (local) value;
+     - who creates it (integration, generated, owner);
+     - how to generate it (for example `openssl rand -base64 32`, a different value per environment);
+     - how to verify it.
+
+     It must include at least: `DATABASE_URL` (pooled; does the migration in the build need an unpooled URL? check `drizzle.config.ts` and `scripts/db-migrate.ts`), `SITE_URL`, `BETTER_AUTH_SECRET`, `ADMIN_EMAIL`, `BLOB_READ_WRITE_TOKEN`, `BLOB_PUBLIC_HOST`, `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, `CONTACT_TO_EMAIL`, `NEXT_PUBLIC_ASSET_BASE`, plus anything Vercel sets itself (`VERCEL`, `VERCEL_ENV`, `VERCEL_PROJECT_PRODUCTION_URL`) that the code reads. **No real values or secrets in the file.**
+  5. **Step by step**, one section per step of the order above. Each section has:
+     - where to click (dashboard path), or the CLI alternative (`vercel`, `neonctl`, with exact flags);
+     - which values to copy and where they go;
+     - the check that proves the step worked (a command, a URL, or what the dashboard shows);
+     - "if it goes wrong", with the likely causes.
+
+     Include:
+     - the Vercel build settings: install `pnpm install --frozen-lockfile`, build `pnpm db:migrate && pnpm build`, Node 24, `ENABLE_EXPERIMENTAL_COREPACK=1` (spec M0 row), root directory;
+     - how to run `pnpm admin:create` against a remote database from this Windows laptop without writing the URL to a committed file (a one-off `DATABASE_URL=... ADMIN_EMAIL=... corepack pnpm admin:create` in Git Bash, or a git-ignored `.env.production.local`);
+     - the DNS records, as tables: Vercel apex and `www`; Resend SPF `TXT`, DKIM, and return-path `MX`/`CNAME` as Resend shows them; DMARC `_dmarc` `TXT` starting at `v=DMARC1; p=none; rua=mailto:<owner mailbox>`, and when to tighten it to `quarantine`;
+     - Gmail's "Show original" check for SPF/DKIM/DMARC = PASS;
+     - HSTS preload submission only after a week on HTTPS without problems.
+  6. **Rollback and troubleshooting:**
+     - Vercel "Promote previous deployment";
+     - a migration that failed in the build;
+     - auth cookies on the wrong domain after `SITE_URL` changes;
+     - images returning 400 from `/_next/image` (Blob host);
+     - mails in `email_status=failed` (Resend not verified yet).
+  7. **A session script for tomorrow.** A short numbered list the owner can paste to Claude ("we are at step N; open X in Chrome; …"), so the attended session can resume at any step.
+- [ ] Add **`pnpm deploy:check`** (`scripts/deploy-check.ts`), a read-only preflight with a unit test for its pure parts.
+  - It loads a given env file (default `.env.production.local`, which must be git-ignored; check `.gitignore` and add it if missing).
+  - It validates every variable with the same schema as `src/env.ts`, plus the production-only rules:
+    - `SITE_URL` is https;
+    - `BETTER_AUTH_SECRET` is ≥ 32 chars and not the `.env.example` dev value;
+    - when `RESEND_API_KEY` is set, `CONTACT_FROM_EMAIL`'s domain matches `SITE_URL`'s;
+    - Blob uploads have an image host (explicit `BLOB_PUBLIC_HOST` or a derivable token).
+  - With `--online`, it connects to `DATABASE_URL` and reports how many migrations are applied.
+  - It prints only variable **names** and pass/fail, never values.
+- [ ] Link `docs/deploy.md` from the README. Update the README sections touched by M8: security headers, analytics, OG, mobile LHCI, the smoke suite, `deploy:check`, and the settled questions.
+- [ ] Commit `docs: account setup guide and deploy runbook`, and separately `feat(scripts): deploy preflight check`.
 
 ## Task 14: Gate on a fresh clone, then the PR
 
@@ -414,7 +493,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
 1. Read the M8 handover and the `m8-followup` issues. Merge `dev` into `main` when ready to release (M9).
 2. Enter the real EN/RO content in `/admin` (local or, better, on production after M9): headline, about, skills, experience, projects with covers and case studies, CV PDFs, headshot, links. Then decide open question 4 (placement).
-3. M9 accounts, following `docs/deploy.md`: Vercel project, Neon, Blob store, Resend + DNS, domain, env vars, `admin:create` on production, the smoke workflow on the production URL. An attended Claude session with Claude in Chrome can drive the dashboards while the owner is logged in.
+3. M9 accounts, the day after the run, in an attended session with Claude (Claude in Chrome on the dashboards), following `docs/deploy.md` step by step (Task 13), with `pnpm deploy:check` before the first deploy.
 4. Install the Renovate GitHub app on the repo.
 5. A real iPhone and Android check (spec §8/§9).
 
