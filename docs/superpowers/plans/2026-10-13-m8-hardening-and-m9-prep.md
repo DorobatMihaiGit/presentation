@@ -237,15 +237,15 @@ upgrade-insecure-requests   (production only)
 
 ## Task 5: Analytics (cookie-less, budget-safe)
 
-- [ ] Add `@vercel/analytics` `2.0.1` and `@vercel/speed-insights` `2.0.0` (the spec's pins; check that they are still the latest 2.x and peer-compatible with Next 16.3 and React 19.3).
-- [ ] Render them only when the build runs on Vercel (`process.env.VERCEL === "1"` read at build time in a server component). Locally, in CI, in e2e and in LHCI they must render nothing. Otherwise the 404 on `/_vercel/insights/script.js` costs Best Practices points and pollutes the console.
+- [x] Add `@vercel/analytics` `2.0.1` and `@vercel/speed-insights` `2.0.0` (the spec's pins; check that they are still the latest 2.x and peer-compatible with Next 16.3 and React 19.3).
+- [x] Render them only when the build runs on Vercel (`process.env.VERCEL === "1"` read at build time in a server component). Locally, in CI, in e2e and in LHCI they must render nothing. Otherwise the 404 on `/_vercel/insights/script.js` costs Best Practices points and pollutes the console.
 
   Don't render them on `/admin`. Respect `Do Not Track`? Vercel Analytics is cookie-less; note this in the README instead of adding code.
-- [ ] Budget: measure the first-load JS added when the flag is on. Do a local build with `VERCEL=1` and run `budgets.spec.ts`; only the measurement matters, the network 404s don't. It must keep `/en` ≤ 160 KB gz. Load them after the page (`afterInteractive` / their default) and **after** LCP.
+- [x] Budget: measure the first-load JS added when the flag is on. Do a local build with `VERCEL=1` and run `budgets.spec.ts`; only the measurement matters, the network 404s don't. It must keep `/en` ≤ 160 KB gz. Load them after the page (`afterInteractive` / their default) and **after** LCP.
 
   If they push past 160 KB, load them from the same idle callback that loads the 3D chunk.
-- [ ] Unit test: the analytics component renders nothing without `VERCEL`, and renders both with it.
-- [ ] Commit `feat(analytics): vercel analytics and speed insights`.
+- [x] Unit test: the analytics component renders nothing without `VERCEL`, and renders both with it.
+- [x] Commit `feat(analytics): vercel analytics and speed insights`.
 
 ## Task 6: Accessibility audit (a11y 100)
 
@@ -554,6 +554,12 @@ Before leaving it:
 - Static: every card is `●` in the build (`/en|ro/opengraph-image`, `/en|ro/projects/<slug>/opengraph-image`, and the twitter ones), revalidated with the `cv` tag. Two findings on the way: a route handler gets no params from the `[locale]` layout, so the project cards list locale × slug themselves. And at runtime, after an admin edit, rendering outside a cache failed with "used IO that was not cached" (HTTP 500): the PNG bytes are now made inside a `"use cache"` function tagged `cv`.
 - The project page's `og:image` used to be the cover; file-based metadata wins in Next, so that config was removed.
 - Romanian diacritics render (checked by eye on the built `/ro` card); the unit test renders a Romanian card.
+
+### Task 5: analytics
+
+- `@vercel/analytics` 2.0.1 and `@vercel/speed-insights` 2.0.0 are still the latest 2.x; their peers accept Next ≥ 13 and React 19.
+- `VercelInsights` (in the `[locale]` layout only, not `/admin`) renders both when the build has `VERCEL=1`, otherwise nothing.
+- Measured: `/en` and `/ro` 153.5 KB gz before 3D, project page 150.1, **with and without** `VERCEL=1`. The +1.9 KB is the two packages' client modules, bundled even when not rendered. With `VERCEL=1` their scripts load after the page and are counted with the lazy chunks (5 instead of 3, 316.6 KB gz). Under 160 KB, so no idle-callback loading was needed.
 
 ## Open questions
 

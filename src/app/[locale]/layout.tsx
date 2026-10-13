@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { VercelInsights } from "@/components/site/VercelInsights";
 import { getCv } from "@/content/get-cv";
 import { routing } from "@/i18n/routing";
 import { siteUrl } from "@/site";
@@ -48,6 +49,7 @@ export default async function LocaleLayout({
           {children}
           <SiteFooter cv={cv} />
         </NextIntlClientProvider>
+        <VercelInsights />
       </body>
     </html>
   );
