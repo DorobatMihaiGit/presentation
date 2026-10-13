@@ -1,14 +1,16 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import LocaleError from "@/app/[locale]/error";
 import AdminError from "@/app/admin/error";
 import GlobalError from "@/app/global-error";
 import { StageErrorBoundary } from "@/experience/StageErrorBoundary";
-import { globalErrorCopy } from "@/lib/global-error-copy";
+import { errorCopy } from "@/lib/error-copy";
 import en from "../../messages/en.json";
 import ro from "../../messages/ro.json";
+
+let pathname = "/en";
+vi.mock("next/navigation", () => ({ usePathname: () => pathname }));
 
 afterEach(cleanup);
 
@@ -18,11 +20,8 @@ describe("the page error boundary", () => {
     ["ro", ro, "Ceva nu a mers", "Încearcă din nou"],
   ] as const)("speaks %s and retries", (locale, messages, title, retry) => {
     const onRetry = vi.fn();
-    render(
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        <LocaleError retry={onRetry} />
-      </NextIntlClientProvider>,
-    );
+    pathname = `/${locale}/projects/ledger-lens`;
+    render(<LocaleError retry={onRetry} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(title);
     expect(
       screen
@@ -50,14 +49,14 @@ describe("the admin error boundary", () => {
 
 describe("the global error page", () => {
   it("keeps its copy in sync with messages/*.json", () => {
-    expect(globalErrorCopy("/en").copy).toEqual(en.Error);
-    expect(globalErrorCopy("/ro/projects/x").copy).toEqual(ro.Error);
+    expect(errorCopy("/en").copy).toEqual(en.Error);
+    expect(errorCopy("/ro/projects/x").copy).toEqual(ro.Error);
   });
 
   it("picks the language from the path", () => {
-    expect(globalErrorCopy("/ro").lang).toBe("ro");
-    expect(globalErrorCopy("/robots").lang).toBe("en");
-    expect(globalErrorCopy("/admin").lang).toBe("en");
+    expect(errorCopy("/ro").lang).toBe("ro");
+    expect(errorCopy("/robots").lang).toBe("en");
+    expect(errorCopy("/admin").lang).toBe("en");
   });
 
   it("renders the copy and retries", () => {

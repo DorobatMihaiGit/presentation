@@ -1,6 +1,6 @@
-// The global error page cannot use next-intl, and global-error ships with
-// every page's JS, so it carries only these strings (messages/*.json "Error";
-// tests/unit/error-boundaries.test.tsx keeps them in sync).
+// The error pages ship with every page's JS, so they carry only these
+// strings instead of next-intl (whose client formatter costs ~6 KB gz).
+// tests/unit/error-boundaries.test.tsx keeps them equal to messages/*.json.
 const COPY = {
   en: {
     title: "Something went wrong",
@@ -18,8 +18,8 @@ const COPY = {
   },
 } as const;
 
-/** The global error page's language and copy, from the URL's locale prefix. */
-export function globalErrorCopy(pathname: string) {
+/** The error pages' language and copy, from the URL's locale prefix. */
+export function errorCopy(pathname: string) {
   const lang = /^\/ro(\/|$)/.test(pathname) ? "ro" : "en";
   return { lang, copy: COPY[lang] } as const;
 }

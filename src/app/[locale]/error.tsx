@@ -1,22 +1,12 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 import { ErrorPanel } from "@/components/site/ErrorPanel";
+import { errorCopy } from "@/lib/error-copy";
 
+// No next-intl here: the boundary ships with every page (src/lib/error-copy.ts).
 export default function LocaleError({ retry }: { retry: () => void }) {
-  const t = useTranslations("Error");
-  const locale = useLocale();
+  const { lang, copy } = errorCopy(usePathname());
 
-  return (
-    <ErrorPanel
-      copy={{
-        title: t("title"),
-        description: t("description"),
-        retry: t("retry"),
-        home: t("home"),
-      }}
-      homeHref={`/${locale}`}
-      onRetry={retry}
-    />
-  );
+  return <ErrorPanel copy={copy} homeHref={`/${lang}`} onRetry={retry} />;
 }

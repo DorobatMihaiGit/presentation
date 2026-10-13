@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 export type ErrorCopy = {
   title: string;
   description: string;
@@ -34,9 +32,11 @@ export function ErrorPanel({
         >
           {copy.retry}
         </button>
-        <Link href={homeHref} className="text-ink underline underline-offset-4">
+        {/* A full page load: a fresh start after an error, and next/link
+            would add ~3.4 KB gz to every page (the boundary ships with it). */}
+        <a href={homeHref} className="text-ink underline underline-offset-4">
           {copy.home}
-        </Link>
+        </a>
       </div>
     </main>
   );
