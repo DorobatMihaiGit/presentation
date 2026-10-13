@@ -132,3 +132,43 @@ jobs:
           name: lighthouse-reports
           path: .lighthouseci/reports/
           retention-days: 7
+
+  lighthouse-mobile:
+    name: Lighthouse (mobile)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: cv
+          POSTGRES_PASSWORD: cv
+          POSTGRES_DB: cv
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cv -d cv"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+      - run: pnpm build
+        env:
+          SITE_URL: http://localhost:3200
+      - run: pnpm lhci:mobile
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-reports-mobile
+          path: .lighthouseci/reports-mobile/
+          retention-days: 7
