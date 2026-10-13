@@ -1,5 +1,6 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
+import { isHostname } from "./blob-host";
 
 export type RuntimeEnv = {
   DATABASE_URL?: string;
@@ -7,6 +8,7 @@ export type RuntimeEnv = {
   BETTER_AUTH_SECRET?: string;
   ADMIN_EMAIL?: string;
   BLOB_READ_WRITE_TOKEN?: string;
+  BLOB_PUBLIC_HOST?: string;
   RESEND_API_KEY?: string;
   CONTACT_FROM_EMAIL?: string;
   CONTACT_TO_EMAIL?: string;
@@ -26,6 +28,14 @@ export function createAppEnv(
       BETTER_AUTH_SECRET: z.string().min(32),
       ADMIN_EMAIL: email,
       BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
+      // The Blob store's public image host; derived from the token when unset.
+      BLOB_PUBLIC_HOST: z
+        .string()
+        .refine(
+          isHostname,
+          "A hostname, e.g. <store>.public.blob.vercel-storage.com",
+        )
+        .optional(),
       // Contact form mail (M3). No key = mails go to .data/mail/ instead.
       RESEND_API_KEY: z.string().startsWith("re_").optional(),
       CONTACT_FROM_EMAIL: email.optional(),
@@ -40,6 +50,7 @@ export function createAppEnv(
       BETTER_AUTH_SECRET: runtimeEnv.BETTER_AUTH_SECRET,
       ADMIN_EMAIL: runtimeEnv.ADMIN_EMAIL,
       BLOB_READ_WRITE_TOKEN: runtimeEnv.BLOB_READ_WRITE_TOKEN,
+      BLOB_PUBLIC_HOST: runtimeEnv.BLOB_PUBLIC_HOST,
       RESEND_API_KEY: runtimeEnv.RESEND_API_KEY,
       CONTACT_FROM_EMAIL: runtimeEnv.CONTACT_FROM_EMAIL,
       CONTACT_TO_EMAIL: runtimeEnv.CONTACT_TO_EMAIL,

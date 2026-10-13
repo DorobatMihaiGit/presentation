@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { blobImageHost } from "./src/lib/blob-host";
 import { securityHeaders } from "./src/lib/security-headers";
 import "./src/env";
+
+// Admin uploads on Vercel Blob (production): their host is allowed for
+// next/image and in the CSP. Locally there is none (/api/media).
+const imageHost = blobImageHost({
+  BLOB_PUBLIC_HOST: process.env.BLOB_PUBLIC_HOST,
+  BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+});
 
 const withNextIntl = createNextIntlPlugin();
 
@@ -14,6 +22,7 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders({
           dev: process.env.NODE_ENV === "development",
+          imageHost,
         }),
       },
       {
@@ -29,9 +38,12 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    // Covers and portraits from the media library (local store). Vercel Blob
-    // URLs join as remotePatterns when production storage is set up (M9).
+    // Covers and portraits from the media library: the local store, or the
+    // Blob store's public host in production.
     localPatterns: [{ pathname: "/api/media/**", search: "" }],
+    remotePatterns: imageHost
+      ? [{ protocol: "https", hostname: imageHost, pathname: "/**" }]
+      : [],
   },
   experimental: {
     serverActions: {

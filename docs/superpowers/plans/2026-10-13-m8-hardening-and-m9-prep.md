@@ -337,7 +337,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
 ## Task 11: M9 prep, Blob images
 
-- [ ] `images.remotePatterns` from env. Vercel Blob public URLs look like `https://<storeId>.public.blob.vercel-storage.com/...`. Read Next's `images` config docs and `@vercel/blob` 2.8.0's docs/types in `node_modules` to confirm the host format and whether the store id can be derived from `BLOB_READ_WRITE_TOKEN` (`vercel_blob_rw_<storeId>_<secret>`).
+- [x] `images.remotePatterns` from env. Vercel Blob public URLs look like `https://<storeId>.public.blob.vercel-storage.com/...`. Read Next's `images` config docs and `@vercel/blob` 2.8.0's docs/types in `node_modules` to confirm the host format and whether the store id can be derived from `BLOB_READ_WRITE_TOKEN` (`vercel_blob_rw_<storeId>_<secret>`).
 
   Implement a pure `blobImageHost(env)` in `src/lib/`:
   - it prefers an explicit optional `BLOB_PUBLIC_HOST`;
@@ -345,9 +345,9 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
   - otherwise it returns nothing.
 
   `next.config.ts` adds `{ protocol: "https", hostname: <host>, pathname: "/**" }` only when there is a host, and Task 2's CSP `img-src` gets the same host.
-- [ ] Add `BLOB_PUBLIC_HOST` to `src/env.ts` / `create-app-env.ts` (optional, hostname-validated) and to `.env.example`, with a comment.
-- [ ] Unit tests: token → host, explicit host wins, nothing → no pattern, a malformed token → no pattern (no throw at build).
-- [ ] Commit `feat(media): allow the blob store's image host`.
+- [x] Add `BLOB_PUBLIC_HOST` to `src/env.ts` / `create-app-env.ts` (optional, hostname-validated) and to `.env.example`, with a comment.
+- [x] Unit tests: token → host, explicit host wins, nothing → no pattern, a malformed token → no pattern (no throw at build).
+- [x] Commit `feat(media): allow the blob store's image host`.
 
 ## Task 12: M9 prep, production smoke suite
 
@@ -588,6 +588,11 @@ Before leaving it:
 | contact › the rate limit | the 3 s minimum fill time counts from the form's mount, but the test waited from `goto`; the bucket's IP was also fixed, so repeats/retries started full | wait for hydration, then 3.1 s; count each message by its "Thanks!" answer; one TEST-NET-2 address per run/repeat/retry | 10/10 |
 | stage › tier 2 puts one hidden canvas | the poster's fade-out was checked with the default 5 s | wait for the opacity state up to 30 s | 10/10 |
 | stage › a lost WebGL context | same, for the fade back in | same | 10/10 |
+
+### Task 11: Blob image host
+
+- `@vercel/blob` 2.8.0 reads the store id as the 4th `_` part of the token (`parseStoreIdFromReadWriteToken`) and builds public URLs as `https://<storeId>.public.blob.vercel-storage.com/<path>`; `src/lib/blob-host.ts` does the same (lowercased).
+- `BLOB_PUBLIC_HOST` (optional, hostname-validated) wins; otherwise the host comes from the token; otherwise there's none. With a token `vercel_blob_rw_Abc123_…` the config gives `remotePatterns` `[{https, abc123.public.blob.vercel-storage.com, /**}]` and `img-src 'self' data: blob: https://abc123.public.blob.vercel-storage.com`.
 
 ## Open questions
 
