@@ -11,6 +11,10 @@ import { dirname, join } from "node:path";
 // on the reference Windows laptop (i5-1135G7) the 3D stage's mount after the
 // LCP costs ~0.7 to 1.4 s of TBT under Lighthouse's desktop throttling, the
 // same before and after M7 (scores 69 to 73), so the budget there is 0.65.
+// `--mobile` uses lighthouserc.mobile.json (Lighthouse's default mobile
+// emulation: Moto G class, 4x CPU slowdown, slow 4G). Its performance score
+// is only reported here: CI on Linux decides it (M8), and this laptop's
+// stage mount under 4x throttling is not what a phone runs.
 // Run after `SITE_URL=http://localhost:3200 pnpm build`.
 
 type Assertion = [string, { minScore: number }];
@@ -19,7 +23,7 @@ type LighthouseConfig = {
     collect: {
       url: string[];
       numberOfRuns: number;
-      settings: { preset: string };
+      settings: { preset?: string };
     };
     assert: { assertions: Record<string, Assertion> };
   };
@@ -29,11 +33,19 @@ type Report = {
   audits: Record<string, { numericValue: number }>;
 };
 
-const WINDOWS_MIN_SCORE: Record<string, number> = { performance: 0.65 };
+const MOBILE = process.argv.includes("--mobile");
+const WINDOWS_MIN_SCORE: Record<string, number> = {
+  performance: MOBILE ? 0 : 0.65,
+};
 const PORT = 3200;
 
 const { collect, assert } = (
-  JSON.parse(readFileSync("lighthouserc.json", "utf8")) as LighthouseConfig
+  JSON.parse(
+    readFileSync(
+      MOBILE ? "lighthouserc.mobile.json" : "lighthouserc.json",
+      "utf8",
+    ),
+  ) as LighthouseConfig
 ).ci;
 const budgets = Object.entries(assert.assertions).map(([key, [, options]]) => {
   const category = key.replace("categories:", "");
@@ -86,7 +98,9 @@ async function main() {
           [
             lighthouse,
             url,
-            `--preset=${collect.settings.preset}`,
+            ...(collect.settings.preset
+              ? [`--preset=${collect.settings.preset}`]
+              : []),
             "--output=json",
             `--output-path=${output}`,
             "--chrome-flags=--headless=new",
