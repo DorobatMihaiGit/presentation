@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { watchCsp } from "../e2e/csp";
 
 // M6 acceptance on the reference machine (Intel Iris Xe): scrolling the WHOLE
 // page (every scene of the journey) holds >= 55 fps with no long task over
@@ -106,6 +107,8 @@ for (const tier of ["auto", "1", "3"] as const) {
       };
       requestAnimationFrame(frame);
     });
+    // The real GPU path (tier 3 included) runs under the CSP too.
+    const checkCsp = await watchCsp(page);
     await page.goto(tier === "auto" ? "/en" : `/en?tier=${tier}`);
     const html = page.locator("html");
     await expect(html).toHaveAttribute("data-canvas", /live|poster/, {
@@ -193,6 +196,7 @@ for (const tier of ["auto", "1", "3"] as const) {
       Math.max(0, ...before.map((task) => task.duration)),
     ).toBeLessThanOrEqual(MOUNT_BUDGET_MS);
     expect(report.tabMb).toBeLessThan(MEMORY_BUDGET_MB);
+    await checkCsp();
     // Tier 3 is meant for discrete GPUs; on this iGPU it is only reported.
     if (tier !== "3") {
       for (const stop of STOPS) {
@@ -229,6 +233,7 @@ test("three trips to a project page and back keep the stage smooth and lean", as
     };
     requestAnimationFrame(frame);
   });
+  const checkCsp = await watchCsp(page);
   await page.goto("/en");
   const html = page.locator("html");
   await expect(html).toHaveAttribute("data-canvas", /live|poster/, {
@@ -317,4 +322,5 @@ test("three trips to a project page and back keep the stage smooth and lean", as
     expect(perStop[stop], stop).toBeGreaterThanOrEqual(MIN_FPS);
   }
   expect(report.tabMb).toBeLessThan(MEMORY_BUDGET_MB);
+  await checkCsp();
 });
