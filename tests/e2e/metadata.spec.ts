@@ -54,3 +54,28 @@ test("embeds a Person JSON-LD matching the visible name", async ({ page }) => {
   });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(person.name);
 });
+
+// M8: an Open Graph card per page, 1200x630 PNG, also used for X.
+for (const path of ["/en", "/ro", "/en/projects/ledger-lens"]) {
+  test(`${path} has an Open Graph image`, async ({ page, request }) => {
+    await page.goto(path);
+    const meta = (selector: string) =>
+      page.locator(selector).first().getAttribute("content");
+
+    const image = await meta('meta[property="og:image"]');
+    expect(image).toMatch(/^http:\/\/localhost:3100\/.+opengraph-image/);
+    expect(await meta('meta[property="og:image:width"]')).toBe("1200");
+    expect(await meta('meta[property="og:image:height"]')).toBe("630");
+    expect(await meta('meta[name="twitter:card"]')).toBe("summary_large_image");
+    expect(await meta('meta[name="twitter:image"]')).toMatch(/twitter-image/);
+
+    const response = await request.get(image ?? "");
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+    const png = await response.body();
+    // PNG signature, then the IHDR chunk: width and height, big-endian.
+    expect(png.subarray(1, 4).toString("ascii")).toBe("PNG");
+    expect(png.readUInt32BE(16)).toBe(1200);
+    expect(png.readUInt32BE(20)).toBe(630);
+  });
+}

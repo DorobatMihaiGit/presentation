@@ -1,5 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, type Page, test } from "@playwright/test";
+import {
+  type APIRequestContext,
+  expect,
+  type Page,
+  test,
+} from "@playwright/test";
 import { signInAsOwner } from "./admin-login";
 import {
   deleteMedia,
@@ -18,9 +23,19 @@ test.beforeEach(async ({ page }) => {
   await signInAsOwner(page);
 });
 
+/** The bytes of a page's og:image (read over HTTP, the page is not opened). */
+async function ogImage(request: APIRequestContext, path: string) {
+  const html = await (await request.get(path)).text();
+  const url = html.match(/<meta property="og:image" content="([^"]+)"/)?.[1];
+  const response = await request.get(url ?? "");
+  expect(response.status()).toBe(200);
+  return response.body();
+}
+
 test("a Romanian headline edited in the admin shows on /ro", async ({
   page,
 }) => {
+  const ogBefore = await ogImage(page.request, "/ro");
   const headline = page.getByLabel("Headline (RO)");
   await expect(headline).toHaveValue(SEEDED_RO_HEADLINE);
 
@@ -35,6 +50,10 @@ test("a Romanian headline edited in the admin shows on /ro", async ({
   await expect(
     page.getByText("Construiesc produse web rapide, de la bază la pixel."),
   ).toBeVisible();
+  // The Open Graph card is cached under the same tag as the page.
+  await expect
+    .poll(async () => (await ogImage(page.request, "/ro")).equals(ogBefore))
+    .toBe(false);
 
   await page.goto("/admin/profile");
   await page.getByLabel("Headline (RO)").fill(SEEDED_RO_HEADLINE);

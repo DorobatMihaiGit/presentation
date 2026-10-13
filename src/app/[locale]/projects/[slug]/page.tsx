@@ -66,18 +66,7 @@ export async function generateMetadata({
       title,
       description: project.summary.value,
       locale: locale === "ro" ? "ro_RO" : "en_US",
-      ...(project.cover
-        ? {
-            images: [
-              {
-                url: new URL(project.cover.url, siteUrl).href,
-                width: project.cover.width,
-                height: project.cover.height,
-                alt: project.cover.alt.value,
-              },
-            ],
-          }
-        : {}),
+      // og:image comes from ./opengraph-image.tsx (it draws the cover).
     },
   };
 }
