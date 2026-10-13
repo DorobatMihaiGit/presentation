@@ -22,7 +22,9 @@
 
 Then a gate on a fresh clone and a PR into `dev`.
 
-**Not in this plan (the owner does these; Part C lists them):** real EN/RO content in `/admin`, merging PRs, the domain, DNS, and the Vercel/Neon/Resend/Blob/Renovate accounts. The auto-mode classifier blocks merges (observed 2026-10-13), so the run **ends at an open PR with green CI**.
+**Not in this plan (the owner does these; Part C lists them):** real EN/RO content in `/admin`, the domain, DNS, and the Vercel/Neon/Resend/Blob/Renovate accounts.
+
+**Merging (owner decision 2026-10-13):** the run merges its own PR into **`dev` only**, by rebase, once every CI check passes. It never merges into `main` and never pushes to `main`. The run ends with the M8 work merged into `dev`.
 
 **Spec:** `docs/superpowers/specs/2026-09-23-cinematic-cv-design.md`, read in full before Task 1. The relevant parts are:
 - §3: budgets, accessibility, tiers;
@@ -114,12 +116,12 @@ The owner chose finishing the implementation over fixing every problem in the sa
 - **Keep CI green so the work stays reviewable.** A test this plan adds that cannot pass yet becomes `test.fixme("…", …)` with a comment `// see #<issue>`. Never use `.skip` without an issue. An existing test that turns flaky is never weakened or disabled: open an issue and leave it as is (CI retries twice). A budget or threshold is not lowered except where a Stop rule says so, and then the issue records the real number.
 - **Exception 1: security.** The repo is **public**. Security findings (Task 10) and anything that describes how to attack the site never go into a GitHub issue, a commit message or the PR body. Write them to the git-ignored file `.data/security-findings.md` (it lives only on this laptop). In the PR body, say only "N security findings recorded locally for the owner". A **high** finding is still fixed in the run if at all possible. When fixed, the commit message names the area, not the exploit (`fix(security): tighten media route checks`).
 - **Exception 2: no task is skipped silently.** If a whole task cannot be done, its issue says so. The PR body lists every issue opened (`gh issue list --label m8-followup`). The Findings section of this file links them.
-- **Pushing is allowed** to `feat/m8-hardening` at any time (push after every task, so nothing is lost if the laptop stops). Pushing to `dev` or `main`, merging, and changing repository settings are not allowed.
+- **Pushing is allowed** to `feat/m8-hardening` at any time (push after every task, so nothing is lost if the laptop stops). Merging is allowed **only** for the M8 PR **into `dev`**, through `gh pr merge --rebase` once all its checks pass (Task 14). Pushing directly to `dev` or `main`, merging anything into `main`, and changing repository settings are not allowed.
 
 ## Task 0: Workspace and baseline
 
 - [ ] Docker up (see Machine). `docker compose up -d --wait` prints `Healthy`.
-- [ ] `git fetch -p origin`. You are on branch `feat/m8-hardening`, which has this plan committed. If `origin/dev` moved (for example PR #2 merged), run `git rebase origin/dev`.
+- [ ] `git fetch -p origin`, `git switch dev`, `git pull --ff-only`. This plan is committed on `dev`. Then `git switch -c feat/m8-hardening`. If that branch already exists locally or on origin without M8 work, delete it first. If it exists **with** M8 commits (a resumed run), switch to it and `git rebase origin/dev` instead.
 - [ ] `pnpm install --frozen-lockfile`, `pnpm db:migrate`, `pnpm db:seed`.
 - [ ] Baseline, recorded under Findings:
   - `pnpm typecheck`;
@@ -400,14 +402,17 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 
   End the body with the session's PR attribution line.
 - [ ] Wait for CI (all jobs, including `Lighthouse (mobile)`). Use `gh pr checks <n> --watch` in a background command, or a poll every 60 s. If a job fails, read its log (`gh run view --log-failed`), fix and push, **at most 3 rounds**. A job still failing after that gets an issue, which the PR body links.
-- [ ] **Done when:** every task has been worked through, and is either done or has its issue. The PR is open (not draft) against `dev`, and its body lists every `m8-followup` issue. CI is green, or each red job has an issue. `git status` is clean, everything is pushed, and this file's checkboxes are ticked or explained under Findings.
-- [ ] Write the handover `docs/superpowers/handover/<date>-m8.md` (same shape as M7's) and commit it to the branch. Push.
+- [ ] Write the handover `docs/superpowers/handover/<date>-m8.md` (same shape as M7's). Commit it to the branch, push, and wait for CI on that push.
+- [ ] **Merge into `dev`.** When **every** check passes, run `"/c/Program Files/GitHub CLI/gh.exe" pr merge <n> -R DorobatMihaiGit/presentation --rebase --delete-branch`. Then `git switch dev && git pull --ff-only` and `git branch -D feat/m8-hardening`.
 
-**Never merge.** The owner merges.
+  If a check is still red after the 3 rounds above, **do not merge**. Leave the PR open, and link the issue for the red job in the PR body and the handover. If the merge itself is refused (permissions, conflicts), record why in the handover and leave the PR open.
+- [ ] **Done when:** every task has been worked through, and is either done or has its issue. The M8 PR lists every `m8-followup` issue and is **merged into `dev`**, or left open only because a check stayed red, with its issue linked. `git status` is clean on `dev`, and this file's checkboxes are ticked or explained under Findings.
+
+**Never merge into `main`.** Releasing `dev` to `main` is the owner's call (M9).
 
 ## Part C: what only the owner can do (not for the overnight run)
 
-1. Merge PR #2 (`.gitattributes`) and the M8 PR once CI is green.
+1. Read the M8 handover and the `m8-followup` issues. Merge `dev` into `main` when ready to release (M9).
 2. Enter the real EN/RO content in `/admin` (local or, better, on production after M9): headline, about, skills, experience, projects with covers and case studies, CV PDFs, headshot, links. Then decide open question 4 (placement).
 3. M9 accounts, following `docs/deploy.md`: Vercel project, Neon, Blob store, Resend + DNS, domain, env vars, `admin:create` on production, the smoke workflow on the production URL. An attended Claude session with Claude in Chrome can drive the dashboards while the owner is logged in.
 4. Install the Renovate GitHub app on the repo.
@@ -418,7 +423,7 @@ Flaky, known from M7 (handover "Known flaky on this laptop"):
 Start the session in the repo with `claude --permission-mode auto`. Then:
 
 ```
-/goal Execute docs/superpowers/plans/2026-10-13-m8-hardening-and-m9-prep.md on branch feat/m8-hardening, task by task in order (Task 0 to Task 14), following its Machine notes, Global constraints, Stop rules and the section "Problems become GitHub issues". Prefer finishing the implementation over perfecting it: after 2 failed attempts at a problem, open an m8-followup issue (security findings go only to the local .data/security-findings.md, never to GitHub, the repo is public) and continue. Push the branch after every task. Done when: every task is done or has an issue; the M8 pull request into dev is open, not a draft, and lists all m8-followup issues; `gh pr checks` output is pasted and every red job has an issue; the gate log tail is pasted; `git status` is clean and everything is pushed; the M8 handover file is committed. Never merge a PR, never push to dev or main, never change GitHub settings. Stop after 200 turns.
+/goal Execute docs/superpowers/plans/2026-10-13-m8-hardening-and-m9-prep.md on branch feat/m8-hardening, task by task in order (Task 0 to Task 14), following its Machine notes, Global constraints, Stop rules and the section "Problems become GitHub issues". Prefer finishing the implementation over perfecting it: after 2 failed attempts at a problem, open an m8-followup issue (security findings go only to the local .data/security-findings.md, never to GitHub, the repo is public) and continue. Push the branch after every task. Done when: every task is done or has an issue; the gate log tail is pasted; the M8 handover file is committed; the M8 pull request lists all m8-followup issues and, with `gh pr checks` all passing (paste the output), is merged into dev with `gh pr merge --rebase --delete-branch` (or left open only because a check stayed red after 3 fix rounds, with its issue linked); `git status` is clean. Merge only into dev: never merge into main, never push directly to dev or main, never change GitHub settings. Stop after 200 turns.
 ```
 
 Before leaving it:
