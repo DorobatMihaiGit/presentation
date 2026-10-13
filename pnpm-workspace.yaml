@@ -15,3 +15,9 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-arm64-msvc@16.3.6'
   - '@next/swc-win32-x64-msvc@16.3.6'
   - next@16.3.6
+overrides:
+  # GHSA (high) in source-map-js < 1.2.2, pulled in by postcss (next, vite)
+  # and tailwind; no parent release pins the patched version yet.
+  source-map-js: 1.2.2
+  # next 16.3.8 still resolves its optional sharp to 0.35.4 (librsvg, high).
+  sharp: 0.35.5

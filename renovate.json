@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "baseBranches": ["dev"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/Bucharest",
+  "rangeStrategy": "pin",
+  "lockFileMaintenance": { "enabled": false },
+  "packageRules": [
+    {
+      "description": "One weekly PR for every minor and patch update",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "minor and patch updates"
+    },
+    {
+      "description": "Majors one by one, each with its own PR",
+      "matchUpdateTypes": ["major"],
+      "groupName": null
+    },
+    {
+      "description": "@react-three/fiber 9 needs React below 19.4",
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ],
+      "allowedVersions": "<19.4.0"
+    }
+  ]
+}
