@@ -1,0 +1,32 @@
+name: Smoke
+
+# Run by hand after a deploy (M9): Actions > Smoke > Run workflow, with the
+# deployment's URL. Read-only: it never signs in and never sends mail.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Deployment to check, e.g. https://example.com"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Production smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm smoke
+        env:
+          SMOKE_URL: ${{ inputs.url }}
