@@ -1,0 +1,11 @@
+# LF everywhere, whatever core.autocrlf says: CRLF breaks Biome and the poster hash
+* text=auto eol=lf
+
+*.avif binary
+*.webp binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
+*.glb binary
+*.woff2 binary
