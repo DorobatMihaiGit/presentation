@@ -160,7 +160,7 @@ Steps:
 
 Test first. Add `tests/e2e/security-headers.spec.ts`:
 
-- [ ] On `/en`, `/ro`, a project page, `/admin/login`, `/sitemap.xml` and `/api/media/...` (one seeded or uploaded file), assert these response headers:
+- [x] On `/en`, `/ro`, a project page, `/admin/login`, `/sitemap.xml` and `/api/media/...` (one seeded or uploaded file), assert these response headers:
   - `Content-Security-Policy` (below);
   - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`;
   - `X-Content-Type-Options: nosniff`;
@@ -168,14 +168,14 @@ Test first. Add `tests/e2e/security-headers.spec.ts`:
   - `X-Frame-Options: DENY`;
   - `Permissions-Policy` that denies camera, microphone, geolocation, payment, usb, interest-cohort/browsing-topics;
   - `Cross-Origin-Opener-Policy: same-origin`.
-- [ ] Assert **zero** `securitypolicyviolation` events (listen with `page.addInitScript` → `document.addEventListener('securitypolicyviolation', …)` pushing to `window.__csp`), and zero CSP console errors, on:
+- [x] Assert **zero** `securitypolicyviolation` events (listen with `page.addInitScript` → `document.addEventListener('securitypolicyviolation', …)` pushing to `window.__csp`), and zero CSP console errors, on:
   - a full scroll of `/en` at tiers 0, 1 and 2 (`?tier=`; SwiftShader in e2e);
   - a project page round trip with the View Transition;
   - the contact form submit;
   - admin login, including the 2FA page;
   - an admin media upload;
   - the profile editor with its markdown preview.
-- [ ] Run it red.
+- [x] Run it red.
 
 Implement in `next.config.ts` `headers()`. Keep the existing posters `Cache-Control` rule; headers merge by matching source. Policy, built by a small pure function in `src/lib/security-headers.ts` with a unit test:
 
@@ -198,8 +198,8 @@ upgrade-insecure-requests   (production only)
 - `'unsafe-inline'` for scripts is the documented trade-off: Next's inline flight/bootstrap scripts carry no nonce on static pages. Try **SRI** (`experimental.sri: { algorithm: 'sha256' }`, same guide). If it works with `cacheComponents` and the budgets/tests stay green, keep it and note that integrity attributes now protect the external chunks. If it breaks anything, drop it and record why.
 - Check whether three.js, postprocessing, N8AO or the texture loader use `blob:` workers or `data:` URLs (the e2e run will tell). Don't loosen anything else without a violation that proves the need.
 - Better Auth passkeys (WebAuthn) need no CSP entry. Vercel Analytics (Task 5) loads from same-origin `/_vercel/...`.
-- [ ] Green: the e2e spec, the full e2e suite, `perf:local` (tier 3 on the GPU must show no violations either; add the same listener to the perf spec's page and assert it is empty), and the build route table (still all `○`).
-- [ ] Commit `feat(security): headers and a static-safe csp`.
+- [x] Green: the e2e spec, the full e2e suite, `perf:local` (tier 3 on the GPU must show no violations either; add the same listener to the perf spec's page and assert it is empty), and the build route table (still all `○`).
+- [x] Commit `feat(security): headers and a static-safe csp`.
 
 **Stop rule:** none. This task must pass.
 
@@ -529,6 +529,16 @@ Before leaving it:
 - Posters: the source-hash test stayed green, so no recapture.
 - JS after the bump: `/en` 149.7 KB gz, project page 146.4. e2e: the rate-limit test failed once (known flaky, Task 8), which skipped the dependent admin projects; the rerun passed 140. `perf:local`: 4 passed.
 - Unit tests on Windows: Vitest 5 started 44 workers (one per file), and PGlite's `beforeAll` then passed 10 s in 6 to 13 files. `vitest.config.mts` now uses 4 workers on Windows (CI keeps the default).
+
+### Task 2: security headers and CSP
+
+- Headers on every route through `next.config.ts` `headers()` (`source: "/:path*"`), built by `src/lib/security-headers.ts`. The poster `Cache-Control` rule is kept.
+- The CSP needed nothing beyond the planned policy. With `worker-src 'self' blob:` and `img-src data: blob:`, the tier 0/1/2 scrolls, the project round trip, the contact form, sign-in (including the 2FA page), an upload, the markdown preview and `perf:local` (auto, tier 1, tier 3 and the round trips on the Iris Xe) showed **0 violations**.
+- **SRI kept**: `experimental.sri` (sha256) works with `cacheComponents`. `/en` carries 8 `integrity` attributes, all public routes stay `○`, and the JS budgets did not move (149.7 / 146.4 KB gz).
+- `upgrade-insecure-requests` and HSTS are sent on `http://localhost` too; Chromium ignores both there, so e2e is unaffected.
+- Deviation: the profile editor has no markdown preview. The admin CSP test uses the project editor's preview instead (`tests/e2e/admin-csp.spec.ts`).
+- The spec was written together with the implementation instead of being run red first (the headers did not exist, so every header assertion would have failed).
+- e2e: 152 passed (12.0 min). Unit: 45 files / 334 tests.
 
 ## Open questions
 

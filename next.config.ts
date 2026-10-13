@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { securityHeaders } from "./src/lib/security-headers";
 import "./src/env";
 
 const withNextIntl = createNextIntlPlugin();
@@ -7,9 +8,16 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   cacheComponents: true,
   async headers() {
-    // Posters are content-hashed (scripts/posters.ts): a new image gets a new name.
     return [
       {
+        // Every route, pages, API and files alike (src/lib/security-headers.ts).
+        source: "/:path*",
+        headers: securityHeaders({
+          dev: process.env.NODE_ENV === "development",
+        }),
+      },
+      {
+        // Posters are content-hashed (scripts/posters.ts): a new image gets a new name.
         source: "/posters/:file",
         headers: [
           {
@@ -31,6 +39,9 @@ const nextConfig: NextConfig = {
       // multipart overhead; Vercel functions accept at most 4.5 MB.
       bodySizeLimit: "4.5mb",
     },
+    // The CSP keeps 'unsafe-inline' for Next's inline scripts (no nonce on
+    // prerendered pages); integrity attributes pin the external chunks.
+    sri: { algorithm: "sha256" },
   },
 };
 
