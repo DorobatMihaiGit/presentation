@@ -221,19 +221,19 @@ upgrade-insecure-requests   (production only)
 
 ## Task 4: OG images
 
-- [ ] Read `01-app/01-getting-started/14-metadata-and-og-images.md` and the `opengraph-image` file-convention reference.
-- [ ] Add `opengraph-image.tsx` (and `twitter-image` re-exporting it, or `twitter:card summary_large_image` metadata pointing at the same image) for:
+- [x] Read `01-app/01-getting-started/14-metadata-and-og-images.md` and the `opengraph-image` file-convention reference.
+- [x] Add `opengraph-image.tsx` (and `twitter-image` re-exporting it, or `twitter:card summary_large_image` metadata pointing at the same image) for:
   - `src/app/[locale]/`: name, headline and the role over the studio background colours, 1200×630. It reads `getCv(locale)`, so the image expires with the `cv` tag like the page.
   - `src/app/[locale]/projects/[slug]/`: the project title, summary and year. It uses the cover when there is one: fetch it through the media store, not over HTTP.
-- [ ] Fonts. `next/og` (Satori) cannot read woff2. Load a TTF/OTF of Mona Sans. Check whether `next/font/google`'s cache or `node_modules` has one. Otherwise commit the one weight you need from the official Mona Sans release (SIL OFL), as `src/app/og/MonaSans-SemiBold.ttf`, with its licence file next to it.
+- [x] Fonts. `next/og` (Satori) cannot read woff2. Load a TTF/OTF of Mona Sans. Check whether `next/font/google`'s cache or `node_modules` has one. Otherwise commit the one weight you need from the official Mona Sans release (SIL OFL), as `src/app/og/MonaSans-SemiBold.ttf`, with its licence file next to it.
 
   Romanian diacritics (ș ț ă â î) must render: add a test with a Romanian headline.
-- [ ] The images must be static at build (prerendered like the pages; check the build table) or cached with the `cv` tag. No per-request rendering.
-- [ ] Tests:
+- [x] The images must be static at build (prerendered like the pages; check the build table) or cached with the `cv` tag. No per-request rendering.
+- [x] Tests:
   - `metadata.spec.ts` checks that `og:image`, `og:image:width/height`, `twitter:card` and `twitter:image` are present on `/en`, `/ro` and a project page;
   - fetching the og:image URL returns `200 image/png` and is 1200×630 (read the PNG header);
   - an admin edit of the RO headline changes `/ro`'s OG image (bytes differ after the edit; follow the existing admin e2e pattern).
-- [ ] Commit `feat(seo): open graph images per page`.
+- [x] Commit `feat(seo): open graph images per page`.
 
 ## Task 5: Analytics (cookie-less, budget-safe)
 
@@ -546,6 +546,14 @@ Before leaving it:
 - The repo had no jsdom or Testing Library (the plan assumed it did). Added as exact dev pins: `jsdom` 30.1.2, `@testing-library/react` 16.3.3, `@testing-library/dom` 10.4.2. Component tests are `tests/unit/*.test.tsx` with `// @vitest-environment jsdom`.
 - `global-error.tsx` ships with every page, so it carries only its EN/RO strings (`src/lib/global-error-copy.ts`), not the message files; a unit test keeps them equal to `messages/*.json` `Error`.
 - Stage: `StageErrorBoundary` wraps `<Stage>` in `StageLoader` and calls the same fallback as a lost context. `tests/e2e/stage-error.spec.ts` makes `getContext("webgl*")` throw at `?tier=1`: it fails without the boundary (`data-canvas` stuck at `loading`) and passes with it.
+
+### Task 4: OG images
+
+- Budget regression caught here, made in Task 3: the `[locale]` error boundary ships with every page, and `useTranslations` + `next/link` in it put `/en` at 156.6 KB gz (from 149.7). Fixed in `perf(errors)` with plain strings (`src/lib/error-copy.ts`) and an `<a>`: `/en` and `/ro` 151.6, project page 148.2.
+- Cards: `src/lib/og-image.tsx` (next/og, Mona Sans SemiBold TTF v2.0.27 from github/mona-sans with its `OFL.txt` in `src/app/og/`). The home card shows the current role, the name and the headline; the project card shows name · year, the title and the summary over the cover (read from the local store, or fetched from Blob in production, converted to PNG by sharp). `twitter-image` re-exports the same card.
+- Static: every card is `●` in the build (`/en|ro/opengraph-image`, `/en|ro/projects/<slug>/opengraph-image`, and the twitter ones), revalidated with the `cv` tag. Two findings on the way: a route handler gets no params from the `[locale]` layout, so the project cards list locale × slug themselves. And at runtime, after an admin edit, rendering outside a cache failed with "used IO that was not cached" (HTTP 500): the PNG bytes are now made inside a `"use cache"` function tagged `cv`.
+- The project page's `og:image` used to be the cover; file-based metadata wins in Next, so that config was removed.
+- Romanian diacritics render (checked by eye on the built `/ro` card); the unit test renders a Romanian card.
 
 ## Open questions
 
