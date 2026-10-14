@@ -460,7 +460,7 @@ The owner sets up the accounts **the next day, in an attended session** (owner +
 
 ## Task 14: Gate on a fresh clone, then the PR
 
-- [ ] The gate script is M7's (`docs/superpowers/handover/2026-10-11-m7.md`, "How to resume" step 3), with:
+- [x] The gate script is M7's (`docs/superpowers/handover/2026-10-11-m7.md`, "How to resume" step 3), with:
   - the branch `feat/m8-hardening`;
   - the clone at `C:/Users/MiHAi/AppData/Local/Temp/m8gate`;
   - the database `cv_m8gate`.
@@ -470,9 +470,9 @@ The owner sets up the accounts **the next day, in an attended session** (owner +
   - a smoke run against a `next start --port 3500` of the gate build.
 
   The gate ends with `echo "gate=0"`. Write it to the scratchpad and log to a file. It runs ~45 min: use `run_in_background` and wait on the notification. Don't poll in a loop that burns turns.
-- [ ] If the gate fails, fix what is quick and run it again, **at most 3 gate runs** in total. Whatever still fails after that gets an issue (labels `m8-followup` and `blocker-m9`), and the PR body says the gate did not reach `gate=0` and links the issue. A test that fails once and passes on rerun gets an issue, as a flaky test, and is recorded under Findings.
-- [ ] Delete the gate clone.
-- [ ] Push. Mark the PR ready (`gh pr ready`) and update its body. The body covers:
+- [x] If the gate fails, fix what is quick and run it again, **at most 3 gate runs** in total. Whatever still fails after that gets an issue (labels `m8-followup` and `blocker-m9`), and the PR body says the gate did not reach `gate=0` and links the issue. A test that fails once and passes on rerun gets an issue, as a flaky test, and is recorded under Findings.
+- [x] Delete the gate clone.
+- [x] Push. Mark the PR ready (`gh pr ready`) and update its body. The body covers:
   - what changed per task;
   - the gate numbers (unit and e2e counts, JS budgets, perf fps, LHCI desktop + mobile scores);
   - `pnpm audit` before/after;
@@ -480,12 +480,12 @@ The owner sets up the accounts **the next day, in an attended session** (owner +
   - the open questions.
 
   End the body with the session's PR attribution line.
-- [ ] Wait for CI (all jobs, including `Lighthouse (mobile)`). Use `gh pr checks <n> --watch` in a background command, or a poll every 60 s. If a job fails, read its log (`gh run view --log-failed`), fix and push, **at most 3 rounds**. A job still failing after that gets an issue, which the PR body links.
-- [ ] Write the handover `docs/superpowers/handover/<date>-m8.md` (same shape as M7's). Commit it to the branch, push, and wait for CI on that push.
-- [ ] **Merge into `dev`.** When **every** check passes, run `"/c/Program Files/GitHub CLI/gh.exe" pr merge <n> -R DorobatMihaiGit/presentation --rebase --delete-branch`. Then `git switch dev && git pull --ff-only` and `git branch -D feat/m8-hardening`.
+- [x] Wait for CI (all jobs, including `Lighthouse (mobile)`). Use `gh pr checks <n> --watch` in a background command, or a poll every 60 s. If a job fails, read its log (`gh run view --log-failed`), fix and push, **at most 3 rounds**. A job still failing after that gets an issue, which the PR body links.
+- [x] Write the handover `docs/superpowers/handover/<date>-m8.md` (same shape as M7's). Commit it to the branch, push, and wait for CI on that push.
+- [x] **Merge into `dev`.** When **every** check passes, run `"/c/Program Files/GitHub CLI/gh.exe" pr merge <n> -R DorobatMihaiGit/presentation --rebase --delete-branch`. Then `git switch dev && git pull --ff-only` and `git branch -D feat/m8-hardening`.
 
   If a check is still red after the 3 rounds above, **do not merge**. Leave the PR open, and link the issue for the red job in the PR body and the handover. If the merge itself is refused (permissions, conflicts), record why in the handover and leave the PR open.
-- [ ] **Done when:** every task has been worked through, and is either done or has its issue. The M8 PR lists every `m8-followup` issue and is **merged into `dev`**, or left open only because a check stayed red, with its issue linked. `git status` is clean on `dev`, and this file's checkboxes are ticked or explained under Findings.
+- [x] **Done when:** every task has been worked through, and is either done or has its issue. The M8 PR lists every `m8-followup` issue and is **merged into `dev`**, or left open only because a check stayed red, with its issue linked. `git status` is clean on `dev`, and this file's checkboxes are ticked or explained under Findings.
 
 **Never merge into `main`.** Releasing `dev` to `main` is the owner's call (M9).
 
@@ -619,6 +619,13 @@ Before leaving it:
 - Other notes from the guide: a Preview needs its own `SITE_URL` (`VERCEL_PROJECT_PRODUCTION_URL` points at production); the scripts load only `.env.local`, so remote values are exported in the shell; `admin:create`'s password prompt fails in Git Bash's default terminal, so the guide uses `read -s`.
 - `pnpm deploy:check`: unit tested; against `.env.example` it flags SITE_URL and the example secret, and `--online` on the local database prints "3 of 3 migrations applied".
 
+### Task 14: gate and PR
+
+- The gate did not reach `gate=0` in its 3 runs: `perf:local` came in just under 55 fps at one stop each time (hero 54.4, then skills 53.5/53.9, then 52.6/54.1) → #10 (`blocker-m9`). Run 3 was stopped by Claude Code because the system was critically low on memory, during the smoke build. 16 of its 18 Windows Lighthouse runs wrote no report. Details and the log tail are in the handover (`docs/superpowers/handover/2026-10-14-m8.md`).
+- Unit 361, e2e 186 passed + 3 skipped (#8) on the fresh clone; CI on Ubuntu all green.
+- Issues opened by the run: #7 (dev-only audit highs), #8 (tablet framing), #9 (mobile LCP), #10 (perf:local in the gate, blocker-m9).
+
 ## Open questions
 
+0. **perf:local in the gate (#10, blocker-m9):** machine (memory pressure) or regression? Rerun on a rested laptop.
 1. **Tablet portrait framing (#8):** how should the stack sit on a 3:4 portrait screen (smaller and lower, or a tablet camera with its own poster)? Needs a GPU poster recapture.
